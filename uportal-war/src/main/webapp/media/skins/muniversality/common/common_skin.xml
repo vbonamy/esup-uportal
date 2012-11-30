@@ -37,6 +37,8 @@
   <css>portlet.css</css> -->
 
   <css>jquerymobile.accordion.listview.css</css>
+
+  <css>esup-mobile.css</css>
   
   <js included="plain" resource="true">/rs/jquery/1.6.4/jquery-1.6.4.js</js>
   <js included="aggregated" resource="true">/rs/jquery/1.6.4/jquery-1.6.4.min.js</js>
