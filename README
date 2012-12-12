@@ -25,7 +25,7 @@ Notes d'installation :
   * ProxyPass / ajp://tomcat.univ-ville.fr:8009/
 
 * récupération esup-uportal 
-  * git clone git@github.com:EsupPortail/esup-uportal.git
+  * git clone git://github.com/EsupPortail/esup-uportal.git
 
 * build.properties
   * ln -s build.properties.sample build.properties
