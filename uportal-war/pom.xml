@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal</groupId>
         <artifactId>uportal-parent</artifactId>
-        <version>4.0.9.1</version>
+        <version>4.0.10</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -833,7 +833,6 @@
             <plugin>
                 <groupId>org.jasig.maven</groupId>
                 <artifactId>sass-maven-plugin</artifactId>
-                <version>1.0.1</version>
                 <configuration>
                     <baseOutputDirectory>${basedir}/src/main/webapp</baseOutputDirectory>
                 </configuration>
@@ -841,7 +840,6 @@
             <plugin>
                 <groupId>org.jasig.resourceserver</groupId>
                 <artifactId>resource-server-plugin</artifactId>
-                <version>${resource-server.version}</version>
                 <executions>
                     <execution>
                         <id>aggregate-universality-skins</id>
