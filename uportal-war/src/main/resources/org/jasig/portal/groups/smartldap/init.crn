@@ -79,7 +79,7 @@
 		  for (String child : record.getKeysOfChildren()){
 		     def matcher = pattern.matcher(child);
 		     if (matcher.matches()) {		
-			newChildren.add(matcher.group(1));
+			newChildren.add(matcher.group(keyIndexMatchingGroup));
 		     }
 	      	 }
 		 record = new LdapRecord(record.getGroup(), newChildren); 
