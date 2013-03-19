@@ -172,7 +172,7 @@
    | GREEN
    | Locatlization Settings can be used to change the localization of the theme.
   -->
-	<xsl:param name="USER_LANG">en</xsl:param> <!-- Sets the default user language. -->
+	<xsl:param name="USER_LANG">fr</xsl:param> <!-- Sets the default user language. -->
   
   
   <!-- ****** PORTAL SETTINGS ****** -->
