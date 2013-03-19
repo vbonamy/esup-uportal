@@ -23,7 +23,7 @@
   <name>All categories</name>
   <entity-type>org.jasig.portal.portlet.om.IPortletDefinition</entity-type>
   <creator>system</creator>
-  <description>Toutes_les_categories</description>
+  <description>Toutes les catégories de portlets</description>
   <children>
     <group>Enseignement</group>
     <group>Administration</group>
