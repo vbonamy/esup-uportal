@@ -58,6 +58,10 @@ Notes d'installation :
     * environment.build.ldap.pooled=false
     * environment.build.ldap.uidAttr=uid
 
+* ajout dépendance Postgresql
+  * emacs pom.xml
+    * on décommente le bloc situé sous le commentaire "<!-- POSTGRESQL driver. Uncomment if you need to -->"
+
 * déploiement
   * la première fois : 
     * ant -Dmaven.test.skip=true clean initportal 
