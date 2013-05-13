@@ -28,9 +28,14 @@
      | This bean is the ContextSource instance that will be used to connect to LDAP.
      +-->
     <bean id="ldapContext" class="org.springframework.ldap.core.support.LdapContextSource">
-        <property name="url" value="ldap://localhost:389"/>
-        <property name="userDn" value="cn=admin,dc=univ,dc=fr"/>
-        <property name="password" value="esup"/>
+	<!--<property name="url" value="${environment.build.smartldapgroupstore.ldap.url}" />-->
+	<property name="urls">
+	    <list>
+		<value>${environment.build.smartldapgroupstore.ldap.url}</value>
+	    </list>
+	</property>
+	<property name="userDn" value="${environment.build.smartldapgroupstore.ldap.userName}"/>
+	<property name="password" value="${environment.build.smartldapgroupstore.ldap.password}"/>
     </bean>
 
     <!--
@@ -38,7 +43,7 @@
      | tree.  A value of zero or less (negative) disables this feature.
      +-->
     <bean id="groupsTreeRefreshIntervalSeconds" class="java.lang.Long">
-        <constructor-arg><value>120</value></constructor-arg>
+        <constructor-arg><value>${environment.build.smartldapgroupstore.groupsTreeRefreshIntervalSeconds}</value></constructor-arg>
     </bean>
 
     <!--
@@ -49,7 +54,7 @@
      | it probably means your baseDn isn't correct!
      +-->
     <bean id="baseDn" class="java.lang.String">
-        <constructor-arg><value>ou=groups,dc=univ,dc=fr</value></constructor-arg>
+        <constructor-arg><value>${environment.build.smartldapgroupstore.ldap.baseDn}</value></constructor-arg>
     </bean>
 
     <!--
@@ -61,7 +66,7 @@
      | (http://docs.oracle.com/javase/7/docs/api/java/util/regex/Matcher.html#group%28int%29)
     -->
     <bean id="childGroupKeyRegex" class="java.lang.String">
-        <constructor-arg><value>cn=(.*),ou=groups,dc=univ,dc=fr</value></constructor-arg>
+        <constructor-arg><value>cn=(.*),${environment.build.smartldapgroupstore.ldap.baseDn}</value></constructor-arg>
     </bean>
     <bean id="keyIndexMatchingGroup" class="java.lang.Integer">
         <constructor-arg><value>0</value></constructor-arg>
