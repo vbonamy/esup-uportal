@@ -24,10 +24,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.portlet.PortletMode;
+import javax.portlet.WindowState;
+
 import org.apache.commons.lang.Validate;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.jasig.portal.dao.usertype.FunctionalNameType;
+import org.jasig.portal.portlet.om.IPortletWindowId;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 /**
  * Constructor assumes that Map passed in is completely immutable
@@ -38,12 +44,16 @@ import org.jasig.portal.dao.usertype.FunctionalNameType;
 public abstract class PortletExecutionEvent extends PortalEvent {
     private static final long serialVersionUID = 1L;
     
+    @JsonIgnore
+    private final IPortletWindowId portletWindowId;
     private final String fname;
+    private final WindowState windowState;
+    private final PortletMode portletMode;
     /**
      * Still here to support deserializing old event json
      * @deprecated use {@link #executionTimeNano} instead
      */
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonInclude(Include.NON_NULL)
     @Deprecated
     private Long executionTime;
     private long executionTimeNano;
@@ -51,19 +61,30 @@ public abstract class PortletExecutionEvent extends PortalEvent {
 
     PortletExecutionEvent() {
         super();
+        this.portletWindowId = null;
         this.fname = null;
         this.executionTimeNano = -1;
         this.parameters = Collections.emptyMap();
+        this.windowState = null;
+        this.portletMode = null;
     }
 
-    PortletExecutionEvent(PortalEventBuilder eventBuilder, String fname, long executionTimeNano, Map<String, List<String>> parameters) {
-        super(eventBuilder);
-        FunctionalNameType.validate(fname);
-        Validate.notNull(parameters, "parameters");
+    PortletExecutionEvent(PortletExecutionEventBuilder portletEventBuilder) {
+        super(portletEventBuilder.portalEventBuilder);
         
-        this.fname = fname;
-        this.executionTimeNano = executionTimeNano;
-        this.parameters = parameters;
+        this.portletWindowId = portletEventBuilder.portletWindowId;
+        this.fname = portletEventBuilder.fname;
+        this.executionTimeNano = portletEventBuilder.executionTimeNano;
+        this.parameters = portletEventBuilder.parameters;
+        this.windowState = portletEventBuilder.windowState;
+        this.portletMode = portletEventBuilder.portletMode;
+    }
+    
+    /**
+     * @return The windowId of the portlet that was executed, may return null if this event was loaded from a persistent store
+     */
+    public IPortletWindowId getPortletWindowId() {
+        return portletWindowId;
     }
 
     /**
@@ -98,15 +119,57 @@ public abstract class PortletExecutionEvent extends PortalEvent {
     public Map<String, List<String>> getParameters() {
         return Collections.unmodifiableMap(this.parameters);
     }
+    
+    public WindowState getWindowState() {
+        return windowState;
+    }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
+    public PortletMode getPortletMode() {
+        return portletMode;
+    }
+
     @Override
     public String toString() {
         return super.toString() + 
                 ", fname=" + this.fname + 
                 ", executionTimeNano=" + this.getExecutionTimeNano() +
                 ", parameters=" + this.parameters.size();
+    }
+    
+    protected static class PortletExecutionEventBuilder {
+        private final PortalEventBuilder portalEventBuilder;
+        private final IPortletWindowId portletWindowId;
+        private final String fname;
+        private final long executionTimeNano;
+        private final Map<String, List<String>> parameters;
+        private final WindowState windowState;
+        private final PortletMode portletMode;
+        
+        public PortletExecutionEventBuilder(PortletExecutionEventBuilder portletEventBuilder) {
+            this(portletEventBuilder.portalEventBuilder,
+                portletEventBuilder.portletWindowId,
+                portletEventBuilder.fname,
+                portletEventBuilder.executionTimeNano,
+                portletEventBuilder.parameters,
+                portletEventBuilder.windowState,
+                portletEventBuilder.portletMode);
+        }
+
+        public PortletExecutionEventBuilder(PortalEventBuilder portalEventBuilder, IPortletWindowId portletWindowId,
+                String fname, long executionTimeNano, Map<String, List<String>> parameters, WindowState windowState,
+                PortletMode portletMode) {
+
+            Validate.notNull(portalEventBuilder, "portalEventBuilder");
+            FunctionalNameType.validate(fname);
+            Validate.notNull(parameters, "parameters");
+
+            this.portalEventBuilder = portalEventBuilder;
+            this.portletWindowId = portletWindowId;
+            this.fname = fname;
+            this.executionTimeNano = executionTimeNano;
+            this.parameters = parameters;
+            this.windowState = windowState;
+            this.portletMode = portletMode;
+        }
     }
 }

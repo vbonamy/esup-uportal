@@ -109,6 +109,7 @@
         	<link rel="shortcut icon" href="{$PORTAL_SHORTCUT_ICON}" type="image/x-icon" />
         </xsl:if>
         
+        <xsl:copy-of select="//channel[@fname = 'google-analytics-config']"/>
         <xsl:call-template name="skinResources">
             <xsl:with-param name="path" select="$SKIN_RESOURCES_PATH" />
         </xsl:call-template>
@@ -117,6 +118,10 @@
             up.jQuery = jQuery.noConflict(true);
             up.fluid = fluid;
             up._ = _.noConflict();
+            up._.templateSettings = {
+              interpolate : /{{=(.+?)}}/g, 
+              evaluate    : /{{(.+?)}}/g
+            };
             up.Backbone = Backbone.noConflict();
             fluid = null;
             fluid_1_4 = null;
@@ -172,6 +177,12 @@
             </xsl:choose>
           </div> 
         </div>
+        <script type="text/javascript">
+            up.analytics = up.analytics || {};
+            up.analytics.host = '<xsl:value-of select="$HOST_NAME" />';
+            up.analytics.portletData = <portlet-analytics-data/>;
+            up.analytics.pageData = <page-analytics-data/>;
+        </script>
       </body>
     </html>
   </xsl:template>

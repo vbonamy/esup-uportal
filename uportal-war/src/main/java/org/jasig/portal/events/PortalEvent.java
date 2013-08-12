@@ -21,18 +21,20 @@ package org.jasig.portal.events;
 
 import java.util.Date;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang.Validate;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonMethod;
-import org.codehaus.jackson.annotate.JsonTypeInfo;
-import org.codehaus.jackson.annotate.JsonTypeInfo.Id;
 import org.jasig.portal.security.IPerson;
 import org.jasig.portal.utils.SerializableObject;
 import org.joda.time.DateTime;
 import org.springframework.context.ApplicationEvent;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 
 /**
  * ApplicationEvent specific to the Portal.
@@ -42,7 +44,7 @@ import org.springframework.context.ApplicationEvent;
  * @since 2.6
  *
  */
-@JsonAutoDetect(value=JsonMethod.FIELD, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, isGetterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
 @JsonTypeInfo(use=Id.MINIMAL_CLASS)
 @JsonIgnoreProperties(value="source")
 public abstract class PortalEvent extends ApplicationEvent {
@@ -54,6 +56,8 @@ public abstract class PortalEvent extends ApplicationEvent {
     private final String eventSessionId;
     private final String userName;
     @JsonIgnore
+    private final HttpServletRequest portalRequest;
+    @JsonIgnore
     private final IPerson person;
     @JsonIgnore
     private DateTime timestampAsDate;
@@ -64,6 +68,7 @@ public abstract class PortalEvent extends ApplicationEvent {
         this.eventSessionId = null;
         this.person = null;
         this.userName = null;
+        this.portalRequest = null;
     }
 
     protected PortalEvent(PortalEventBuilder eventBuilder) {
@@ -73,6 +78,7 @@ public abstract class PortalEvent extends ApplicationEvent {
         this.eventSessionId = eventBuilder.eventSessionId;
         this.person = eventBuilder.person;
         this.userName = this.person.getUserName();
+        this.portalRequest = eventBuilder.portalRequest;
     }
     
     /**
@@ -116,6 +122,13 @@ public abstract class PortalEvent extends ApplicationEvent {
         return this.person;
     }
 
+    /**
+     * @return The portal's HttpServletRequest for the fired event, may return null if this event was loaded from a persistent store
+     */
+    public HttpServletRequest getPortalRequest() {
+        return portalRequest;
+    }
+
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
@@ -136,15 +149,17 @@ public abstract class PortalEvent extends ApplicationEvent {
         private final String serverName;
         private final String eventSessionId;
         private final IPerson person;
+        private final HttpServletRequest portalRequest;
         
         protected PortalEventBuilder(PortalEventBuilder portalEventBuilder) {
             this(portalEventBuilder.source, 
                     portalEventBuilder.serverName, 
                     portalEventBuilder.eventSessionId, 
-                    portalEventBuilder.person);
+                    portalEventBuilder.person,
+                    portalEventBuilder.portalRequest);
         }
 
-        protected PortalEventBuilder(Object source, String serverName, String eventSessionId, IPerson person) {
+        protected PortalEventBuilder(Object source, String serverName, String eventSessionId, IPerson person, HttpServletRequest portalRequest) {
             Validate.notNull(source, "source");
             Validate.notNull(serverName, "serverId");
             Validate.notNull(eventSessionId, "eventSessionId");
@@ -154,6 +169,27 @@ public abstract class PortalEvent extends ApplicationEvent {
             this.serverName = serverName;
             this.eventSessionId = eventSessionId;
             this.person = person;
+            this.portalRequest = portalRequest;
+        }
+
+        protected Object getSource() {
+            return source;
+        }
+
+        protected String getServerName() {
+            return serverName;
+        }
+
+        protected String getEventSessionId() {
+            return eventSessionId;
+        }
+
+        protected IPerson getPerson() {
+            return person;
+        }
+
+        protected HttpServletRequest getPortalRequest() {
+            return portalRequest;
         }
     }
 }

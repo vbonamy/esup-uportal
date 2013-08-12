@@ -1347,7 +1347,7 @@
   float: left;
   height: 16px;
   width: 16px;
-  background-image: url("../common/images/portlet_icons_flat.png");
+  background-image: url("../common/images/portlet_icons_with_print_flat.png");
   background-repeat: no-repeat;
   background-position: 0 0;
 }
@@ -1410,6 +1410,12 @@
 }
 .up .up-portlet-wrapper .up-portlet-titlebar .return:hover .icon, .up .up-portlet-wrapper .up-portlet-titlebar .return:focus .icon {
   background-position: -144px -16px;
+}
+.up .up-portlet-wrapper .up-portlet-titlebar .print .icon {
+  background-position: -160px 0px;
+}
+.up .up-portlet-wrapper .up-portlet-titlebar .print:hover .icon, .up .up-portlet-wrapper .up-portlet-titlebar .print:focus .icon {
+  background-position: -160px -16px;
 }
 .up .up-portlet-wrapper .up-portlet-content-wrapper {
   margin: 0;
@@ -1487,6 +1493,8 @@
 .up .up-portlet-wrapper.locked .up-portlet-titlebar h2 a {
   color: #8f8f8f;
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+  padding-left: 21px;
+  background: transparent url(/ResourceServingWebapp/rs/tango/0.8.90/16x16/emblems/emblem-readonly.png) 0 0 no-repeat;
 }
 .up .up-portlet-wrapper.locked .up-portlet-titlebar h2 a:hover, .up .up-portlet-wrapper.locked .up-portlet-titlebar h2 a:focus {
   color: #4682b4;
@@ -1497,10 +1505,6 @@
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
-}
-.up .up-portlet-wrapper.locked .up-portlet-titlebar h2 {
-  padding-left: 21px;
-  background: transparent url(/ResourceServingWebapp/rs/tango/0.8.90/16x16/emblems/emblem-readonly.png) 0 0 no-repeat;
 }
 .up .dashboard .up-portlet-controls {
   top: 0;

@@ -19,8 +19,6 @@
 
 package org.jasig.portal.events;
 
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author Eric Dalquist
@@ -33,13 +31,10 @@ public final class PortletActionExecutionEvent extends PortletExecutionEvent {
     private PortletActionExecutionEvent() {
     }
 
-    PortletActionExecutionEvent(PortalEventBuilder eventBuilder, String fname, long executionTime, Map<String, List<String>> parameters) {
-        super(eventBuilder, fname, executionTime, parameters);
+    PortletActionExecutionEvent(PortletExecutionEventBuilder eventBuilder) {
+        super(eventBuilder);
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
         return super.toString() + "]";

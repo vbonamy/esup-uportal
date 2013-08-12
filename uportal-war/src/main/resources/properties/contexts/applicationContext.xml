@@ -84,13 +84,13 @@
     </bean>
     
     <util:map id="productVersions" value-type="org.jasig.portal.version.om.Version">
-    	<entry value="4.0.10">
+    	<entry value="4.0.12">
     		<key><util:constant static-field="org.jasig.portal.jpa.BasePortalJpaDao.PERSISTENCE_UNIT_NAME"/></key>
     	</entry>
-    	<entry value="4.0.10">
+    	<entry value="4.0.12">
     		<key><util:constant static-field="org.jasig.portal.jpa.BaseRawEventsJpaDao.PERSISTENCE_UNIT_NAME"/></key>
     	</entry>
-    	<entry value="4.0.10">
+    	<entry value="4.0.12">
     		<key><util:constant static-field="org.jasig.portal.jpa.BaseAggrEventsJpaDao.PERSISTENCE_UNIT_NAME"/></key>
     	</entry>
     </util:map>
@@ -105,11 +105,16 @@
                 <entry key="org.joda.time.ReadablePeriod"><bean class="org.jasig.portal.spring.properties.ReadablePeriodEditor" /></entry>
                 <entry key="org.joda.time.ReadableDuration"><bean class="org.jasig.portal.spring.properties.ReadableDurationEditor" /></entry>
                 <entry key="org.jasig.portal.version.om.Version"><bean class="org.jasig.portal.spring.properties.VersionEditor"/></entry>
+                <entry key="com.fasterxml.jackson.databind.JsonNode">
+                    <bean class="org.jasig.portal.spring.properties.MappingJackson2JsonTreeEditor">
+                        <property name="objectMapper" ref="objectMapper" />
+                    </bean>
+                </entry>
             </map>
         </property>
     </bean>
 
-    <bean class="org.springframework.beans.factory.config.CustomEditorConfigurer">
+    <bean id="customEditorConfigurer" class="org.springframework.beans.factory.config.CustomEditorConfigurer">
         <property name="propertyEditorRegistrars">
             <list>
                 <ref bean="portalPropertyEditorRegistrar"/>
@@ -147,4 +152,5 @@
         </property>
     </bean>
     
+    <bean id="objectMapper" class="org.jasig.portal.spring.beans.factory.ObjectMapperFactoryBean" />
 </beans>

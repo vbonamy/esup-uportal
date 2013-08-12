@@ -158,7 +158,7 @@ up.jQuery(function() {
 
         var submitForm = function(form){
             if (!principalSuggest.getValue() || !permissionSuggest.getValue()) {
-                alert("<spring:message code="please.choose.principal.and.permission.from.the.autocomplete.menus"/>");
+                alert('<spring:message code="please.choose.principal.and.permission.from.the.autocomplete.menus" htmlEscape="false" javaScriptEscape="true"/>');
                 return false;
             }
             form.principal.value = principalSuggest.getValue();
@@ -172,19 +172,22 @@ up.jQuery(function() {
                 initialText: "John",
                 searchFunction: function(searchterm) {
                     var principals = [];
-                    $.ajax({
-                       url: "<c:url value="/api/permissions/principals.json"/>",
-                       data: { q: searchterm },
-                       async: false,
-                       success: function (data) {
-                           $(data.groups).each( function (idx, group) {
-                               principals.push({ value: group.principalString, text: group.name || group.keys });
-                           });
-                           $(data.people).each( function (idx, person) {
-                               principals.push({ value: person.principalString, text: person.name || person.id });
-                           });
-                       }
-                    });
+                    if (searchterms.length > 2) {
+                       $.ajax({
+                          url: "<c:url value="/api/permissions/principals.json"/>",
+                          data: { q: searchterm },
+                          async: false,
+                          timeout: '10000',
+                          success: function (data) {
+                              $(data.groups).each( function (idx, group) {
+                                  principals.push({ value: group.principalString, text: group.name || group.keys });
+                              });
+                              $(data.people).each( function (idx, person) {
+                                  principals.push({ value: person.principalString, text: person.name || person.id });
+                              });
+                          }
+                       });
+                    }
                     return principals;
                 }
             }
@@ -193,7 +196,7 @@ up.jQuery(function() {
         var permissionSuggest = up.Autocomplete(
             "#${n}permissionSuggest", 
             {
-                initialText: "<spring:message code="permission"/>",
+                initialText: '<spring:message code="permission" htmlEscape="false" javaScriptEscape="true"/>',
                 searchFunction: function(searchterm) {
                     var principals = [];
                     $.ajax({

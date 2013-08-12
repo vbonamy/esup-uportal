@@ -18,12 +18,10 @@
  */
 package org.jasig.portal.events;
 
-import java.util.List;
-import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.namespace.QName;
 
+import org.jasig.portal.portlet.om.IPortletWindowId;
 import org.jasig.portal.portlet.rendering.worker.IPortletExecutionWorker;
 import org.jasig.portal.url.IPortalRequestInfo;
 
@@ -36,27 +34,31 @@ public interface IPortletExecutionEventFactory {
     
     //********** Portlet Hung Events **********//
     
-    public void publishPortletHungEvent(HttpServletRequest request, Object source,
+    void publishPortletHungEvent(HttpServletRequest request, Object source,
             IPortletExecutionWorker<?> worker);
     
-    public void publishPortletHungCompleteEvent(Object source,
+    void publishPortletHungCompleteEvent(Object source,
             IPortletExecutionWorker<?> worker);
     
     //********** Portlet Execution Events **********//
-    
-    public void publishPortletActionExecutionEvent(HttpServletRequest request, Object source, 
-            String fname, long executionTime, Map<String, List<String>> parameters);
-    public void publishPortletEventExecutionEvent(HttpServletRequest request, Object source, 
-            String fname, long executionTime, Map<String, List<String>> parameters, QName eventName);
-    public void publishPortletRenderHeaderExecutionEvent(HttpServletRequest request, Object source, 
-            String fname, long executionTime, Map<String, List<String>> parameters, boolean targeted, boolean usedPortalCache);
-    public void publishPortletRenderExecutionEvent(HttpServletRequest request, Object source, 
-            String fname, long executionTime, Map<String, List<String>> parameters, boolean targeted, boolean usedPortalCache);
-    public void publishPortletResourceExecutionEvent(HttpServletRequest request, Object source, 
-            String fname, long executionTime, Map<String, List<String>> parameters, String resourceId, boolean usedBrowserCache, boolean usedPortalCache);
-    
+
+    void publishPortletActionExecutionEvent(HttpServletRequest request, Object source,
+            IPortletWindowId portletWindowId, long executionTime);
+
+    void publishPortletEventExecutionEvent(HttpServletRequest request, Object source, IPortletWindowId portletWindowId,
+            long executionTime, QName eventName);
+
+    void publishPortletRenderHeaderExecutionEvent(HttpServletRequest request, Object source,
+            IPortletWindowId portletWindowId, long executionTime, boolean targeted, boolean cached);
+
+    void publishPortletRenderExecutionEvent(HttpServletRequest request, Object source,
+            IPortletWindowId portletWindowId, long executionTime, boolean targeted, boolean cached);
+
+    void publishPortletResourceExecutionEvent(HttpServletRequest request, Object source,
+            IPortletWindowId portletWindowId, long executionTime, boolean usedBrowserCache, boolean usedPortalCache);
+
     //********** Portal Rendering Pipeline Events **********//
     
-    public void publishPortalRenderEvent(HttpServletRequest request, Object source, String requestPathInfo, long executionTime,
+    void publishPortalRenderEvent(HttpServletRequest request, Object source, String requestPathInfo, long executionTime,
             IPortalRequestInfo portalRequestInfo);
 }

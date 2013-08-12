@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal.portlets-overlay</groupId>
         <artifactId>uportal-portlets-overlay</artifactId>
-        <version>4.0.11</version>
+        <version>4.0.12</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -74,13 +74,6 @@
             <plugin>
                 <groupId>org.apache.portals.pluto</groupId>
                 <artifactId>maven-pluto-plugin</artifactId>
-            </plugin>
-            <!-- Plug-in to add lifecycles to support db-init and data-import -->
-            <plugin>
-                <groupId>org.jasig.portal.maven</groupId>
-                <artifactId>uportal-maven-plugin</artifactId>
-                <!-- extensions must be set to true to pick up the custom phases -->
-                <extensions>true</extensions>
             </plugin>
             <!-- To drop and recreate the calendar db tables, use mvn db-init -->
             <plugin>

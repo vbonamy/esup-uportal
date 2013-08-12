@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal</groupId>
         <artifactId>uportal-parent</artifactId>
-        <version>4.0.11</version>
+        <version>4.0.12</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -43,6 +43,16 @@
         <dependency>
             <groupId>org.jasig.cas.client</groupId>
             <artifactId>cas-client-core</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jaxb-annotations</artifactId>
         </dependency>
         
         <dependency>
@@ -188,26 +198,17 @@
         <dependency>
             <groupId>net.sf.json-lib</groupId>
             <artifactId>json-lib-ext-spring</artifactId>
+            <exclusions>
+            	<exclusion>
+            		<groupId>javax.servlet</groupId>
+  					<artifactId>servlet-api</artifactId>
+            	</exclusion>
+            </exclusions>
         </dependency>
         
         <dependency>
             <groupId>org.jvnet.jaxb2_commons</groupId>
             <artifactId>jaxb2-basics-runtime</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-core-asl</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-xc</artifactId>
         </dependency>
         
         <dependency>
@@ -559,12 +560,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jasig.cas3.extensions</groupId>
-            <artifactId>clearpass-integration-uportal</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
             <scope>runtime</scope>
@@ -697,6 +692,7 @@
                     <include>properties/contexts/personDirectoryContext.xml</include>
                     <include>properties/groups/SmartLdapGroupStoreConfig.xml</include>
                     <include>properties/i18n/*.properties</include>
+                    <include>properties/groups/PAGSGroupStoreConfig.xml</include>
                 </includes>
             </resource>
             <!-- 
@@ -710,6 +706,7 @@
                     <exclude>properties/rdbm.properties</exclude>
                     <exclude>properties/security.properties</exclude>
                     <exclude>properties/contexts/userContext.xml</exclude>
+                    <exclude>properties/groups/PAGSGroupStoreConfig.xml</exclude>
                 </excludes>
             </resource>
             <resource>

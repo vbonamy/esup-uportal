@@ -33,11 +33,14 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.portlet.ActionRequest;
+import javax.portlet.PortletMode;
+import javax.portlet.WindowState;
 import javax.xml.namespace.QName;
 
 import org.jasig.portal.concurrency.CallableWithoutResult;
 import org.jasig.portal.concurrency.FunctionWithoutResult;
 import org.jasig.portal.events.handlers.db.IPortalEventDao;
+import org.jasig.portal.mock.portlet.om.MockPortletWindowId;
 import org.jasig.portal.security.SystemPerson;
 import org.jasig.portal.test.BaseRawEventsJpaDaoTest;
 import org.joda.time.DateTime;
@@ -216,7 +219,7 @@ public class JpaPortalEventStoreTest extends BaseRawEventsJpaDaoTest {
     private static final long EVENT_DELAY = 100;
     protected List<PortalEvent> generateEvents() throws Exception {
         final String sessionId = "1234567890123_system_AAAAAAAAAAA";
-        final PortalEvent.PortalEventBuilder eventBuilder = new PortalEvent.PortalEventBuilder(this, "example.com", sessionId, SystemPerson.INSTANCE);
+        final PortalEvent.PortalEventBuilder eventBuilder = new PortalEvent.PortalEventBuilder(this, "example.com", sessionId, SystemPerson.INSTANCE, null);
         
         final Set<String> groups = ImmutableSet.of("Student", "Employee");
         final Map<String, List<String>> attributes = ImmutableMap.of("username", (List<String>)ImmutableList.of("system"), "roles", (List<String>)ImmutableList.of("student", "employee"));
@@ -240,15 +243,16 @@ public class JpaPortalEventStoreTest extends BaseRawEventsJpaDaoTest {
         Thread.sleep(EVENT_DELAY);
         events.add(new PortletDeletedFromLayoutPortalEvent(eventBuilder, SystemPerson.INSTANCE, 1, "n24", "portletA"));
         
+        final PortletExecutionEvent.PortletExecutionEventBuilder portletExecutionEventBuilder = new PortletExecutionEvent.PortletExecutionEventBuilder(eventBuilder, new MockPortletWindowId("pw1"), "fname", 12345, Collections.EMPTY_MAP, WindowState.NORMAL, PortletMode.VIEW);
         
         Thread.sleep(EVENT_DELAY);
-        events.add(new PortletActionExecutionEvent(eventBuilder, "portletA", 5, ImmutableMap.<String, List<String>>of(ActionRequest.ACTION_NAME, ImmutableList.of("foobar"))));
+        events.add(new PortletActionExecutionEvent(portletExecutionEventBuilder));
         Thread.sleep(EVENT_DELAY);
-        events.add(new PortletEventExecutionEvent(eventBuilder, "portletA", 7, ImmutableMap.<String, List<String>>of(), new QName("http://www.jasig.org/foo", "event", "e")));
+        events.add(new PortletEventExecutionEvent(portletExecutionEventBuilder, new QName("http://www.jasig.org/foo", "event", "e")));
         Thread.sleep(EVENT_DELAY);
-        events.add(new PortletRenderExecutionEvent(eventBuilder, "portletA", 13, ImmutableMap.<String, List<String>>of(), true, false));
+        events.add(new PortletRenderExecutionEvent(portletExecutionEventBuilder, true, false));
         Thread.sleep(EVENT_DELAY);
-        events.add(new PortletResourceExecutionEvent(eventBuilder, "portletA", 17, ImmutableMap.<String, List<String>>of(), "someImage.jpg", false, false));
+        events.add(new PortletResourceExecutionEvent(portletExecutionEventBuilder, "someImage.jpg", false, false));
         
         Thread.sleep(EVENT_DELAY);
         events.add(new LogoutEvent(eventBuilder));

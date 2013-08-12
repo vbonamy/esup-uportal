@@ -19,8 +19,15 @@
 
 package org.jasig.portal.utils.jsp;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+
+import org.jasig.portal.spring.beans.factory.ObjectMapperFactoryBean;
+
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * JSP Static utility functions
@@ -29,6 +36,21 @@ import java.util.Map;
  * @version $Revision$
  */
 public class Util {
+    private static final ObjectMapper OBJECT_MAPPER;
+    static {
+        ObjectMapper mapper;
+        try {
+            final ObjectMapperFactoryBean omfb = new ObjectMapperFactoryBean();
+            omfb.afterPropertiesSet();
+            mapper = omfb.getObject();
+        }
+        catch (Exception e) {
+            mapper = new ObjectMapper();
+            mapper.findAndRegisterModules();
+        }
+        
+        OBJECT_MAPPER = mapper;
+    }
     
     public static boolean contains(Collection<?> coll, Object o) {
         return coll != null && coll.contains(o);
@@ -49,4 +71,7 @@ public class Util {
         return isInstanceOf;
     }
 
+    public static String json(Object obj) throws JsonGenerationException, JsonMappingException, IOException {
+        return OBJECT_MAPPER.writeValueAsString(obj);
+    }
 }
