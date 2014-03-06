@@ -60,6 +60,9 @@ var up = up || {};
                     .text(that.options.messages.addValue)
                     .attr("paramName", name)
                     .click(function(){ addValue($(this), that); })
+                    .append(
+                        $(document.createElement("input")).attr({"name" : getParameterPath(name, that), "type" : "text" }).hide()
+                     )
             );
 
             // add an input field for an initial single value
@@ -70,7 +73,7 @@ var up = up || {};
                 $(document.createElement("input")).attr({"name" : paramPath, "type" : "text" })
             );
         }
-        
+
         // add the parameter override checkbox
         if (that.options.useAuxiliaryCheckbox) {
             checkbox = $(document.createElement("input")).attr("type", "checkbox")
@@ -80,8 +83,8 @@ var up = up || {};
         
         // add the remove parameter link
         tr.append($(document.createElement("td")).append(
-            $(document.createElement("a")).text(that.options.messages.remove)
-                .addClass(that.options.displayClasses.removeItemLink)
+            $(document.createElement("a")).text(that.options.messages.removeParameter)
+                .addClass(that.options.displayClasses.deleteItemLink)
                 .attr("href", "javascript:;")
                 .click(function(){ removeParameter($(this), that); })
         ));
@@ -174,6 +177,7 @@ var up = up || {};
         },
         messages: {
             remove: 'Remove',
+            removeParameter: 'Delete Preference',
             addValue: 'Add value'
         },
         selectors: {

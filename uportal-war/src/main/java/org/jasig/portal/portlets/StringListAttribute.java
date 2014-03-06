@@ -28,18 +28,21 @@ import org.apache.commons.lang.StringUtils;
 
 public class StringListAttribute implements Serializable {
     private static final long serialVersionUID = 1L;
+    public static final List<String> LIST_EMTPY_ITEMS = Arrays.asList("", null);
     private List<String> value = new ArrayList<String>();
     
     public StringListAttribute() {
     }
     
     public StringListAttribute(List<String> value) {
+        removeAllEmptyItems(value);
         this.value = value;
     }
 
     public StringListAttribute(String[] value) {
-    	List<String> values = new ArrayList<String>();
+        List<String> values = new ArrayList<String>();
         values.addAll(Arrays.<String>asList(value));
+        removeAllEmptyItems(values);
         this.value = values;
     }
 
@@ -73,15 +76,21 @@ public class StringListAttribute implements Serializable {
      * @param value the value to set
      */
     public void setValue(List<String> value) {
+        removeAllEmptyItems(value);
         this.value = value;
     }
 
     public void setValue(String[] value) {
-    	List<String> values = new ArrayList<String>();
+        List<String> values = new ArrayList<String>();
         values.addAll(Arrays.<String>asList(value));
+        removeAllEmptyItems(values);
         this.value = values;
     }
-
+    
+    private void removeAllEmptyItems(List<String> value) {
+        value.removeAll(LIST_EMTPY_ITEMS);
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

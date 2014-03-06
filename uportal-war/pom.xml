@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal</groupId>
         <artifactId>uportal-parent</artifactId>
-        <version>4.0.12</version>
+        <version>4.0.13</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -786,7 +786,7 @@
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-Xmx512m -XX:MaxPermSize=512m</argLine>
+                    <argLine>-Xmx512m -XX:MaxPermSize=512m -Duser.timezone=UTC</argLine>
                     <systemPropertyVariables>
                         <org.jasig.portal.test>true</org.jasig.portal.test>
                     </systemPropertyVariables>

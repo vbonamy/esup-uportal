@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 
     Licensed to Jasig under one or more contributor license
@@ -19,4 +20,25 @@
 
 -->
 
-<Context crossContext="true"/>
+<project name="${project.name} ${project.version}">
+    <bannerLeft>
+        <name>uPortal</name>
+        <src>http://www.jasig.org/sites/jasig.webchuckhosting.com/files/uportalLogo.jpg</src>
+        <href>http://www.jasig.org/uportal</href>
+    </bannerLeft>
+    <bannerRight>
+        <name>JA-SIG</name>
+        <src>http://www.jasig.org/sites/all/themes/jasig2/logo.png</src>
+        <href>http://www.jasig.org</href>
+    </bannerRight>
+    <publishDate position="left" format="MM-dd-yy hh:mm zz"/>
+
+    <body>
+        <breadcrumbs>
+          <item name="Home" href="${project.url}"/>
+        </breadcrumbs>
+    
+        <menu ref="modules" />
+        <menu ref="reports" />
+    </body>
+</project>

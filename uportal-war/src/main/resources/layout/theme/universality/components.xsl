@@ -478,11 +478,20 @@
             </xsl:with-param>
         </xsl:call-template>
       </xsl:variable>
-      <a href="{$subNavUrl}" title="{@title}">  <!-- Navigation item link. -->
-        <span>
-          {up-portlet-title(<xsl:value-of select="@ID" />)}
-        </span>
-      </a>
+      <xsl:element name="a"><!-- Navigation item link. -->
+        <xsl:attribute name="title"><xsl:value-of select="@title" /></xsl:attribute>
+        <xsl:choose>
+          <xsl:when test="@alternativeMaximixedLink and string-length(@alternativeMaximixedLink) > 0">
+            <xsl:attribute name="href"><xsl:value-of select="@alternativeMaximixedLink" /></xsl:attribute>
+            <xsl:attribute name="target">_blank</xsl:attribute>
+            <xsl:attribute name="class">externalLink</xsl:attribute>
+          </xsl:when>
+          <xsl:otherwise>
+           <xsl:attribute name="href"><xsl:value-of select="$subNavUrl" /></xsl:attribute>
+          </xsl:otherwise>
+        </xsl:choose>
+        <span>{up-portlet-title(<xsl:value-of select="@ID"/>)}</span>
+      </xsl:element>
     </li>
   </xsl:template>
   <!-- ========================================== -->
@@ -494,7 +503,7 @@
   -->
   <xsl:template name="dlm.sidebar.links">
     <xsl:for-each select="/layout/sidebar/sidebarGroup">
-      <xsl:if test="count(//sidebarChannel) > 0">
+      <xsl:if test="count(./sidebarChannel) > 0">
         <div id="portalSidebarGroupLinks{position()}" class="fl-widget">
           <div class="fl-widget-inner">
             <div class="fl-widget-titlebar">
@@ -542,11 +551,20 @@
           </xsl:with-param>
         </xsl:call-template>
       </xsl:variable>
-      <a href="{$subNavUrl}" title="{@title}">  <!-- Navigation item link. -->
-        <span>
-          {up-portlet-title(<xsl:value-of select="@ID" />)}
-        </span>
-      </a>
+      <xsl:element name="a"><!-- Navigation item link. -->
+        <xsl:attribute name="title"><xsl:value-of select="@title" /></xsl:attribute>
+        <xsl:choose>
+          <xsl:when test="@alternativeMaximixedLink and string-length(@alternativeMaximixedLink) > 0">
+            <xsl:attribute name="href"><xsl:value-of select="@alternativeMaximixedLink" /></xsl:attribute>
+            <xsl:attribute name="target">_blank</xsl:attribute>
+            <xsl:attribute name="class">externalLink</xsl:attribute>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:attribute name="href"><xsl:value-of select="$subNavUrl" /></xsl:attribute>
+          </xsl:otherwise>
+        </xsl:choose>
+        <span>{up-portlet-title(<xsl:value-of select="@ID"/>)}</span>
+      </xsl:element>
     </li>
   </xsl:template>
   <!-- =============================================== -->

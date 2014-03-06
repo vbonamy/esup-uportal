@@ -195,7 +195,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
               <table>
                 <thead>
                   <tr>
-                      <th><spring:message code="parameter"/></th>
+                      <th><spring:message code="preference"/></th>
                       <th><spring:message code="value"/></th>
                       <th><spring:message code="read.only.prevents.user.customization"/></th>
                     <th></th>
@@ -214,6 +214,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                  <a class="delete-parameter-value-link" href="javascript:;">Remove</a>
                                 </div>
                             </c:forEach>
+                            <input type="hidden" name="portletPreferences['${fn:escapeXml(name)}'].value" value="" />
                             <a class="add-parameter-value-link" href="javascript:;" paramName="${fn:escapeXml(name)}">Add value</a>
                         </td>
                         <td>
@@ -285,6 +286,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                             multivalued: false,
                             messages: {
                               remove: '<spring:message code="remove" htmlEscape="false" javaScriptEscape="true"/>',
+                              removeParameter: '<spring:message code="setParameters.deleteButton" htmlEscape="false" javaScriptEscape="true"/>',
                               addValue: '<spring:message code="add.value" htmlEscape="false" javaScriptEscape="true"/>'
                             }
 					      }
@@ -300,6 +302,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                             multivalued: true,
                             messages: {
                               remove: '<spring:message code="remove" htmlEscape="false" javaScriptEscape="true"/>',
+                              removeParameter: '<spring:message code="setParameters.deleteButton" htmlEscape="false" javaScriptEscape="true"/>',
                               addValue: '<spring:message code="add.value" htmlEscape="false" javaScriptEscape="true"/>'
                             }
                           }

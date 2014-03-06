@@ -12,6 +12,7 @@
 	&.dashboard-grid {
 		.portal-nav {
 			/* Main menu grid of apps and web views. */
+			clear: both;
 			width: 300px;
 			margin: 0 auto;
 			text-align: center;
@@ -54,6 +55,8 @@
 			background-image: none;
 			background: white;
 			.portal-nav {
+                clear: both;
+
 				.ui-listview {
 					li {
 						// reset borders
