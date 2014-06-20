@@ -51,7 +51,7 @@ public class PortalPermissionEvaluator implements PermissionEvaluator {
     public void setGroupListHelper(IGroupListHelper groupListHelper) {
         this.groupListHelper = groupListHelper;
     }
-    
+
     private AuthorizationService authorizationService;
 
     @Override
@@ -65,10 +65,8 @@ public class PortalPermissionEvaluator implements PermissionEvaluator {
                 userDetails.getUsername(), IPerson.class);
 
         String targetId = null;
-        
-        // if the target object is a string, assume it already represents a 
-        // valid uPortal permission target
         if (targetDomainObject instanceof String) {
+            // Assume it already represents a valid uPortal permission target
             targetId = (String) targetDomainObject;
         } else if (targetDomainObject instanceof JsonEntityBean) {
             // JsonEntityBean objects now have a targetString member
@@ -88,12 +86,11 @@ public class PortalPermissionEvaluator implements PermissionEvaluator {
             String activityName = (String) permission;
             activity = getViewActivity(activityName, (JsonEntityBean) targetDomainObject);
         }
-        
 
         else {
             throw new RuntimeException("Unable to determine permission target id for type " + targetDomainObject.getClass());
         }
-        
+
         if (activity != null) {
             final boolean hasPermission = principal.hasPermission(activity.getOwnerFname(), activity.getActivityFname(), targetId);
             return hasPermission;
