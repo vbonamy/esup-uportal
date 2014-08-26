@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal.portlets-overlay</groupId>
         <artifactId>uportal-portlets-overlay</artifactId>
-        <version>4.0.14</version>
+        <version>4.0.15</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -155,6 +155,20 @@
             <resource>
                 <filtering>true</filtering>
                 <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/webapp/WEB-INF</directory>
+                <includes>
+                    <include>cas.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/webapp/WEB-INF/spring-configuration</directory>
+                <includes>
+                    <include>clearpass-configuration.xml</include>
+                </includes>
             </resource>
         </resources>
         <plugins>
