@@ -27,8 +27,6 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.jasig.portal.utils.Servlet3WrapperUtils;
-
 
 /**
  * Scopes set request attributes to just this request.
@@ -45,27 +43,14 @@ public class PortletHttpServletRequestWrapper extends AbstractHttpServletRequest
     
     private final Map<String, Object> attributes = new LinkedHashMap<String, Object>();
     
-    /**
-     * Needed with the Servlet 3.0 bridge so that returned references to "this" are actually
-     * references to the wrapper
-     */
-    private HttpServletRequest servlet3Wrapper;
-    
-    public static HttpServletRequest create(HttpServletRequest request) {
-        final PortletHttpServletRequestWrapper proxy = new PortletHttpServletRequestWrapper(request);
-        final HttpServletRequest wrapper = Servlet3WrapperUtils.addServlet3Wrapper(proxy, request);
-        proxy.servlet3Wrapper = wrapper;
-        return wrapper;
-    }
-    
-    private PortletHttpServletRequestWrapper(HttpServletRequest httpServletRequest) {
+    public PortletHttpServletRequestWrapper(HttpServletRequest httpServletRequest) {
         super(httpServletRequest);
     }
 
     @Override
     public Object getAttribute(String name) {
         if (ATTRIBUTE__HTTP_SERVLET_REQUEST.equals(name)) {
-            return servlet3Wrapper;
+            return this;
         }
         
         final Object attribute = this.attributes.get(name);

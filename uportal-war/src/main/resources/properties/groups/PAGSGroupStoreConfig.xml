@@ -23,7 +23,9 @@
 <!DOCTYPE Group-Store PUBLIC "-//uPortal//PAGSGroupStore/EN" "PAGSGroupStore.dtd">
 
 <!--
-    PAGSGroupStoreConfig.xml is used to configure the person attributes group store.
+    PAGSGroupStoreConfig.xml is used to configure the person attributes group store when using the
+    XML PAGS implementation (configured in compositeGroupService.xml).
+    
     See PAGSGroupStore.dtd for xml grammar.
 
     To control the attributes that are available, see ../personDirectory.xml.
@@ -63,6 +65,7 @@
       <member-key>authenticated_users</member-key>
       <member-key>desktop_device_access</member-key>
       <member-key>mobile_device_access</member-key>
+      <member-key>respondr_theme_users</member-key>
     </members>
   </group>
 
@@ -132,7 +135,22 @@
     </selection-test>
   </group>
 
-    <!--==================== Other Examples ====================-->
+  <group>
+    <group-key>respondr_theme_users</group-key>
+    <group-name>Respondr Theme Users</group-name>
+    <group-description>User Access by Theme</group-description>
+    <selection-test>
+      <test-group>
+        <test>
+          <attribute-name></attribute-name>
+          <tester-class>org.jasig.portal.groups.pags.testers.ThemeNameEqualsIgnoreCaseTester</tester-class>
+          <test-value>respondr</test-value>
+        </test>
+      </test-group>
+    </selection-test>
+  </group>
+
+<!--==================== Other Examples ====================-->
 
 
 <!--

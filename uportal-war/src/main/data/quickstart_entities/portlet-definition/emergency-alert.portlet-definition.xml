@@ -23,7 +23,7 @@
     <title>Message d'alerte</title>
     <name>Message d'alerte</name>
     <fname>emergency-alert</fname>
-    <desc>Portlet d'alerte d'Apereo</desc>
+    <desc>Portlet d'alerte d'Aperero</desc>
     <type>Portlet</type>
     <timeout>20000</timeout>
     <portlet-descriptor>
@@ -75,6 +75,11 @@
         <name>blockImpersonation</name>
         <value>false</value>
     </parameter>
+    <portlet-preference>
+        <name>EmergencyAlertController.usePortalJsLibs</name>
+        <readOnly>false</readOnly>
+        <value>false</value>
+    </portlet-preference>
     <portlet-preference>
         <name>DemoNotificationService.locations</name>
         <readOnly>false</readOnly>

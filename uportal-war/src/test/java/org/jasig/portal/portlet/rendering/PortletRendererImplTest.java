@@ -36,7 +36,6 @@ import java.util.Map;
 import javax.portlet.CacheControl;
 import javax.portlet.PortletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import junit.framework.Assert;
 
@@ -56,6 +55,8 @@ import org.jasig.portal.portlet.om.IPortletWindowId;
 import org.jasig.portal.portlet.registry.IPortletWindowRegistry;
 import org.jasig.portal.url.IPortalRequestInfo;
 import org.jasig.portal.url.IUrlSyntaxProvider;
+import org.jasig.portal.utils.web.PortletHttpServletRequestWrapper;
+import org.jasig.portal.utils.web.PortletHttpServletResponseWrapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -140,7 +141,7 @@ public class PortletRendererImplTest {
 		handler = new RenderPortletOutputHandler("UTF-8");
 		portletRenderer.doRenderMarkup(portletWindowId, request, response, handler);
 		
-		verify(portletContainer, times(2)).doRender(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
+		verify(portletContainer, times(2)).doRender(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletHttpServletResponseWrapper.class));
 		verify(portletCacheControlService, times(2)).getPortletRenderState(request, portletWindowId);
 		verify(portletCacheControlService, times(2)).getCacheSizeThreshold();
 		verify(portletCacheControlService, times(2)).shouldOutputBeCached(cacheControl);
@@ -175,11 +176,11 @@ public class PortletRendererImplTest {
         RenderPortletOutputHandler handler = new RenderPortletOutputHandler("UTF-8");
 		portletRenderer.doRenderMarkup(portletWindowId, request, response, handler);
 		
-		verify(portletContainer, times(1)).doRender(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
+		verify(portletContainer, times(1)).doRender(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletHttpServletResponseWrapper.class));
         verify(portletCacheControlService, times(1)).getPortletRenderState(request, portletWindowId);
         verify(portletCacheControlService, times(1)).getCacheSizeThreshold();
         verify(portletCacheControlService, times(1)).shouldOutputBeCached(cacheControl);
-        verify(portletCacheControlService, times(1)).cachePortletRenderOutput(eq(portletWindowId), isA(HttpServletRequest.class), eq(cacheState), isA(CachedPortletData.class));
+        verify(portletCacheControlService, times(1)).cachePortletRenderOutput(eq(portletWindowId), isA(PortletHttpServletRequestWrapper.class), eq(cacheState), isA(CachedPortletData.class));
         
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
 	}
@@ -213,11 +214,11 @@ public class PortletRendererImplTest {
         portletRenderer.doRenderMarkup(portletWindowId, request, response, handler);
 
         
-        verify(portletContainer, times(1)).doRender(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
+        verify(portletContainer, times(1)).doRender(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletHttpServletResponseWrapper.class));
         verify(portletCacheControlService, times(1)).getPortletRenderState(request, portletWindowId);
         verify(portletCacheControlService, times(1)).getCacheSizeThreshold();
         verify(portletCacheControlService, times(1)).shouldOutputBeCached(cacheControl);
-        verify(portletCacheControlService, times(1)).cachePortletRenderOutput(eq(portletWindowId), isA(HttpServletRequest.class), eq(cacheState), isA(CachedPortletData.class));
+        verify(portletCacheControlService, times(1)).cachePortletRenderOutput(eq(portletWindowId), isA(PortletHttpServletRequestWrapper.class), eq(cacheState), isA(CachedPortletData.class));
         
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
 	}
@@ -334,8 +335,8 @@ public class PortletRendererImplTest {
 
 		verify(portletCacheControlService, times(1)).getPortletRenderState(request, portletWindowId);
 		verify(portletCacheControlService, times(1)).getCacheSizeThreshold();
-		verify(portletContainer, times(1)).doRender(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
-		verify(portletCacheControlService, times(1)).cachePortletRenderOutput(eq(portletWindowId), isA(HttpServletRequest.class), eq(cacheState), isA(CachedPortletData.class));
+		verify(portletContainer, times(1)).doRender(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletHttpServletResponseWrapper.class));
+		verify(portletCacheControlService, times(1)).cachePortletRenderOutput(eq(portletWindowId), isA(PortletHttpServletRequestWrapper.class), eq(cacheState), isA(CachedPortletData.class));
         
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
 	}
@@ -357,7 +358,7 @@ public class PortletRendererImplTest {
 		portletRenderer.doAction(portletWindowId, request, response);
 		
 		verify(portletCacheControlService, times(1)).purgeCachedPortletData(portletWindowId, request);
-		verify(portletContainer, times(1)).doAction(isA(PortletWindow.class), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
+		verify(portletContainer, times(1)).doAction(isA(PortletWindow.class), isA(PortletHttpServletRequestWrapper.class), isA(PortletHttpServletResponseWrapper.class));
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
 	}
 	
@@ -392,7 +393,7 @@ public class PortletRendererImplTest {
 		
 		verify(portletCacheControlService, times(2)).getCacheSizeThreshold();
 		verify(portletCacheControlService, times(2)).getPortletResourceState(request, portletWindowId);
-		verify(portletContainer, times(2)).doServeResource(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
+		verify(portletContainer, times(2)).doServeResource(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletResourceHttpServletResponseWrapper.class));
 		verify(portletCacheControlService, times(2)).shouldOutputBeCached(isA(CacheControl.class));
         
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
@@ -427,7 +428,7 @@ public class PortletRendererImplTest {
         
         verify(portletCacheControlService, times(1)).getPortletResourceState(request, portletWindowId);
         verify(portletCacheControlService, times(1)).getCacheSizeThreshold();
-        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
+        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletResourceHttpServletResponseWrapper.class));
         verify(portletCacheControlService, times(1)).shouldOutputBeCached(isA(CacheControl.class));
         
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
@@ -464,7 +465,7 @@ public class PortletRendererImplTest {
 		
         verify(portletCacheControlService, times(1)).getPortletResourceState(request, portletWindowId);
         verify(portletCacheControlService, times(1)).getCacheSizeThreshold();
-        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
+        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletResourceHttpServletResponseWrapper.class));
         verify(portletCacheControlService, times(1)).shouldOutputBeCached(isA(CacheControl.class));
         
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
@@ -506,8 +507,8 @@ public class PortletRendererImplTest {
 		
         verify(portletCacheControlService, times(1)).getPortletResourceState(request, portletWindowId);
         verify(portletCacheControlService, times(1)).getCacheSizeThreshold();
-        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
-        verify(portletCacheControlService).cachePortletResourceOutput(eq(portletWindowId), isA(HttpServletRequest.class), eq(cacheState), eq(cachedPortletResourceData));
+        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletResourceHttpServletResponseWrapper.class));
+        verify(portletCacheControlService).cachePortletResourceOutput(eq(portletWindowId), isA(PortletHttpServletRequestWrapper.class), eq(cacheState), eq(cachedPortletResourceData));
         
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
 	}
@@ -550,8 +551,8 @@ public class PortletRendererImplTest {
         
         verify(portletCacheControlService, times(1)).getPortletResourceState(request, portletWindowId);
         verify(portletCacheControlService, times(1)).getCacheSizeThreshold();
-        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
-        verify(portletCacheControlService).cachePortletResourceOutput(eq(portletWindowId), isA(HttpServletRequest.class), eq(cacheState), eq(cachedPortletResourceData));
+        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletResourceHttpServletResponseWrapper.class));
+        verify(portletCacheControlService).cachePortletResourceOutput(eq(portletWindowId), isA(PortletHttpServletRequestWrapper.class), eq(cacheState), eq(cachedPortletResourceData));
         
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
 	}
@@ -630,8 +631,8 @@ public class PortletRendererImplTest {
         
         verify(portletCacheControlService, times(1)).getPortletResourceState(request, portletWindowId);
         verify(portletCacheControlService, times(1)).getCacheSizeThreshold();
-        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
-        verify(portletCacheControlService).cachePortletResourceOutput(eq(portletWindowId), isA(HttpServletRequest.class), eq(cacheState), eq(cachedPortletResourceData));
+        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletResourceHttpServletResponseWrapper.class));
+        verify(portletCacheControlService).cachePortletResourceOutput(eq(portletWindowId), isA(PortletHttpServletRequestWrapper.class), eq(cacheState), eq(cachedPortletResourceData));
         
         
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
@@ -722,8 +723,8 @@ public class PortletRendererImplTest {
         
         verify(portletCacheControlService, times(1)).getPortletResourceState(request, portletWindowId);
         verify(portletCacheControlService, times(1)).getCacheSizeThreshold();
-        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(HttpServletRequest.class), isA(HttpServletResponse.class));
-        verify(portletCacheControlService).cachePortletResourceOutput(eq(portletWindowId), isA(HttpServletRequest.class), eq(cacheState), eq(cachedPortletResourceData));
+        verify(portletContainer, times(1)).doServeResource(eq(plutoPortletWindow), isA(PortletHttpServletRequestWrapper.class), isA(PortletResourceHttpServletResponseWrapper.class));
+        verify(portletCacheControlService).cachePortletResourceOutput(eq(portletWindowId), isA(PortletHttpServletRequestWrapper.class), eq(cacheState), eq(cachedPortletResourceData));
         
         verifyNoMoreInteractions(portletContainer, portletCacheControlService);
 	}

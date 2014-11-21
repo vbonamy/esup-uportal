@@ -39,6 +39,7 @@ import org.jasig.portal.url.IPortalUrlProvider;
 import org.jasig.portal.url.IPortletUrlBuilder;
 import org.jasig.portal.url.UrlType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 public class PortletRegistrySearchService implements IPortalSearchService {
 
@@ -46,6 +47,9 @@ public class PortletRegistrySearchService implements IPortalSearchService {
     private IPortalUrlProvider portalUrlProvider;
     private IPortletWindowRegistry portletWindowRegistry;
     private IPortalRequestUtils portalRequestUtils;
+
+    @Value("${org.jasig.portal.portlets.portletRegistry.search.result.type:Portlet List}")
+    private String searchResultType = "Portlet List";
 
     @Autowired
     public void setPortletDefinitionRegistry(IPortletDefinitionRegistry portletDefinitionRegistry) {
@@ -82,7 +86,7 @@ public class PortletRegistrySearchService implements IPortalSearchService {
                 final SearchResult result = new SearchResult();
                 result.setTitle(portlet.getTitle());
                 result.setSummary(portlet.getDescription());
-                result.getType().add("Portal Content");
+                result.getType().add(searchResultType);
 
                 final IPortletWindow portletWindow = this.portletWindowRegistry.getOrCreateDefaultPortletWindowByFname(httpServletRequest, portlet.getFName());
                 if (portletWindow != null) {
@@ -96,15 +100,31 @@ public class PortletRegistrySearchService implements IPortalSearchService {
 
             }
         }
-        
+
         return results;
     }
-    
-    protected boolean matches(String query, IPortletDefinition portlet) {
-        return portlet.getTitle().toLowerCase().contains(query) ||
-                portlet.getName().toLowerCase().contains(query) ||
-                (portlet.getDescription() != null && portlet.getDescription().toLowerCase().contains(query)) ||
-                portlet.getFName().toLowerCase().contains(query);
+
+    /**
+     * Performs a case-insensitive comparison of the user's query against 
+     * several important fields from the {@link IPortletDefinition}.
+     * 
+     * @param query The user's search terms, which seem to be forced lower-case
+     * @param portlet
+     * @return
+     */
+    protected boolean matches(final String query, final IPortletDefinition portlet) {
+        /*
+         * The query parameter is coming in lower case always (even when upper
+         * or mixed case is entered by the user).  We really want a case-
+         * insensitive comparison here anyway;  for safety, we will make certain
+         * it is insensitive.
+         */
+        final String lcQuery = query.toLowerCase();
+        final boolean titleMatch = portlet.getTitle().toLowerCase().contains(lcQuery);
+        final boolean nameMatch = portlet.getName().toLowerCase().contains(lcQuery);
+        final boolean descMatch = portlet.getDescription() != null && portlet.getDescription().toLowerCase().contains(lcQuery);
+        final boolean fnameMatch = portlet.getFName().toLowerCase().contains(lcQuery);
+        return titleMatch || nameMatch || descMatch || fnameMatch;
     }
 
 }

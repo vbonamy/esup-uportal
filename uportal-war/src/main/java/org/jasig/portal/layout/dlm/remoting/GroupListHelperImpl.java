@@ -148,12 +148,15 @@ public class GroupListHelperImpl implements IGroupListHelper {
 
         // First check the appropriate canonical super-target for the specified type
         String canonicalSuperTarget = null;
-        if (JsonEntityBean.ENTITY_GROUP.equals(groupType)) {
-            canonicalSuperTarget = IPermission.ALL_GROUPS_TARGET;
-        } else if (JsonEntityBean.ENTITY_CATEGORY.equals(groupType)) {
-            canonicalSuperTarget = IPermission.ALL_CATEGORIES_TARGET;
-        } else {
-            throw new RuntimeException("Unrecognized groupType:  " + groupType);
+        switch (groupType) {
+            case JsonEntityBean.ENTITY_GROUP:
+                canonicalSuperTarget = IPermission.ALL_GROUPS_TARGET;
+                break;
+            case JsonEntityBean.ENTITY_CATEGORY:
+                canonicalSuperTarget = IPermission.ALL_CATEGORIES_TARGET;
+                break;
+            default:
+                throw new RuntimeException("Unrecognized groupType:  " + groupType);
         }
         if (log.isDebugEnabled()) {
             log.debug("Identified for groupType='" + groupType + 

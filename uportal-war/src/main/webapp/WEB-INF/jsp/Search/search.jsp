@@ -20,8 +20,23 @@
 --%>
 
 <%@ include file="/WEB-INF/jsp/include.jsp"%>
+<%@ taglib uri="/WEB-INF/tag/portletUrl.tld" prefix="pURL" %>
+<c:set var="n"><portlet:namespace/></c:set>
+
+<style>
+	.marketplace_entry_link{
+		font-family: 'Arial';
+		font-weight: 400;
+		color: #666666;
+		font-style: normal;
+		font-size: 13px;
+		text-align: left;
+		line-height: normal;
+	}
+</style>
 
 <portlet:actionURL var="formUrl"/>
+<portlet:resourceURL var="autocompleteUrl" id="retrieveSearchJSONResults"/>
 <c:set var="n"><portlet:namespace/></c:set>
 
 <!-- Portlet -->
@@ -42,7 +57,9 @@
       <div class="portlet-section-body">
 
         <form action="${ formUrl }" method="POST">
-            <input name="query" maxlength="200" value="${ fn:escapeXml(query)}"/> <input type="submit" value="<spring:message code="search.submit"/>"/>
+            <input id="${n}searchInput" class="searchInput" name="query" value="${ fn:escapeXml(query )}"/>
+            <input type="submit" value="<spring:message code="search.submit"/>"/>
+            <input class="autocompleteUrl" name="autocompleteUrl" type="hidden" value="${autocompleteUrl}"/>
         </form>
         
         <c:if test="${hitMaxQueries}">
@@ -56,14 +73,14 @@
             <div class="portlet-section" role="region">
           
                 <div class="content">
-                    <div id="${n}searchResults">
-                        <ul>
+                    <div id="${n}searchResults" class="hidden">
+                        <ul class="searchTabsContainer">
                             <li><a href="#${n}_DEFAULT_TAB"><span><spring:message code="${defaultTabKey}"/></span></a></li>
                             <c:forEach var="tabKey" items="${tabKeys}" varStatus="loopStatus">
                                 <li><a href="#${n}_${loopStatus.index}"><span><spring:message code="${tabKey}"/></span></a></li>
                             </c:forEach>
                         </ul>
-                        
+
                         <%--
                          | result.first is the SearchResult object
                          | result.second is the calculated URL
@@ -78,6 +95,11 @@
                                   <a class="result_link" href="${result.second}"><span class="result_title">${ result.first.title }</span></a>
                                 </div>
                                 <div class="result_excerpt">${ result.first.summary }</div>
+                                <%-- Start of display marketplace specific information --%>
+                                <c:if test="${up:contains(result.first.type, 'marketplace')}">
+                                	<a class="marketplace_entry_link" href="${pURL:getStringFromPortletUrl(result.first.portletUrl, pageContext.request)}">About this app</a>                             	
+                                </c:if>
+                                <%-- End of display marketplace specific information --%>
                               </div>
                             </c:forEach>
                           </div>
@@ -102,23 +124,33 @@
                     </div>
                 </div>
             </div>
-
-<script type="text/javascript">
-up.jQuery(function () {
-  var $ = up.jQuery;
-  var fluid = up.fluid;
-  
-  up.jQuery(document).ready(function () {
-    up.jQuery("#${n}searchResults").tabs();
-  });
-});
-</script>
         </c:if>
-
-      </div>  
-
+      </div>
     </div>
-    
   </div>
-
 </div>
+
+<script type="text/javascript" src="<rs:resourceURL value="/rs/jquery/1.10.2/jquery-1.10.2.min.js"/>"></script>
+<script type="text/javascript" src="<rs:resourceURL value="/rs/jqueryui/1.10.3/jquery-ui-1.10.3.min.js"/>"></script>
+
+<%@ include file="autosuggest_handler.jsp"%>
+
+<script language="javascript" type="text/javascript"><rs:compressJs>
+/*
+* Switch jQuery to extreme noConflict mode, keeping a reference to it in the searchjQ["${n}"] namespace
+*/
+var searchjQ = searchjQ || {};
+searchjQ["${n}"] = searchjQ["${n}"] || {};
+searchjQ["${n}"].jQuery = jQuery.noConflict(true);
+
+searchjQ["${n}"].jQuery(document).ready(function() {
+    initSearchAuto(searchjQ["${n}"].jQuery, "#${n}searchInput");
+    searchjQ["${n}"].jQuery("#${n}searchResults").tabs();
+    <%-- If not configured for multiple tabs, don't display the tabs header --%>
+    <c:if test="${empty tabKeys}">
+        searchjQ["${n}"].jQuery("#${n}searchResults .searchTabsContainer").addClass("hidden");
+    </c:if>
+    searchjQ["${n}"].jQuery("#${n}searchResults").removeClass("hidden"); // Unhide the search results now that the tabs are rendered
+});
+
+</rs:compressJs></script>

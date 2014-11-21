@@ -30,7 +30,7 @@ import org.jasig.portal.security.IPerson;
  * @author Eric Dalquist
  * @version $Revision$
  */
-public interface IPortalEventFactory extends IPortalAuthEventFactory, IPortalLayoutEventFactory, IPortletExecutionEventFactory {
+public interface IPortalEventFactory extends IPortalAuthEventFactory, IPortalLayoutEventFactory, IPortletExecutionEventFactory, IPortalTenantEventFactory {
     
     public String getPortalEventSessionId(HttpServletRequest request, IPerson person);
 

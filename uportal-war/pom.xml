@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal</groupId>
         <artifactId>uportal-parent</artifactId>
-        <version>4.0.15</version>
+        <version>4.1.1</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -14,14 +14,13 @@
     <name>uPortal WAR</name>
     <description>The uPortal web application.</description>
     
-    <dependencies>  
-        <!-- ***** Portal JDBC Driver *****
-         | The groupId, artifactId and version are configured in the root POM.
-         +-->
+    <dependencies>
+        <!-- ***** Portal JDBC Driver ***** -->
         <dependency>
-            <groupId>${jdbc.groupId}</groupId>
-            <artifactId>${jdbc.artifactId}</artifactId>
-            <version>${jdbc.version}</version>
+            <groupId>org.jasig.portal</groupId>
+            <artifactId>uportal-db</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
         
         <dependency>
@@ -43,6 +42,11 @@
         <dependency>
             <groupId>org.jasig.cas.client</groupId>
             <artifactId>cas-client-core</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
         </dependency>
         
         <dependency>
@@ -116,18 +120,13 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>commons-pool</groupId>
             <artifactId>commons-pool</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         
         <dependency>
@@ -189,12 +188,11 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time-jsptags</artifactId>
         </dependency>
-
+        
         <dependency>
             <groupId>net.sf.ehcache</groupId>
             <artifactId>ehcache-core</artifactId>
@@ -345,7 +343,7 @@
         
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jcl</artifactId>
+            <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
         
         <dependency>
@@ -471,12 +469,6 @@
         
         <!-- ===== Provided Dependencies ====================================== -->
         <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>javax.ccpp</groupId>
             <artifactId>ccpp</artifactId>
             <scope>provided</scope>
@@ -496,7 +488,7 @@
 
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -531,7 +523,13 @@
             <artifactId>person-directory-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        
+
+        <dependency>
+            <groupId>org.jasig.portal</groupId>
+            <artifactId>uportal-platform-api</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
         
         <!-- ===== Runtime Dependencies ======================================= -->
         <dependency>
@@ -564,29 +562,25 @@
             <scope>runtime</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.jasig.cas</groupId>
-            <artifactId>cas-server-extension-clearpass</artifactId>
+		<dependency>
+           	<groupId>org.jasig.cas</groupId>
+           	<artifactId>cas-server-extension-clearpass</artifactId>
             <exclusions>
-                <exclusion>
-                    <groupId>org.jasig.cas</groupId>
-                    <artifactId>cas-server-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.validation</groupId>
-                    <artifactId>validation-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>jcl-over-slf4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
+             <exclusion>
+               <groupId>org.jasig.cas</groupId>
+               <artifactId>cas-server-core</artifactId>
+             </exclusion>
+             <exclusion>
+             	<groupId>javax.validation</groupId>	
+               	<artifactId>validation-api</artifactId>
+             </exclusion>
+             <exclusion>
+             	<groupId>org.slf4j</groupId>	
+               	<artifactId>slf4j-log4j12</artifactId>
+             </exclusion>
             </exclusions>
             <scope>runtime</scope>
-        </dependency>
+         </dependency>
 
         <!-- For clustered uPortal environments using CAS ClearPass. It does not hurt to have the dependency included
              even if the site does not use CAS ClearPass -->
@@ -600,6 +594,30 @@
                     <artifactId>commons-logging</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>runtime</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.lesscss</groupId>
+            <artifactId>lesscss</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jul-to-slf4j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
             <scope>runtime</scope>
         </dependency>
 
@@ -631,6 +649,12 @@
         <dependency>
             <groupId>org.easymock</groupId>
             <artifactId>easymock</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.skyscreamer</groupId>
+            <artifactId>jsonassert</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -733,11 +757,13 @@
                     <include>properties/rdbm.properties</include>
                     <include>properties/security.properties</include>
                     <include>properties/contexts/userContext.xml</include>
+                    <include>properties/groups/PAGSGroupStoreConfig.xml</include>
+                    <include>META-INF/persistence.xml</include>
+                    <include>logback.xml</include>
                     <include>properties/contexts/ldapContext.xml</include>
                     <include>properties/contexts/personDirectoryContext.xml</include>
                     <include>properties/groups/SmartLdapGroupStoreConfig.xml</include>
                     <include>properties/i18n/*.properties</include>
-                    <include>properties/groups/PAGSGroupStoreConfig.xml</include>
                 </includes>
             </resource>
             <!-- 
@@ -754,6 +780,8 @@
                     <exclude>properties/security.properties</exclude>
                     <exclude>properties/contexts/userContext.xml</exclude>
                     <exclude>properties/groups/PAGSGroupStoreConfig.xml</exclude>
+                    <exclude>META-INF/persistence.xml</exclude>
+                    <exclude>logback.xml</exclude>
                 </excludes>
             </resource>
             <resource>
@@ -765,6 +793,28 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                              <bannedDependencies>
+                                 <excludes>
+                                    <exclude>commons-logging:commons-logging</exclude>
+                                    <exclude>commons-logging:commons-logging-api</exclude>
+                                    <exclude>log4j:log4j</exclude>
+                                 </excludes>
+                              </bannedDependencies>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Generates JAXB binding classes -->            
             <plugin>
                 <groupId>org.jvnet.jaxb2.maven2</groupId>
@@ -864,25 +914,16 @@
                     <attachClasses>true</attachClasses>
                     <webXml>${project.build.directory}/pluto-resources/web.xml</webXml>
                     <webResources>
-                        <resource>
+                        <webResource>
                             <directory>${basedir}/src/main/webapp/WEB-INF</directory>
+                            <includes>
+                                <include>web.xml</include>
+                                <include>log4j.properties</include>
+                            </includes>
                             <targetPath>WEB-INF</targetPath>
                             <filtering>true</filtering>
-                            <includes>
-                                <include>log4j.properties</include>
-                                <include>web.xml</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${basedir}/src/main/webapp/WEB-INF</directory>
-                            <targetPath>WEB-INF</targetPath>
-                            <filtering>false</filtering>
-                            <excludes>
-                                <exclude>log4j.properties</exclude>
-                                <include>web.xml</include>
-                            </excludes>
-                        </resource>
-                    </webResources>
+                        </webResource>
+                   </webResources> 
                 </configuration>
             </plugin>
             <plugin>
@@ -900,13 +941,43 @@
             <plugin>
                 <groupId>org.jasig.maven</groupId>
                 <artifactId>sass-maven-plugin</artifactId>
+                <version>1.1.1</version>
+                <executions>
+                    <execution>
+                        <id>compile-sass-skins</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>update-stylesheets</goal>
+                        </goals>
+                        <inherited>false</inherited>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.lesscss</groupId>
+                <artifactId>lesscss-maven-plugin</artifactId>
+                <version>1.3.3</version>
                 <configuration>
-                    <baseOutputDirectory>${basedir}/src/main/webapp</baseOutputDirectory>
+                    <sourceDirectory>${project.basedir}/src/main/webapp/media/skins/respondr/</sourceDirectory>
+                    <outputDirectory>${project.build.directory}/${project.build.finalName}/media/skins/respondr/</outputDirectory>
+                    <compress>true</compress>
+                    <includes>
+                        <include>defaultSkin.less</include>
+                    </includes>
+                    <lessJs>${project.basedir}/src/main/webapp/media/skins/common/javascript/less/less-1.6.2.js</lessJs>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jasig.resourceserver</groupId>
                 <artifactId>resource-server-plugin</artifactId>
+                <version>${resource-server.version}</version>
                 <executions>
                     <execution>
                         <id>aggregate-universality-skins</id>
@@ -917,6 +988,7 @@
                         <inherited>false</inherited>
                         <configuration>
                             <displayJsWarnings>false</displayJsWarnings>
+                            <useGeneratedSources>true</useGeneratedSources>
                             <includes>
                                 <include>media/skins/universality/**/skin.xml</include>
                             </includes>
@@ -932,6 +1004,7 @@
                         <inherited>false</inherited>
                         <configuration>
                             <displayJsWarnings>false</displayJsWarnings>
+                            <useGeneratedSources>true</useGeneratedSources>
                             <includes>
                                 <include>media/skins/muniversality/**/skin.xml</include>
                             </includes>
@@ -1006,6 +1079,35 @@
                         </dependencies>
                     </plugin>
                 </plugins>
+                <pluginManagement>
+                  <plugins>
+                    <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                    <plugin>
+                      <groupId>org.eclipse.m2e</groupId>
+                      <artifactId>lifecycle-mapping</artifactId>
+                      <version>1.0.0</version>
+                      <configuration>
+                        <lifecycleMappingMetadata>
+                          <pluginExecutions>
+                            <pluginExecution>
+                              <pluginExecutionFilter>
+                                <groupId>org.codehaus.mojo.jspc</groupId>
+                                <artifactId>jspc-maven-plugin</artifactId>
+                                <versionRange>[2.0-alpha-3,)</versionRange>
+                                <goals>
+                                  <goal>compile</goal>
+                                </goals>
+                              </pluginExecutionFilter>
+                              <action>
+                                <ignore />
+                              </action>
+                            </pluginExecution>
+                          </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                      </configuration>
+                    </plugin>
+                  </plugins>
+                </pluginManagement>
             </build>
         </profile>
     </profiles>

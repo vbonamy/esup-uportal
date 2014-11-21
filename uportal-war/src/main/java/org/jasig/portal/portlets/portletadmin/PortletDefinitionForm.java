@@ -49,8 +49,11 @@ import org.jasig.portal.portlets.BooleanAttribute;
 import org.jasig.portal.portlets.BooleanAttributeFactory;
 import org.jasig.portal.portlets.StringListAttribute;
 import org.jasig.portal.portlets.StringListAttributeFactory;
+import org.jasig.portal.xml.PortletDescriptor;
 
 public class PortletDefinitionForm implements Serializable {
+
+    private static final String FRAMEWORK_PORTLET_URL = "/uPortal";
 	
 	private static final long serialVersionUID = 892741367149099647L;
 	protected transient final Log log = LogFactory.getLog(getClass());
@@ -91,6 +94,7 @@ public class PortletDefinitionForm implements Serializable {
 	private boolean editable;
 	private boolean hasHelp;
 	private boolean hasAbout;
+	private boolean configurable;
 	
 	/**
 	 * Groups and categories
@@ -141,13 +145,16 @@ public class PortletDefinitionForm implements Serializable {
 		if (def.getParameter(IPortletDefinition.EDITABLE_PARAM) != null) {
 		    this.setEditable(Boolean.parseBoolean(def.getParameter(IPortletDefinition.EDITABLE_PARAM).getValue()));
 		}
-        if (def.getParameter(IPortletDefinition.HAS_HELP_PARAM) != null) {
+        if (def.getParameter(IPortletDefinition.CONFIGURABLE_PARAM) != null) {
+    		this.setConfigurable(Boolean.parseBoolean(def.getParameter(IPortletDefinition.CONFIGURABLE_PARAM).getValue()));
+    	}
+		if (def.getParameter(IPortletDefinition.HAS_HELP_PARAM) != null) {
             this.setHasHelp(Boolean.parseBoolean(def.getParameter(IPortletDefinition.HAS_HELP_PARAM).getValue()));
         }
         if (def.getParameter(IPortletDefinition.HAS_ABOUT_PARAM) != null) {
     		this.setHasAbout(Boolean.parseBoolean(def.getParameter(IPortletDefinition.HAS_ABOUT_PARAM).getValue()));
     	}
-		this.setLifecycleState(def.getLifecycleState());
+        this.setLifecycleState(def.getLifecycleState());
 		
 		int order = this.getLifecycleState().getOrder();
 		if (order < PortletLifecycleState.PUBLISHED.getOrder()) {
@@ -178,7 +185,15 @@ public class PortletDefinitionForm implements Serializable {
 		}
             
 	}
-	
+
+    /**
+     * Indicates whether this portlet has been previously published.
+     * @return
+     */
+    public boolean isNew() {
+        return id == null || id.equals("-1");
+    }
+
 	/**
 	 * Sets the Java class name and parameter defaults based on the 
 	 * PortletPublishingDefinition.
@@ -186,6 +201,21 @@ public class PortletDefinitionForm implements Serializable {
 	 * @param cpd
 	 */
 	public void setChannelPublishingDefinition(PortletPublishingDefinition cpd) {
+
+        // Set appName/portletName if a descriptor is present.  If a framework
+        // portlet, the applicationId is /uPortal.
+        if (cpd.getPortletDescriptor() != null) {
+            final PortletDescriptor pDesc = cpd.getPortletDescriptor();
+            // PortletDescriptor is a class generated from XSD.  The value of
+            // isIsFramework() will commonly be null.
+            final boolean isFramework = pDesc.isIsFramework() != null
+                    ? pDesc.isIsFramework()
+                    : false;
+            applicationId = isFramework
+                    ? FRAMEWORK_PORTLET_URL
+                    : pDesc.getWebAppName();
+            portletName = pDesc.getPortletName();
+        }
 
 		// set default values for all portlet parameters
 		for (Step step : cpd.getSteps()) {
@@ -362,6 +392,14 @@ public class PortletDefinitionForm implements Serializable {
 
 	public void setEditable(boolean editable) {
 		this.editable = editable;
+	}
+
+	public boolean isConfigurable() {
+		return configurable;
+	}
+
+	public void setConfigurable(boolean configurable) {
+		this.configurable = configurable;
 	}
 
 	public boolean isHasHelp() {

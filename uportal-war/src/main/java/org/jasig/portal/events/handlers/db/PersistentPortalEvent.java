@@ -82,7 +82,7 @@ public class PersistentPortalEvent implements Serializable {
     private final String eventSessionId;
     
     @Index(name = "IDX_UP_RAW_EVENTS_USER_NAME")
-    @Column(name="USER_NAME", length=35, nullable=false, updatable=false)
+    @Column(name="USER_NAME", length=100, nullable=false, updatable=false)
     @SuppressWarnings("unused")
     private final String userName;
     
@@ -97,6 +97,10 @@ public class PersistentPortalEvent implements Serializable {
     @Index(name = "IDX_UP_RAW_EVENTS_AGGREGATED")
     @Column(name = "AGGREGATED") 
     private Boolean aggregated = false;
+    
+    @Index(name = "IDX_UP_RAW_EVENTS_ERR_AGGR")
+    @Column(name = "ERROR_AGGR") 
+    private Boolean errorAggregating = false;
     
     /**
      * no-arg needed by hibernate
@@ -145,6 +149,19 @@ public class PersistentPortalEvent implements Serializable {
 
     void setAggregated(boolean aggregated) {
         this.aggregated = aggregated;
+    }
+    
+    public boolean isErrorAggregating() {
+        Boolean a = this.errorAggregating;
+        if (a == null) {
+            a = false;
+            this.errorAggregating = a;
+        }
+        return a;
+    }
+    
+    void setErrorAggregating(boolean errorAggregating) {
+        this.errorAggregating = errorAggregating;
     }
 
     /* (non-Javadoc)

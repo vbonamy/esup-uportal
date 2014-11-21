@@ -19,12 +19,12 @@
 
 package org.jasig.portal.events;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.StringReader;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,10 +38,12 @@ import org.jasig.portal.mock.portlet.om.MockPortletWindowId;
 import org.jasig.portal.portlet.rendering.worker.IPortletExecutionWorker;
 import org.jasig.portal.security.SystemPerson;
 import org.jasig.portal.spring.beans.factory.ObjectMapperFactoryBean;
+import org.jasig.portal.tenants.ITenant;
 import org.jasig.portal.url.UrlState;
 import org.jasig.portal.url.UrlType;
 import org.junit.Before;
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
@@ -87,6 +89,7 @@ public class JacksonPortalEventTest {
 
         PortalEvent event;
         
+        //TODO: Will uncomment once we add in attribute swapper event processing.
         /*event = new AttributeSwapEvent(eventBuilder, Collections.EMPTY_MAP);
         assertEventJsonEquals("{\"@c\":\".AttributeSwapEvent\",\"timestamp\":1371745598080,\"serverId\":\"example.com\",\"eventSessionId\":\"1234567890123_system_AAAAAAAAAAA\",\"userName\":\"system\",\"swappedAttributes\":{}}", event);
         
@@ -97,8 +100,8 @@ public class JacksonPortalEventTest {
         assertEventJsonEquals("{\"@c\":\".IdentitySwapStartEvent\",\"timestamp\":1371745598080,\"serverId\":\"example.com\",\"eventSessionId\":\"1234567890123_system_AAAAAAAAAAA\",\"userName\":\"system\",\"originalUserName\":\"originalUserName\",\"originalEventSessionId\":\"originalEventSessionId\"}", event);
         
         event = new IdentitySwapStopEvent(eventBuilder, "targetUserName");
-        assertEventJsonEquals("{\"@c\":\".IdentitySwapStopEvent\",\"timestamp\":1371745598080,\"serverId\":\"example.com\",\"eventSessionId\":\"1234567890123_system_AAAAAAAAAAA\",\"userName\":\"system\",\"targetUserName\":\"targetUserName\"}", event);*/
-        
+        assertEventJsonEquals("{\"@c\":\".IdentitySwapStopEvent\",\"timestamp\":1371745598080,\"serverId\":\"example.com\",\"eventSessionId\":\"1234567890123_system_AAAAAAAAAAA\",\"userName\":\"system\",\"targetUserName\":\"targetUserName\"}", event);
+        */
         event = new FolderAddedToLayoutPortalEvent(eventBuilder, SystemPerson.INSTANCE, 1, "newFolderId");
         assertEventJsonEquals("{\"@c\":\".FolderAddedToLayoutPortalEvent\",\"timestamp\":1371745598080,\"serverId\":\"example.com\",\"eventSessionId\":\"1234567890123_system_AAAAAAAAAAA\",\"userName\":\"system\",\"layoutId\":1,\"layoutOwner\":\"system\",\"newFolderId\":\"newFolderId\"}", event);
         
@@ -150,6 +153,37 @@ public class JacksonPortalEventTest {
         event = new PortletHungEvent(eventBuilder, hungWorker);
         assertEventJsonEquals("{\"@c\":\".PortletHungEvent\",\"timestamp\":1371745598080,\"serverId\":\"example.com\",\"eventSessionId\":\"1234567890123_system_AAAAAAAAAAA\",\"userName\":\"system\",\"fname\":\"fname\"}", event);
 
+        final ITenant tenant = new ITenant() {
+            private static final long serialVersionUID = 1L;
+            @Override
+            public int compareTo(ITenant o) { return 0; }
+            @Override
+            public long getId() { return 1L; }
+            @Override
+            public String getName() { return "Mordor"; }
+            @Override
+            public void setName(String name) {}
+            @Override
+            public String getFname() { return "mordor"; }
+            @Override
+            public void setFname(String fname) {}
+            @Override
+            public String getAttribute(String name) { return null; }
+            @Override
+            public void setAttribute(String name, String value) {}
+            @Override
+            public Map<String, String> getAttributesMap() { return Collections.emptyMap(); }
+        };
+
+        event = new TenantCreatedTenantEvent(eventBuilder, tenant);
+        assertEventJsonEquals("{\"@c\":\".TenantCreatedTenantEvent\",\"timestamp\":1371745598080,\"serverId\":\"example.com\",\"eventSessionId\":\"1234567890123_system_AAAAAAAAAAA\",\"userName\":\"system\"}", event);
+
+        event = new TenantUpdatedTenantEvent(eventBuilder, tenant);
+        assertEventJsonEquals("{\"@c\":\".TenantUpdatedTenantEvent\",\"timestamp\":1371745598080,\"serverId\":\"example.com\",\"eventSessionId\":\"1234567890123_system_AAAAAAAAAAA\",\"userName\":\"system\"}", event);
+
+        event = new TenantRemovedTenantEvent(eventBuilder, tenant);
+        assertEventJsonEquals("{\"@c\":\".TenantRemovedTenantEvent\",\"timestamp\":1371745598080,\"serverId\":\"example.com\",\"eventSessionId\":\"1234567890123_system_AAAAAAAAAAA\",\"userName\":\"system\"}", event);
+
     }
     
     private static final Pattern TIMESTAMP_SPLIT = Pattern.compile("(?<=\"timestamp\":)\\d+");
@@ -161,7 +195,7 @@ public class JacksonPortalEventTest {
         actual = TIMESTAMP_SPLIT.matcher(actual).replaceAll(TEST_NOW);
         expected = TIMESTAMP_SPLIT.matcher(expected).replaceAll(TEST_NOW);
         
-        assertEquals(expected, actual);
+        JSONAssert.assertEquals(expected, actual, false);
         
         return actual;
     }

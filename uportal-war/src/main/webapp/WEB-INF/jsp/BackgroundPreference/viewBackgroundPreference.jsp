@@ -37,9 +37,11 @@
         background-size: 100%;
         background-attachment: fixed;
     }
+    /* Opacity currently not working; selector drop down appears behind portlets; 
+       see http://stackoverflow.com/questions/15558148/possible-opacity-z-index-bug
     ${applyOpacityTo} {
         opacity: ${opacityCssValue};
-    }
+    } */
     </c:if>
 
     html.um-dashboard, html.um-dashboard body {
@@ -64,7 +66,7 @@
         overflow-y: scroll;
         z-index: 10000;
         text-align:center;
-        max-height:90%;
+        max-height:515px;
     }
 
     #${n}background-edit-control .background-edit-menu a {
@@ -103,6 +105,7 @@
         cursor: pointer;
         color: rgb(51, 51, 51);
         text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.75);
+        background-color: #DEDEDE;
         background: rgb(245, 245, 245) linear-gradient(to bottom, rgb(255, 255, 255), rgb(230, 230, 230)) repeat-x;
         border: 1px solid rgb(204, 204, 204);
         border-bottom-color: rgb(179, 179, 179);

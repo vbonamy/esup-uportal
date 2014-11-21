@@ -24,7 +24,6 @@ import javax.portlet.CacheControl;
 import javax.servlet.http.HttpServletResponse;
 
 import org.jasig.portal.portlet.om.IPortletWindow;
-import org.jasig.portal.utils.Servlet3WrapperUtils;
 import org.jasig.portal.utils.web.PortletMimeHttpServletResponseWrapper;
 
 /**
@@ -36,13 +35,7 @@ import org.jasig.portal.utils.web.PortletMimeHttpServletResponseWrapper;
 public class PortletResourceHttpServletResponseWrapper extends PortletMimeHttpServletResponseWrapper {
     private final PortletResourceOutputHandler portletResourceOutputHandler;
 
-    public static HttpServletResponse create(HttpServletResponse httpServletResponse, IPortletWindow portletWindow,
-            PortletResourceOutputHandler portletResourceOutputHandler, CacheControl cacheControl) {
-        final HttpServletResponse proxy = new PortletResourceHttpServletResponseWrapper(httpServletResponse, portletWindow, portletResourceOutputHandler, cacheControl);
-        return Servlet3WrapperUtils.addServlet3Wrapper(proxy, httpServletResponse);
-    }
-
-    PortletResourceHttpServletResponseWrapper(HttpServletResponse httpServletResponse, IPortletWindow portletWindow,
+    public PortletResourceHttpServletResponseWrapper(HttpServletResponse httpServletResponse, IPortletWindow portletWindow,
             PortletResourceOutputHandler portletResourceOutputHandler, CacheControl cacheControl) {
         super(httpServletResponse, portletWindow, portletResourceOutputHandler, cacheControl);
         this.portletResourceOutputHandler = portletResourceOutputHandler;

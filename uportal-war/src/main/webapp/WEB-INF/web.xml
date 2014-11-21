@@ -29,48 +29,17 @@
     
     <display-name>uPortal</display-name>
 
-    <!--
-        - Location of the Log4J config file, for initialization and refresh checks.
-        - Applied by Log4jConfigListener.
-    -->
-    <context-param>
-        <param-name>log4jConfigLocation</param-name>
-        <param-value>/WEB-INF/log4j.properties</param-value>
-    </context-param>
-
-    <context-param>
-        <!-- the default log4j.properties does not make use of the webapp root feature -->
-        <param-name>log4jExposeWebAppRoot</param-name>
-        <param-value>false</param-value>
-    </context-param>
-
-    <context-param>
-        <param-name>log4jRefreshInterval</param-name>
-        <!-- interval in milliseconds for checking log4j config for updates -->
-        <param-value>60000</param-value>
-    </context-param>
-
     <context-param>
         <param-name>contextConfigLocation</param-name>
         <param-value>classpath:/properties/contexts/*.xml,classpath:/properties/contextOverrides/*.xml</param-value>
     </context-param>
-   
-    <!--
-        - Configures Log4J for this web app.
-        - As this context specifies a context-param "log4jConfigLocation", its file path
-        - is used to load the Log4J configuration, including periodic refresh checks.
-        -
-        - Would fall back to default Log4J initialization (non-refreshing) if no special
-        - context-params are given.
-        -
-        - Optionally exposes a "web app root key", i.e. a system property that specifies the root
-        - directory of this web app, for usage in log file paths.
-    -->
+
+    <!-- Needed to remove JMX registration and allow for classloader GC. Should be first listener per http://logback.qos.ch/manual/loggingSeparation.html#hotDeploy -->
     <listener>
-        <listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+        <listener-class>ch.qos.logback.classic.selector.servlet.ContextDetachingSCL</listener-class>
     </listener>
-    
-    <!-- 
+
+  <!--
      | uPortal utility for accessing the WebApplicationContext from code that doesn't have a reference to the ServletContext
      +-->
     <listener>
@@ -504,6 +473,10 @@
         <location>/500.html</location>
     </error-page>
 
+    <sessionConfig>
+      <tracking-mode>COOKIE</tracking-mode>
+    </sessionConfig>
+    
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
         <welcome-file>index.htm</welcome-file>

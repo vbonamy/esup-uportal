@@ -106,7 +106,6 @@
         <property name="base" value="${ldap.baseDn}"/>
         <property name="userDn" value="${ldap.userName}"/>
         <property name="password" value="${ldap.password}"/>
-        <property name="pooled" value="${ldap.pooled}"/>
+        <property name="pooled" value="${environment.build.ldap.pooled}"/>      
     </bean>
-
 </beans>

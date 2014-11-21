@@ -245,15 +245,24 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
         final Map<PortalDataKey, IDataImporter<Object>> dataImportersMap = new LinkedHashMap<PortalDataKey, IDataImporter<Object>>();
         
         for (final IDataImporter<?> dataImporter : dataImporters) {
-            final Set<PortalDataKey> importDataKeys = dataImporter.getImportDataKeys();
-            
-            for (final PortalDataKey importDataKey : importDataKeys) {
-                this.logger.debug("Registering IDataImporter for '{}' - {}", new Object[] {importDataKey, dataImporter});
-                final IDataImporter<Object> existing = dataImportersMap.put(importDataKey, (IDataImporter<Object>)dataImporter);
-                if (existing != null) {
-                    this.logger.warn("Duplicate IDataImporter PortalDataKey for {} Replacing {} with {}", 
-                            new Object[] {importDataKey, existing, dataImporter});
+
+            try {
+
+                final Set<PortalDataKey> importDataKeys = dataImporter.getImportDataKeys();
+
+                for (final PortalDataKey importDataKey : importDataKeys) {
+                    this.logger.debug("Registering IDataImporter for '{}' - {}",
+                            new Object[]{importDataKey, dataImporter});
+                    final IDataImporter<Object> existing =
+                            dataImportersMap.put(importDataKey, (IDataImporter<Object>) dataImporter);
+                    if (existing != null) {
+                        this.logger.warn("Duplicate IDataImporter PortalDataKey for {} Replacing {} with {}",
+                                new Object[]{importDataKey, existing, dataImporter});
+                    }
                 }
+
+            } catch (Exception exception) {
+                logger.error("Failed to register data importer {}.", dataImporter, exception);
             }
         }
         
@@ -270,18 +279,28 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
         
         final Set<IPortalDataType> portalDataTypes = new LinkedHashSet<IPortalDataType>();
         
-        for (final IDataExporter<?> dataImporter : dataExporters) {
-            final IPortalDataType portalDataType = dataImporter.getPortalDataType();
-            final String typeId = portalDataType.getTypeId();
-            
-            this.logger.debug("Registering IDataExporter for '{}' - {}", new Object[] {typeId, dataImporter});
-            final IDataExporter<Object> existing = dataExportersMap.put(typeId, (IDataExporter<Object>)dataImporter);
-            if (existing != null) {
-                this.logger.warn("Duplicate IDataExporter typeId for {} Replacing {} with {}", 
-                        new Object[] {typeId, existing, dataImporter});
+        for (final IDataExporter<?> dataExporter : dataExporters) {
+
+            try {
+
+                final IPortalDataType portalDataType = dataExporter.getPortalDataType();
+                final String typeId = portalDataType.getTypeId();
+
+                this.logger.debug("Registering IDataExporter for '{}' - {}",
+                        new Object[]{typeId, dataExporter});
+                final IDataExporter<Object> existing =
+                        dataExportersMap.put(typeId, (IDataExporter<Object>) dataExporter);
+                if (existing != null) {
+                    this.logger.warn("Duplicate IDataExporter typeId for {} Replacing {} with {}",
+                            new Object[]{typeId, existing, dataExporter});
+                }
+
+                portalDataTypes.add(portalDataType);
+
+            } catch (Exception exception) {
+                logger.error("Failed to register data exporter {}.", dataExporter, exception);
             }
-            
-            portalDataTypes.add(portalDataType);
+
         }
         
         this.portalDataExporters = Collections.unmodifiableMap(dataExportersMap);
@@ -307,18 +326,27 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
         
         final Set<IPortalDataType> portalDataTypes = new LinkedHashSet<IPortalDataType>();
         
-        for (final IDataDeleter<?> dataImporter : dataDeleters) {
-            final IPortalDataType portalDataType = dataImporter.getPortalDataType();
-            final String typeId = portalDataType.getTypeId();
-            
-            this.logger.debug("Registering IDataDeleter for '{}' - {}", new Object[] {typeId, dataImporter});
-            final IDataDeleter<Object> existing = dataDeletersMap.put(typeId, (IDataDeleter<Object>)dataImporter);
-            if (existing != null) {
-                this.logger.warn("Duplicate IDataDeleter typeId for {} Replacing {} with {}", 
-                        new Object[] {typeId, existing, dataImporter});
+        for (final IDataDeleter<?> dataDeleter : dataDeleters) {
+
+            try {
+
+                final IPortalDataType portalDataType = dataDeleter.getPortalDataType();
+                final String typeId = portalDataType.getTypeId();
+
+                this.logger.debug("Registering IDataDeleter for '{}' - {}",
+                        new Object[]{typeId, dataDeleter});
+                final IDataDeleter<Object> existing =
+                        dataDeletersMap.put(typeId, (IDataDeleter<Object>) dataDeleter);
+                if (existing != null) {
+                    this.logger.warn("Duplicate IDataDeleter typeId for {} Replacing {} with {}",
+                            new Object[]{typeId, existing, dataDeleter});
+                }
+
+                portalDataTypes.add(portalDataType);
+
+            } catch (Exception exception) {
+                logger.error("Failed to register data deleter {}.", dataDeleter, exception);
             }
-            
-            portalDataTypes.add(portalDataType);
         }
         
         this.portalDataDeleters = Collections.unmodifiableMap(dataDeletersMap);
@@ -333,14 +361,21 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
         final Map<PortalDataKey, IDataUpgrader> dataUpgraderMap = new LinkedHashMap<PortalDataKey, IDataUpgrader>();
         
         for (final IDataUpgrader dataUpgrader : dataUpgraders) {
-            final Set<PortalDataKey> upgradeDataKeys = dataUpgrader.getSourceDataTypes();
-            for (final PortalDataKey upgradeDataKey : upgradeDataKeys) {
-                this.logger.debug("Registering IDataUpgrader for '{}' - {}", upgradeDataKey, dataUpgrader);
-                final IDataUpgrader existing = dataUpgraderMap.put(upgradeDataKey, dataUpgrader);
-                if (existing != null) {
-                    this.logger.warn("Duplicate IDataUpgrader PortalDataKey for {} Replacing {} with {}", 
-                            new Object[] {upgradeDataKey, existing, dataUpgrader});
+
+            try {
+
+                final Set<PortalDataKey> upgradeDataKeys = dataUpgrader.getSourceDataTypes();
+                for (final PortalDataKey upgradeDataKey : upgradeDataKeys) {
+                    this.logger.debug("Registering IDataUpgrader for '{}' - {}", upgradeDataKey, dataUpgrader);
+                    final IDataUpgrader existing = dataUpgraderMap.put(upgradeDataKey, dataUpgrader);
+                    if (existing != null) {
+                        this.logger.warn("Duplicate IDataUpgrader PortalDataKey for {} Replacing {} with {}",
+                                new Object[]{upgradeDataKey, existing, dataUpgrader});
+                    }
                 }
+
+            } catch (Exception exception) {
+                logger.error("Failed to register data upgrader {}.", dataUpgrader, exception);
             }
         }
         
@@ -655,7 +690,46 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
     public void importData(Source source) {
 		this.importData(source, null);
     }
-    
+
+    @Override
+    public final void importData(final Source source, PortalDataKey portalDataKey) {
+        //Get a StAX reader for the source to determine info about the data to import
+        final BufferedXMLEventReader bufferedXmlEventReader = createSourceXmlEventReader(source);
+
+        //If no PortalDataKey was passed build it from the source
+        if (portalDataKey == null) {
+            final StartElement rootElement = StaxUtils.getRootElement(bufferedXmlEventReader);
+            portalDataKey = new PortalDataKey(rootElement);
+            bufferedXmlEventReader.reset();
+        }
+
+        final String systemId = source.getSystemId();
+
+        //Post Process the PortalDataKey to see if more complex import operations are needed
+        final IPortalDataType portalDataType = this.dataKeyTypes.get(portalDataKey);
+        if (portalDataType == null) {
+            throw new RuntimeException("No IPortalDataType configured for " + portalDataKey + ", the resource will be ignored: " + getPartialSystemId(systemId));
+        }
+        final Set<PortalDataKey> postProcessedPortalDataKeys = portalDataType.postProcessPortalDataKey(systemId, portalDataKey, bufferedXmlEventReader);
+        bufferedXmlEventReader.reset();
+
+        //If only a single result from post processing import
+        if (postProcessedPortalDataKeys.size() == 1) {
+            this.importOrUpgradeData(systemId, DataAccessUtils.singleResult(postProcessedPortalDataKeys), bufferedXmlEventReader);
+        }
+        //If multiple results from post processing ordering is needed
+        else {
+            //Iterate over the data key order list to run the imports in the correct order
+            for (final PortalDataKey orderedPortalDataKey : this.dataKeyImportOrder) {
+                if (postProcessedPortalDataKeys.contains(orderedPortalDataKey)) {
+                    //Reset the to start of the XML document for each import/upgrade call
+                    bufferedXmlEventReader.reset();
+                    this.importOrUpgradeData(systemId, orderedPortalDataKey, bufferedXmlEventReader);
+                }
+            }
+        }
+    }
+
     /**
      * @param portalDataKey Optional PortalDataKey to use, useful for batch imports where post-processing of keys has already take place
      */
@@ -677,46 +751,6 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.jasig.portal.io.xml.IEntityImportService#importEntity(javax.xml.transform.Source)
-     */
-    protected final void importData(final Source source, PortalDataKey portalDataKey) {
-        //Get a StAX reader for the source to determine info about the data to import
-        final BufferedXMLEventReader bufferedXmlEventReader = createSourceXmlEventReader(source);
-        
-        //If no PortalDataKey was passed build it from the source
-        if (portalDataKey == null) {
-            final StartElement rootElement = StaxUtils.getRootElement(bufferedXmlEventReader);
-            portalDataKey = new PortalDataKey(rootElement);
-            bufferedXmlEventReader.reset();
-        }
-        
-        final String systemId = source.getSystemId();
-        
-        //Post Process the PortalDataKey to see if more complex import operations are needed
-        final IPortalDataType portalDataType = this.dataKeyTypes.get(portalDataKey);
-		if (portalDataType == null) {
-            throw new RuntimeException("No IPortalDataType configured for " + portalDataKey + ", the resource will be ignored: " + getPartialSystemId(systemId));
-        }
-        final Set<PortalDataKey> postProcessedPortalDataKeys = portalDataType.postProcessPortalDataKey(systemId, portalDataKey, bufferedXmlEventReader);
-        bufferedXmlEventReader.reset();
-        
-        //If only a single result from post processing import
-        if (postProcessedPortalDataKeys.size() == 1) {
-            this.importOrUpgradeData(systemId, DataAccessUtils.singleResult(postProcessedPortalDataKeys), bufferedXmlEventReader);
-        }
-        //If multiple results from post processing ordering is needed
-        else {
-            //Iterate over the data key order list to run the imports in the correct order
-            for (final PortalDataKey orderedPortalDataKey : this.dataKeyImportOrder) {
-                if (postProcessedPortalDataKeys.contains(orderedPortalDataKey)) {
-                    //Reset the to start of the XML document for each import/upgrade call
-                    bufferedXmlEventReader.reset();
-                    this.importOrUpgradeData(systemId, orderedPortalDataKey, bufferedXmlEventReader);
-                }
-            }
-        }
-    }
     
     protected String getPartialSystemId(String systemId) {
     	final String directoryUriStr = IMPORT_BASE_DIR.get();

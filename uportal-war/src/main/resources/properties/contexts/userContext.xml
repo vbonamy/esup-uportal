@@ -46,6 +46,8 @@
     <util:map id="profileKeyMappings">
         <entry key="desktop" value="default"/>
         <entry key="mobile" value="mobileDefault"/>
+        <entry key="universality" value="universality"/>
+        <entry key="respondr" value="respondr" />
     </util:map>
 
     <bean id="profileMapper" class="org.jasig.portal.layout.ChainingProfileMapperImpl">
@@ -53,13 +55,20 @@
         <property name="subMappers">
             <util:list>
                 <ref bean="sessionAttributeProfileMapper" />
-                <ref bean="userAgentProfileMapper" />
-                 <!--
-                 | Define a profilMapper for user guest associated to the serverName attribute,
-                 | This example configuration is applyed only if user-agent isn't a mobile.
-                 | You need to define and import a new profil for each entries on default users
-                 | Add "guest-[server name]-" prefix to the subfname found
+
+                <!--
+                 | uPortal 4.1 promotes a responsive design theme Respondr.  The older uPortal 3.x, 4.0x
+                 | mUniversality view is by default disabled.  To re-enable it so those user agent strings that
+                 | match the regex instruction get the mUniversality view, uncomment the following bean.
                  +-->
+                <!--<ref bean="userAgentProfileMapper" />-->
+
+                <!--
+                | Define a profilMapper for user guest associated to the serverName attribute,
+                | This example configuration is applyed only if user-agent isn't a mobile.
+                | You need to define and import a new profil for each entries on default users
+                | Add "guest-[server name]-" prefix to the subfname found
+                +-->
                 <!--
                 <bean class="org.jasig.portal.layout.ServerNameGuestChainingProfileMapper">
                 	<property name="authorizedServerNames">
@@ -96,7 +105,13 @@
     </bean>
 
     <!-- The following attribute names are used in searching for users through
-        person-directory, such as from within the Directory framework portlet. -->
+       person-directory, such as from within the Directory framework portlet. If using LDAP User Attribute sources,
+       these should correspond to the internal names (keys, not the ldap attribute names) of the
+       queryAttributeMapping property of bean uPortalLdapAttributeSource in personDirectoryContext.xml (see
+       https://wiki.jasig.org/display/UPM40/LDAP+User+Attribute+Sources).
+
+       For the search to work, users must also have permission to view the attributes (see
+       src/main/data/default/Everyone__VIEW_USER_ATTRIBUTE__UP_USERS.permission-set.xml -->
     <util:list id="directoryQueryAttributes">
         <value>givenName</value>
         <value>sn</value>

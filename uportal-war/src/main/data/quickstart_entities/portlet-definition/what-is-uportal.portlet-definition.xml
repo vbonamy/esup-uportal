@@ -23,7 +23,7 @@
     <title>Bienvenue sur uPortal</title>
     <name>Bienvenue sur uPortal</name>
     <fname>what-is-uportal</fname>
-    <desc>Description d'uPortal.</desc>
+    <desc>Description de uPortal.</desc>
     <type>CMS</type>
     <timeout>10000</timeout>
     <portlet-descriptor>
@@ -32,6 +32,10 @@
     </portlet-descriptor>
     <category>Démonstration</category>
     <group>Everyone</group>
+    <parameter>
+        <name>configurable</name>
+        <value>true</value>
+    </parameter>
     <parameter>
         <name>disableDynamicTitle</name>
         <value>true</value>
@@ -48,16 +52,16 @@
                 &lt;h2&gt;Qu'est-ce que uPortal?&lt;/h2&gt;
                 
                 &lt;p&gt;
-                    &lt;a href=&quot;http://www.uportal.org&quot; target=&quot;_blank&quot;&gt;uPortal&lt;/a&gt; 
+                    &lt;a href=&quot;http://www.apereo.org/uportal&quot; target=&quot;_blank&quot;&gt;uPortal&lt;/a&gt;
                     est un portail web libre et open source implémenté en Java 
                     et maintenu par l'ensemble de la communauté de l'enseignement supérieur 
 					sous la coordination de 
-                    &lt;a href=&quot;http://www.ja-sig.org&quot; target=&quot;_blank&quot;&gt;Jasig&lt;/a&gt;. 
+                    &lt;a href=&quot;http://www.apereo.org/&quot; target=&quot;_blank&quot;&gt;Apereo&lt;/a&gt;.
                     uPortal permet notamment d'agréger du contenu, présenter des applications en libre service, 
                     personnaliser la présentation et le contenu 
-                    en fonction d'attributs de groupes et utilisateurs, et permet également une 
+                    en fonction d'attributs de groupes et utilisateurs, faire fonctionner des applications pour mobiles, et permet également une 
                     personnalisation avancée pour chaque participant de l'expérience uPortal. 
-                    uPortal supporte la norme portlet Java JSR-168 
+                    uPortal supporte les normes portlet Java JSR-286 et JSR-168 
                     pour l'ajout de vos applications personnalisées au sein du portail.
                 &lt;/p&gt;
                 

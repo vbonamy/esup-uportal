@@ -37,6 +37,7 @@ import org.jasig.portal.io.xml.IPortalData;
  */
 public interface IPortletDefinition extends IBasicEntity, IPortalData {
     public static final String EDITABLE_PARAM = "editable";
+    public static final String CONFIGURABLE_PARAM = "configurable";
     public static final String HAS_HELP_PARAM = "hasHelp";
     public static final String HAS_ABOUT_PARAM = "hasAbout";
     
@@ -171,6 +172,26 @@ public interface IPortletDefinition extends IBasicEntity, IPortalData {
 	public void addLocalizedName(String locale, String chanName);
 
 	public void addLocalizedDescription(String locale, String chanDesc);
+	
+	/**
+	 * @return a portlet rating
+	 */
+	public Double getRating();
+
+	/**
+	 * @param rating sets portlet rating
+	 */
+	public void setRating(Double rating);
+
+	/**
+	 * @return Number of users that rated this portlet
+	 */
+	public Long getUsersRated();
+
+	/**
+	 * @param usersRated sets number of users that rated this portlet
+	 */
+	public void setUsersRated(Long usersRated);
 	
 	/**
 	 * Implementation required by IBasicEntity interface.

@@ -51,10 +51,13 @@
     <portlet:param name="execution" value="${flowExecutionKey}" /></portlet:actionURL>
     <c:set var="n"><portlet:namespace/></c:set>
     <c:set var="selectionMode">${selectMultiple}</c:set>
+
+    <link href="<c:url value="/media/skins/common/css/entity-selector.css"/>" rel="stylesheet" type="text/css" />
+
     <!--
     | PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
     | For the standards and guidelines that govern the user interface of this portlet
-    | including HTML, CSS, JavaScript, accessibilty, naming conventions, 3rd Party libraries
+    | including HTML, CSS, JavaScript, accessibility, naming conventions, 3rd Party libraries
     | (like jQuery and the Fluid Skinning System) and more, refer to:
     | http://www.ja-sig.org/wiki/x/cQ
     -->
@@ -69,57 +72,58 @@
             <h3 class="subtitle"><spring:message code="${pageSubtitleCode}" arguments="${pageSubtitleArgument}" text="${pageSubtitleText}"/></h3>
         </div>
         <!--content-->
-        <div id="${n}chooseGroupsBody" class="fl-widget-content content portlet-content" role="main">
+        <div id="${n}chooseGroupsBody" class="fl-widget-content content portlet-content container-fluid" role="main">
             <c:choose>
                 <c:when test="${selectionMode}">
                     <!--
                     | View: Multi Select.
                     ================================================-->
                     <div class="view-multi-select">
-                        <div class="columns-2">
-                            <div class="fl-container-flex60">
+                        <div class="columns-2 row-fluid row">
+                            <div class="fl-container-flex60 span8 col-md-8">
                                 <!-- entity -->
-                                <div id="${n}entityBrowser" class="entity-browser">
+                                <div id="${n}entityBrowser" class="entity-browser row">
                                     <!--breadcrumb-->
-                                    <div id="${n}entityBreadcrumb" class="breadcrumb">
+                                    <div id="${n}entityBreadcrumb" class="link-breadcrumb col-md-12">
                                         <h5 class="title"><spring:message code="groups"/>:</h5>
                                         <div id="${n}entityBreadcrumbs" class="breadcrumbs"></div>
                                     </div>
                                     <!--titlebar-->
-                                    <div id="${n}entityBrowserTitlebar" class="titlebar ui-helper-clearfix">
+                                    <div id="${n}entityBrowserTitlebar" class="titlebar ui-helper-clearfix col-md-12">
                                         <h4 class="title" id="${n}currentEntityName"></h4>
                                         <a class="select" id="${n}selectEntityLink" href="javascript:;" title="<spring:message code="select"/>"><span><spring:message code="select"/></span></a>
+
                                     </div>
                                     <!--content-->
-                                    <div id="${n}entityBrowserContent" class="content">
+                                    <div id="${n}entityBrowserContent" class="content row">
                                         <!--includes-->
-                                        <p><span id="${n}browsingInclude" class="current"></span> <spring:message code="includes"/>:</p>
+                                        <p class="col-md-12"><span id="${n}browsingInclude" class="current"></span> <spring:message code="includes"/>:</p>
                                         <!--members-->
                                         <c:forEach items="${selectTypes}" var="type">
                                         <c:choose>
                                             <c:when test="${type == 'group'}">
-                                                <div class="group">
+                                                <div class="group col-md-12">
                                                     <h6 class="title"><spring:message code="groups"/></h6>
                                                     <ul class="member-list"></ul>
                                                     <p class="no-members" style="display:none"><spring:message code="no.member.subgroups"/></p>
                                                 </div>
                                             </c:when>
                                             <c:when test="${type == 'person'}">
-                                                <div class="person">
+                                                <div class="person col-md-12">
                                                     <h6 class="title"><spring:message code="people"/></h6>
                                                     <ul class="member-list"></ul>
                                                     <p class="no-members" style="display:none"><spring:message code="no.direct.member.people"/></p>
                                                 </div>
                                             </c:when>
                                             <c:when test="${type == 'category'}">
-                                                <div class="category">
+                                                <div class="category col-md-12">
                                                     <h6 class="title"><spring:message code="categories"/></h6>
                                                     <ul class="member-list"></ul>
                                                     <p class="no-members" style="display:none"><spring:message code="no.member.subcategories"/></p>
                                                 </div>
                                             </c:when>
                                             <c:when test="${type == 'portlet'}">
-                                                <div class="portlet">
+                                                <div class="portlet col-md-12">
                                                     <h6 class="title"><spring:message code="portlets"/></h6>
                                                     <ul class="member-list"></ul>
                                                     <p class="no-members" style="display:none"><spring:message code="no.direct.member.portlets"/></p>
@@ -128,12 +132,12 @@
                                         </c:choose>
                                     </c:forEach>
                                     </div><!--end: content-->
-                                    
+
                                     <!--search-->
                                     <div id="${n}portletSearch" class="portlet-search">
-                                        <form id="${n}searchForm">
-                                            <input type="text" name="searchterm" value="<spring:message code="enter.name"/>"/>
-                                            <input type="submit" class="button" value="<spring:message code="go"/>" />
+                                        <form id="${n}searchForm" class="form-inline" role="form">
+                                            <input type="text" class="form-control" name="searchterm" value="<spring:message code="enter.name"/>"/>
+                                            <input type="submit" class="button btn" value="<spring:message code="go"/>" />
                                         </form>
                                         <div id="${n}searchDropDown" class="search-dropdown">
                                             <div id="${n}closeDropDown" class="search-close"><a href="javascript:;">Close</a></div>
@@ -146,9 +150,10 @@
                                             <div id="${n}searchLoader" class="search-loader"><span>&nbsp;</span></div>
                                         </div>
                                     </div>
+
                                 </div><!--end: entity-->
                             </div>
-                            <div class="fl-container-flex40">
+                            <div class="fl-container-flex40 span4 col-md-4">
                                 <!--selection-->
                                 <div class="portlet-selection">
                                     <!--titlebar-->
@@ -171,11 +176,11 @@
                                             
                                             <div id="${n}buttonPanel" class="buttons">
                                                 <c:if test="${ showBackButton }">
-                                                    <input class="button" type="submit" value="<spring:message code="${ backButtonCode }" text="${ backButtonText }"/>" name="_eventId_back"/>
+                                                    <input class="button btn" type="submit" value="<spring:message code="${ backButtonCode }" text="${ backButtonText }"/>" name="_eventId_back"/>
                                                 </c:if>
-                                                <input id="${n}buttonPrimary" class="button primary" type="submit" value="<spring:message code="${ saveButtonCode }" text="${ saveButtonText }"/>" name="_eventId_save"/>
+                                                <input id="${n}buttonPrimary" class="button btn btn-primary" type="submit" value="<spring:message code="${ saveButtonCode }" text="${ saveButtonText }"/>" name="_eventId_save"/>
                                                 <c:if test="${ showCancelButton }">
-                                                    <input class="button" type="submit" value="<spring:message code="${ cancelButtonCode }" text="${ cancelButtonText }"/>" name="_eventId_cancel"/>
+                                                    <input class="button btn btn-link" type="submit" value="<spring:message code="${ cancelButtonCode }" text="${ cancelButtonText }"/>" name="_eventId_cancel"/>
                                                 </c:if>
                                             </div>
                                         </form>
@@ -214,7 +219,7 @@
                             <!--content-->
                             <div class="content">
                                 <!--breadcrumb-->
-                                <div id="${n}entityBreadcrumb" class="breadcrumb">
+                                <div id="${n}entityBreadcrumb" class="link-breadcrumb">
                                     <h5 class="title"><spring:message code="groups"/>:</h5>
                                     <div id="${n}entityBreadcrumbs" class="breadcrumbs"></div>
                                 </div>
@@ -266,11 +271,11 @@
                                 <!--buttons-->
                                 <div id="${n}buttonPanel" class="buttons">
                                     <c:if test="${showBackButton}">
-                                        <input class="button" type="submit" value="<spring:message code="${ backButtonCode }" text="${ backButtonText }"/>" name="_eventId_back"/>
+                                        <input class="button btn" type="submit" value="<spring:message code="${ backButtonCode }" text="${ backButtonText }"/>" name="_eventId_back"/>
                                     </c:if>
-                                    <input id="${n}buttonPrimary" class="button primary" type="submit" value="<spring:message code="${ saveButtonCode }" text="${ saveButtonText }"/>" name="_eventId_save"/>
+                                    <input id="${n}buttonPrimary" class="button btn btn-primary" type="submit" value="<spring:message code="${ saveButtonCode }" text="${ saveButtonText }"/>" name="_eventId_save"/>
                                     <c:if test="${showCancelButton}">
-                                        <input class="button" type="submit" value="<spring:message code="${ cancelButtonCode }" text="${ cancelButtonText }"/>" name="_eventId_cancel"/>
+                                        <input class="button btn btn-link" type="submit" value="<spring:message code="${ cancelButtonCode }" text="${ cancelButtonText }"/>" name="_eventId_cancel"/>
                                     </c:if>
                                 </div><!--end: buttons-->
                             </div><!--end: content-->
@@ -280,7 +285,7 @@
                         <div id="${n}portletSearch" class="portlet-search">
                             <form id="${n}searchForm">
                                 <input type="text" name="searchterm" value="<spring:message code="enter.name"/>"/>
-                                <input type="submit" class="button" value="<spring:message code="go"/>" />
+                                <input type="submit" class="button btn" value="<spring:message code="go"/>" />
                             </form>
                             <div id="${n}searchDropDown" class="search-dropdown">
                                 <div id="${n}closeDropDown" class="search-close"><a href="javascript:;">Close</a></div>

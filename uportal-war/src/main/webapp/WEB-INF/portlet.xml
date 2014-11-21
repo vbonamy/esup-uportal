@@ -98,6 +98,44 @@
             <title>ExitFragmentAdministration</title>
         </portlet-info>
     </portlet>
+    <portlet>
+        <portlet-name>Favorites</portlet-name>
+        <display-name xml:lang="en">Favorites</display-name>
+        <portlet-class>org.springframework.web.portlet.DispatcherPortlet</portlet-class>
+        <init-param>
+            <name>contextConfigLocation</name>
+            <value>classpath:/properties/contexts/portlet/Favorites-portlet.xml</value>
+        </init-param>
+        <expiration-cache>0</expiration-cache>
+        <supports>
+            <mime-type>text/html</mime-type>
+            <portlet-mode>VIEW</portlet-mode>
+            <portlet-mode>EDIT</portlet-mode>
+        </supports>
+        <supported-locale>en</supported-locale>
+        <portlet-info>
+            <title>Favorites</title>
+        </portlet-info>
+    </portlet>
+    	
+    <portlet>
+    	<portlet-name>PortletMarketplace</portlet-name>
+        <display-name xml:lang="en">Marketplace</display-name>
+        <portlet-class>org.springframework.web.portlet.DispatcherPortlet</portlet-class>
+        <init-param>
+            <name>contextConfigLocation</name>
+            <value>classpath:/properties/contexts/portlet/PortletMarketplace-portlet.xml</value>
+        </init-param>
+        <expiration-cache>0</expiration-cache>
+        <supports>
+            <mime-type>text/html</mime-type>
+            <portlet-mode>VIEW</portlet-mode>
+        </supports>
+        <supported-locale>en</supported-locale>
+        <portlet-info>
+            <title>PortletMarketplace</title>
+        </portlet-info>
+    </portlet>
     
     <portlet>
         <portlet-name>FragmentAdministration</portlet-name>
@@ -529,6 +567,72 @@
     </portlet>
 
     <portlet>
+        <portlet-name>DynamicRespondrSkin</portlet-name>
+        <display-name xml:lang="en">Dynamic Respondr Skin</display-name>
+        <portlet-class>org.springframework.web.portlet.HeaderHandlingDispatcherPortlet</portlet-class>
+        <init-param>
+            <name>contextConfigLocation</name>
+            <value>classpath:/properties/contexts/portlet/DynamicRespondrSkin-portlet.xml</value>
+        </init-param>
+        <!-- TODO look into expiration-cache mapping.  An ActionRequest to update the preferences should invalidate
+             the portal's render cache, but it does not appear to be doing that at least in CONFIG mode.
+             Expiration cache is currently disabled so preference changes will take effect immediately. However
+             this results in unnecessary processing of each render request.  UP-3986 -->
+        <expiration-cache>0</expiration-cache>
+        <cache-scope>private</cache-scope>
+        <supports>
+            <mime-type>text/html</mime-type>
+            <portlet-mode>view</portlet-mode>
+            <portlet-mode>config</portlet-mode>
+        </supports>
+        <supported-locale>en</supported-locale>
+        <portlet-info>
+            <title>Dynamic Respondr Skin</title>
+        </portlet-info>
+        <portlet-preferences>
+            <!-- PREF is a prefix to dynamically select those portlet preference values that are sent to the
+                 config jsp page, and written to the LESS file as variables without the prefix. -->
+
+            <!-- Set to true to enable dynamic skins, which will process {PREFdynamicSkinName}.less with LESS variables
+                 defined by portlet preferences to create a custom skin CSS file to embed into the page.
+                 Set to empty string to have the page load {PREFdynamicSkinName}.css. -->
+            <preference>
+                <name>PREFdynamicSkinEnabled</name>
+                <value></value>
+            </preference>
+            <!-- If PREFdynamic=true, the Dynamic Skin Portlet will process {PREFdynamicSkinName}.less to create
+                 a custom skin CSS file to link into the page.  If dynamic=false, the Dynamic Skin Portlet
+                 will link in {PREFdynamicSkinName}.css. -->
+            <preference>
+                <name>PREFdynamicSkinName</name>
+                <value>defaultSkin</value>
+            </preference>
+
+            <!-- All PREF* preference values (without the PREF prefix) are dynamically injected as LESS variables
+                 into the LESS compilation processing, but preferences below this comment are name/value pairs
+                 that are intended to be used within the LESS files. -->
+
+            <preference>
+                <name>PREFcolor1</name>
+                <value>#4065B0</value>
+            </preference>
+            <preference>
+                <name>PREFcolor2</name>
+                <value>#8AA9D8</value>
+            </preference>
+            <preference>
+                <name>PREFcolor3</name>
+                <value>#F68923</value>
+            </preference>
+        </portlet-preferences>
+        
+        <container-runtime-option>
+            <name>javax.portlet.renderHeaders</name>
+            <value>true</value>
+        </container-runtime-option>
+    </portlet>
+
+    <portlet>
         <portlet-name>Search</portlet-name>
         <display-name xml:lang="en">Search</display-name>
         <portlet-class>org.springframework.web.portlet.DispatcherPortlet</portlet-class>
@@ -545,6 +649,14 @@
         <portlet-info>
             <title>Search</title>
         </portlet-info>
+        <portlet-preferences>
+            <!-- Max number of characters returned for title or description for auto-complete search results.
+                 92 found to be a good fit for keeping most description text at 2 lines. -->
+            <preference>
+                <name>autocompleteMaxTextSize</name>
+                <value>92</value>
+            </preference>
+        </portlet-preferences>
         
         <supported-processing-event>
             <qname xmlns:x="https://source.jasig.org/schemas/uportal/search">x:SearchRequest</qname>
@@ -633,6 +745,40 @@
         </portlet-info>
     </portlet>
 
+    <!-- 
+      Simple, Spring Portlet MVC portlet implementation that renders a JSP at a 
+      location specified as a portlet preference.  Very similar to the 
+      SimpleJspPortlet in the jasig-widget-portlets project.
+    -->
+    <portlet>
+        <portlet-name>JspInvoker</portlet-name>
+        <display-name xml:lang="en">JspInvoker</display-name>
+        <portlet-class>org.springframework.web.portlet.DispatcherPortlet</portlet-class>
+        <init-param>
+            <name>contextConfigLocation</name>
+            <value>classpath:/properties/contexts/portlet/JspInvoker-portlet.xml</value>
+        </init-param>
+        <expiration-cache>0</expiration-cache>
+        <supports>
+            <mime-type>text/html</mime-type>
+            <portlet-mode>VIEW</portlet-mode>
+        </supports>
+        <supported-locale>en</supported-locale>
+        <portlet-info>
+            <title>JspInvoker</title>
+        </portlet-info>
+        <portlet-preferences>
+            <!-- Location of the JSP file to use -->
+            <preference>
+                <name>JspInvokerPortletController.viewLocation</name>
+            </preference>
+            <!-- Names of String beans, if any, that should be made available to the JSP on the model -->
+            <preference>
+                <name>JspInvokerPortletController.beans</name>
+            </preference>
+        </portlet-preferences>
+    </portlet>
+
     <portlet>
         <portlet-name>ForgotPassword</portlet-name>
         <display-name xml:lang="en">Forgot Password</display-name>
@@ -652,25 +798,6 @@
         </portlet-info>
     </portlet>
 
-    <portlet>
-        <portlet-name>ResetPassword</portlet-name>
-        <display-name xml:lang="en">Reset Password</display-name>
-        <portlet-class>org.springframework.web.portlet.DispatcherPortlet</portlet-class>
-        <init-param>
-            <name>contextConfigLocation</name>
-            <value>classpath:/properties/contexts/portlet/ResetPassword-portlet.xml</value>
-        </init-param>
-        <expiration-cache>0</expiration-cache>
-        <supports>
-            <mime-type>text/html</mime-type>
-            <portlet-mode>VIEW</portlet-mode>
-        </supports>
-        <supported-locale>en</supported-locale>
-        <portlet-info>
-            <title>Reset Password</title>
-        </portlet-info>
-    </portlet>
-    
     <portlet>
         <portlet-name>Translator</portlet-name>
         <display-name xml:lang="en">Translator</display-name>
@@ -773,10 +900,54 @@
         </security-role-ref>
     </portlet>
 
+    <portlet>
+        <portlet-name>TenantManager</portlet-name>
+        <display-name xml:lang="en">Tenant Manager</display-name>
+        <portlet-class>org.springframework.web.portlet.DispatcherPortlet</portlet-class>
+        <init-param>
+            <name>contextConfigLocation</name>
+            <value>classpath:/properties/contexts/portlet/TenantManager-portlet.xml</value>
+        </init-param>
+        <expiration-cache>-1</expiration-cache>
+        <supports>
+            <mime-type>text/html</mime-type>
+            <portlet-mode>VIEW</portlet-mode>
+        </supports>
+        <supported-locale>en</supported-locale>
+        <portlet-info>
+            <title>Tenant Manager</title>
+        </portlet-info>
+        <portlet-preferences>
+            <preference>
+                <name>groupsTemplate</name>
+                <value>Tenant Template</value>
+            </preference>
+            <preference>
+                <name>tenantToken</name>
+                <value>$tenant</value>
+            </preference>
+        </portlet-preferences>
+    </portlet>
+
     <custom-portlet-mode>
         <description>Allows the portlet to render a preferences edit UI during publishing</description>
         <portlet-mode>config</portlet-mode>
     </custom-portlet-mode>    
+
+    <user-attribute>
+        <description>The P3P username attribute</description>
+        <name>user.login.id</name>
+    </user-attribute>
+
+    <user-attribute>
+        <description>The uPortal attribute for labelling a user in the UI</description>
+        <name>displayName</name>
+    </user-attribute>
+
+    <user-attribute>
+        <description>Indicates whether the user is impersonating</description>
+        <name>impersonating</name>
+    </user-attribute>
 
     <event-definition>
         <qname xmlns:x="https://source.jasig.org/schemas/uportal/search">x:SearchRequest</qname>
@@ -791,4 +962,5 @@
         <name>org.jasig.portal.globalEvent</name>
         <value>{https://source.jasig.org/schemas/uportal/search}SearchRequest</value>
     </container-runtime-option>
+
 </portlet-app>

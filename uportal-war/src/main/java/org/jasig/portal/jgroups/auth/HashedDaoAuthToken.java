@@ -55,11 +55,6 @@ public class HashedDaoAuthToken extends AuthToken {
         
         return av;
     }
-    
-    @Override
-    public int size() {
-        return Util.size(this.getAuthValue());
-    }
 
     public String getName() {
         return HashedDaoAuthToken.class.getName();

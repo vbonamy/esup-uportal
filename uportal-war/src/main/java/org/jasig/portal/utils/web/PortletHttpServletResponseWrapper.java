@@ -36,7 +36,6 @@ import org.apache.commons.io.output.NullWriter;
 import org.apache.commons.io.output.ProxyWriter;
 import org.jasig.portal.portlet.om.IPortletWindow;
 import org.jasig.portal.utils.DelegatingServletOutputStream;
-import org.jasig.portal.utils.Servlet3WrapperUtils;
 
 /**
  * Portlet response wrapper. Makes sure the portlet doesn't screw with the portal's response
@@ -45,19 +44,13 @@ import org.jasig.portal.utils.Servlet3WrapperUtils;
  * discard all data written and log byte/char counts at warn level on close.
  * 
  * @author Eric Dalquist
- * @version $Revision$
  */
 public class PortletHttpServletResponseWrapper extends AbstractHttpServletResponseWrapper {
     private final IPortletWindow portletWindow;
     private ServletOutputStream servletOutputStream;
     private PrintWriter printWriter;
-    
-    public static HttpServletResponse create(HttpServletResponse httpServletResponse, IPortletWindow portletWindow) {
-        final HttpServletResponse proxy = new PortletHttpServletResponseWrapper(httpServletResponse, portletWindow);
-        return Servlet3WrapperUtils.addServlet3Wrapper(proxy, httpServletResponse);
-    }
 
-    PortletHttpServletResponseWrapper(HttpServletResponse httpServletResponse, IPortletWindow portletWindow) {
+    public PortletHttpServletResponseWrapper(HttpServletResponse httpServletResponse, IPortletWindow portletWindow) {
         super(httpServletResponse);
         this.portletWindow = portletWindow;
     }

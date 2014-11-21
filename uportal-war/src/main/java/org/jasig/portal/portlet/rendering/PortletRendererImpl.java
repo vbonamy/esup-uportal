@@ -20,7 +20,6 @@
 package org.jasig.portal.portlet.rendering;
 
 import java.io.IOException;
-import java.io.Writer;
 
 import javax.portlet.CacheControl;
 import javax.portlet.Event;
@@ -31,10 +30,8 @@ import javax.portlet.PortletSession;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.apache.pluto.container.PortletContainer;
 import org.apache.pluto.container.PortletContainerException;
 import org.jasig.portal.AuthorizationException;
@@ -69,6 +66,8 @@ import org.jasig.portal.url.ParameterMap;
 import org.jasig.portal.utils.web.PortletHttpServletRequestWrapper;
 import org.jasig.portal.utils.web.PortletHttpServletResponseWrapper;
 import org.jasig.portal.utils.web.PortletMimeHttpServletResponseWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -80,7 +79,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class PortletRendererImpl implements IPortletRenderer {
-	protected final Log logger = LogFactory.getLog(this.getClass());
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     private IPersonManager personManager;
     private IPortletWindowRegistry portletWindowRegistry;
@@ -115,40 +114,37 @@ public class PortletRendererImpl implements IPortletRenderer {
         this.portletDelegationLocator = portletDelegationLocator;
     }
     /**
-	 * @param portletCacheControlService the portletCacheControlService to set
-	 */
+     * @param portletCacheControlService the portletCacheControlService to set
+     */
     @Autowired
-	public void setPortletCacheControlService(
-			IPortletCacheControlService portletCacheControlService) {
-		this.portletCacheControlService = portletCacheControlService;
-	}
-	
-	
-	/*
-	 * PLT 22.1 If the content of a portlet is cached and the portlet is target of request 
+    public void setPortletCacheControlService(
+            IPortletCacheControlService portletCacheControlService) {
+        this.portletCacheControlService = portletCacheControlService;
+    }
+    
+    
+    /*
+     * PLT 22.1 If the content of a portlet is cached and the portlet is target of request 
      * with an action-type semantic (e.g. an action or event call), the portlet container should discard the cache and
      * invoke the corresponding request handling methods of the portlet like processAction,or processEvent.
      * 
-	 *  (non-Javadoc)
+     *  (non-Javadoc)
      * @see org.jasig.portal.channels.portlet.IPortletRenderer#doAction(org.jasig.portal.portlet.om.IPortletWindowId, javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
     public long doAction(IPortletWindowId portletWindowId, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-    	this.portletCacheControlService.purgeCachedPortletData(portletWindowId, httpServletRequest);
-    	
-    	final IPortletWindow portletWindow = this.portletWindowRegistry.getPortletWindow(httpServletRequest, portletWindowId);
+        this.portletCacheControlService.purgeCachedPortletData(portletWindowId, httpServletRequest);
+        
+        final IPortletWindow portletWindow = this.portletWindowRegistry.getPortletWindow(httpServletRequest, portletWindowId);
 
         enforceConfigPermission(httpServletRequest, portletWindow);
-
         
         httpServletRequest = this.setupPortletRequest(httpServletRequest);
-        httpServletResponse = PortletHttpServletResponseWrapper.create(httpServletResponse, portletWindow);
+        httpServletResponse = new PortletHttpServletResponseWrapper(httpServletResponse, portletWindow);
         
         //Execute the action, 
-        if (this.logger.isDebugEnabled()) {
-            this.logger.debug("Executing portlet action for window '" + portletWindow + "'");
-        }
-        
+        this.logger.debug("Executing portlet action for window '{}'", portletWindow);
+
         final long start = System.nanoTime();
         try {
             this.portletContainer.doAction(portletWindow.getPlutoPortletWindow(), httpServletRequest, httpServletResponse);
@@ -181,20 +177,18 @@ public class PortletRendererImpl implements IPortletRenderer {
     @Override
     public long doEvent(IPortletWindowId portletWindowId, HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse, Event event) {
-    	this.portletCacheControlService.purgeCachedPortletData(portletWindowId, httpServletRequest);
-    	
-        final IPortletWindow portletWindow = this.portletWindowRegistry.getPortletWindow(httpServletRequest, portletWindowId);
+        this.portletCacheControlService.purgeCachedPortletData(portletWindowId, httpServletRequest);
         
-        httpServletRequest = this.setupPortletRequest(httpServletRequest);
-        httpServletResponse = PortletHttpServletResponseWrapper.create(httpServletResponse, portletWindow);
+        final IPortletWindow portletWindow = this.portletWindowRegistry.getPortletWindow(httpServletRequest, portletWindowId);
 
         enforceConfigPermission(httpServletRequest, portletWindow);
         
-        //Execute the action, 
-        if (this.logger.isDebugEnabled()) {
-            this.logger.debug("Executing portlet event for window '" + portletWindow + "'");
-        }
+        httpServletRequest = this.setupPortletRequest(httpServletRequest);
+        httpServletResponse = new PortletHttpServletResponseWrapper(httpServletResponse, portletWindow);
         
+        //Execute the action, 
+        this.logger.debug("Executing portlet event for window '{}'", portletWindow);
+
         final long start = System.nanoTime();
         try {
             this.portletContainer.doEvent(portletWindow.getPlutoPortletWindow(), httpServletRequest, httpServletResponse, event);
@@ -221,8 +215,8 @@ public class PortletRendererImpl implements IPortletRenderer {
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse, PortletOutputHandler portletOutputHandler) throws IOException  {
 
-        // enforce CONFIG mode restriction through its enforcement in doRender().
-
+        // enforce CONFIG mode restriction through its enforcement in doRender();
+        
         return doRender(portletWindowId,
                 httpServletRequest,
                 httpServletResponse,
@@ -233,7 +227,8 @@ public class PortletRendererImpl implements IPortletRenderer {
     
     /**
      * Interacts with the {@link IPortletCacheControlService} to determine if the markup should come from cache or not.
-     * If cached data doesn't exist or is expired, this delegates to {@link #doRenderMarkupInternal(IPortletWindowId, HttpServletRequest, HttpServletResponse, Writer)}.
+     * If cached data doesn't exist or is expired, this delegates to {@link #doRender(IPortletWindowId, HttpServletRequest,
+            HttpServletResponse, PortletOutputHandler, RenderPart)}.
      * @throws IOException 
      */
     @Override
@@ -241,7 +236,7 @@ public class PortletRendererImpl implements IPortletRenderer {
             HttpServletResponse httpServletResponse, PortletOutputHandler portletOutputHandler) throws IOException {
 
         // enforce CONFIG mode access restriction through its enforcement in the doRender() impl.
-
+        
         return doRender(portletWindowId,
                 httpServletRequest,
                 httpServletResponse,
@@ -389,8 +384,8 @@ public class PortletRendererImpl implements IPortletRenderer {
         }
 
         if (cacheState.isUseCachedData()) {
-    		return doRenderReplayCachedContent(portletWindow, httpServletRequest, cacheState, portletOutputHandler, renderPart, 0);
-    	}
+            return doRenderReplayCachedContent(portletWindow, httpServletRequest, cacheState, portletOutputHandler, renderPart, 0);
+        }
         
         final int cacheSizeThreshold = this.portletCacheControlService.getCacheSizeThreshold();
         final CachingPortletOutputHandler cachingPortletOutputHandler = new CachingPortletOutputHandler(portletOutputHandler, cacheSizeThreshold);
@@ -399,14 +394,12 @@ public class PortletRendererImpl implements IPortletRenderer {
         
         //Setup the request and response
         httpServletRequest = this.setupPortletRequest(httpServletRequest);
-        httpServletResponse = PortletMimeHttpServletResponseWrapper.create(httpServletResponse, portletWindow, portletOutputHandler, cacheControl);
+        httpServletResponse = new PortletMimeHttpServletResponseWrapper(httpServletResponse, portletWindow, portletOutputHandler, cacheControl);
         
         httpServletRequest.setAttribute(ATTRIBUTE__PORTLET_CACHE_CONTROL, cacheControl);
         httpServletRequest.setAttribute(ATTRIBUTE__PORTLET_OUTPUT_HANDLER, cachingPortletOutputHandler);
         
-        if (this.logger.isDebugEnabled()) {
-            this.logger.debug("Rendering portlet body for window '" + portletWindow + "'");
-        }
+        logger.debug("Rendering portlet {} for window {}", renderPart.name(), portletWindow);
 
         final long renderStartTime = System.nanoTime();
         try {
@@ -432,8 +425,8 @@ public class PortletRendererImpl implements IPortletRenderer {
             if (cachedPortletData == null) {
                 throw new PortletDispatchException(
                         "The portlet window '" + portletWindow + "' indicated via CacheControl#useCachedContent " +
-                		"that the portal should render cached content, however there is no cached content to return. " +
-                		"This is a portlet bug.",
+                        "that the portal should render cached content, however there is no cached content to return. " +
+                        "This is a portlet bug.",
                         portletWindow);
             }
             
@@ -477,20 +470,17 @@ public class PortletRendererImpl implements IPortletRenderer {
     protected PortletRenderResult doRenderReplayCachedContent(IPortletWindow portletWindow,
             HttpServletRequest httpServletRequest, CacheState<CachedPortletData<PortletRenderResult>, PortletRenderResult> cacheState,
             PortletOutputHandler portletOutputHandler, RenderPart renderPart, long baseExecutionTime) throws IOException {
-        
-        if (logger.isDebugEnabled()) {
-            logger.debug("Replaying cached content for Render " + renderPart + " request to " + portletWindow);
-        }
 
         enforceConfigPermission(httpServletRequest, portletWindow);
 
+        logger.debug("Replaying cached content for Render {} request to {}", renderPart, portletWindow);
+
+        final long renderStartTime = System.nanoTime();
         
-    	final long renderStartTime = System.nanoTime();
-    	
-    	final CachedPortletData<PortletRenderResult> cachedPortletData = cacheState.getCachedPortletData();
+        final CachedPortletData<PortletRenderResult> cachedPortletData = cacheState.getCachedPortletData();
         cachedPortletData.replay(portletOutputHandler);
-    	
-    	final long executionTime = baseExecutionTime + (System.nanoTime() - renderStartTime);
+        
+        final long executionTime = baseExecutionTime + (System.nanoTime() - renderStartTime);
 
         publishRenderEvent(portletWindow, httpServletRequest, renderPart, executionTime, true);
         
@@ -528,7 +518,7 @@ public class PortletRendererImpl implements IPortletRenderer {
      * @return an appropriate {@link PortletRenderResult}, never null
      */
     protected PortletRenderResult constructPortletRenderResult(HttpServletRequest httpServletRequest, long renderTime) {
-    	 final String title = (String)httpServletRequest.getAttribute(IPortletRenderer.ATTRIBUTE__PORTLET_TITLE);
+         final String title = (String)httpServletRequest.getAttribute(IPortletRenderer.ATTRIBUTE__PORTLET_TITLE);
          final String newItemCountString = (String)httpServletRequest.getAttribute(IPortletRenderer.ATTRIBUTE__PORTLET_NEW_ITEM_COUNT);
          final int newItemCount;
          if (newItemCountString != null && StringUtils.isNumeric(newItemCountString)) {
@@ -540,11 +530,11 @@ public class PortletRendererImpl implements IPortletRenderer {
          
          return new PortletRenderResult(title, link, newItemCount, renderTime);
     }
-	
-	@Override
+    
+    @Override
     public long doServeResource(IPortletWindowId portletWindowId, HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse, PortletResourceOutputHandler portletOutputHandler) throws IOException {
-	    
+        
         final CacheState<CachedPortletResourceData<Long>, Long> cacheState = this.portletCacheControlService
                 .getPortletResourceState(httpServletRequest, portletWindowId);
 
@@ -569,17 +559,15 @@ public class PortletRendererImpl implements IPortletRenderer {
         
         //Setup the request and response
         httpServletRequest = this.setupPortletRequest(httpServletRequest);
-        httpServletResponse = PortletResourceHttpServletResponseWrapper.create(httpServletResponse, portletWindow, portletOutputHandler, cacheControl);
+        httpServletResponse = new PortletResourceHttpServletResponseWrapper(httpServletResponse, portletWindow, portletOutputHandler, cacheControl);
         
         httpServletRequest.setAttribute(ATTRIBUTE__PORTLET_CACHE_CONTROL, cacheControl);
         httpServletRequest.setAttribute(ATTRIBUTE__PORTLET_OUTPUT_HANDLER, cachingPortletOutputHandler);
         
-        if (this.logger.isDebugEnabled()) {
-            this.logger.debug("Executing resource request for window '" + portletWindow + "'");
-        }
-	    
-		final long start = System.nanoTime();
-		try {
+        this.logger.debug("Executing resource request for window {}", portletWindow);
+
+        final long start = System.nanoTime();
+        try {
             this.portletContainer.doServeResource(portletWindow.getPlutoPortletWindow(), httpServletRequest, httpServletResponse);
         }
         catch (PortletException pe) {
@@ -592,7 +580,7 @@ public class PortletRendererImpl implements IPortletRenderer {
             throw new PortletDispatchException("The portlet window '" + portletWindow + "' threw an exception while executing serveResource.", portletWindow, ioe);
         }
         final long executionTime = System.nanoTime() - start;
-		
+        
         //See if the portlet signaled to use the cached content
         final boolean useCachedContent = cacheControl.useCachedContent();
         if (useCachedContent) {
@@ -613,8 +601,8 @@ public class PortletRendererImpl implements IPortletRenderer {
             return doResourceReplayCachedContent(portletWindow, httpServletRequest, cacheState, cachingPortletOutputHandler, executionTime);
         }
         
-		publishResourceEvent(portletWindow, httpServletRequest, executionTime, false, false);
-		
+        publishResourceEvent(portletWindow, httpServletRequest, executionTime, false, false);
+        
         if (cacheState != null) {
             boolean shouldCache = this.portletCacheControlService.shouldOutputBeCached(cacheControl);
 
@@ -630,9 +618,9 @@ public class PortletRendererImpl implements IPortletRenderer {
                 }
             }
         }
-		
-		return executionTime;
-	}
+        
+        return executionTime;
+    }
     
     protected long doResourceReplayBrowserContent(IPortletWindow portletWindow, HttpServletRequest httpServletRequest,
             CacheState<CachedPortletResourceData<Long>, Long> cacheState,
@@ -640,10 +628,8 @@ public class PortletRendererImpl implements IPortletRenderer {
 
         enforceConfigPermission(httpServletRequest, portletWindow);
         
-        if (logger.isDebugEnabled()) {
-            logger.debug("Sending 304 for resource request to " + portletWindow);
-        }
-        
+        logger.debug("Sending 304 for resource request to {}", portletWindow);
+
         if (portletOutputHandler.isCommitted()) {
             throw new IllegalStateException("Attempting to send 304 but response is already committed");
         }
@@ -675,10 +661,8 @@ public class PortletRendererImpl implements IPortletRenderer {
 
         enforceConfigPermission(httpServletRequest, portletWindow);
         
-        if (logger.isDebugEnabled()) {
-            logger.debug("Replaying cached content for resource request to " + portletWindow);
-        }
-        
+        logger.debug("Replaying cached content for resource request to {}", portletWindow);
+
         final long renderStartTime = System.nanoTime();
         
         final CachedPortletResourceData<Long> cachedPortletResourceData = cacheState.getCachedPortletData();
@@ -709,92 +693,98 @@ public class PortletRendererImpl implements IPortletRenderer {
 
         this.portalEventFactory.publishPortletResourceExecutionEvent(httpServletRequest, this, portletWindowId, executionTime, usedBrowserCache, usedPortalCache);
     }
-	
-	/*
-	 * (non-Javadoc)
-	 * @see org.jasig.portal.portlet.rendering.IPortletRenderer#doReset(org.jasig.portal.portlet.om.IPortletWindowId, javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-	 */
-	@Override
+    
+    /*
+     * (non-Javadoc)
+     * @see org.jasig.portal.portlet.rendering.IPortletRenderer#doReset(org.jasig.portal.portlet.om.IPortletWindowId, javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     */
+    @Override
     public void doReset(IPortletWindowId portletWindowId, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
-        // Don't enforce config mode restriction because this is going to snap the portlet window into VIEW mode anyway.
-		final IPortletWindow portletWindow = this.portletWindowRegistry.getPortletWindow(httpServletRequest, portletWindowId);
-		if(portletWindow != null) {
-			portletWindow.setPortletMode(PortletMode.VIEW);
-			portletWindow.setRenderParameters(new ParameterMap());
-			portletWindow.setExpirationCache(null);
+        // Don't enforce config mode restriction because this is going to snap the portlet window back into view mode.
 
-			httpServletRequest = this.setupPortletRequest(httpServletRequest);
-			httpServletResponse = PortletHttpServletResponseWrapper.create(httpServletResponse, portletWindow);
+        final IPortletWindow portletWindow = this.portletWindowRegistry.getPortletWindow(httpServletRequest, portletWindowId);
+        if(portletWindow != null) {
+            portletWindow.setPortletMode(PortletMode.VIEW);
+            portletWindow.setRenderParameters(new ParameterMap());
+            portletWindow.setExpirationCache(null);
 
-			httpServletRequest.setAttribute(AdministrativeRequestListenerController.DEFAULT_LISTENER_KEY_ATTRIBUTE, "sessionActionListener");
-			httpServletRequest.setAttribute(PortletSessionAdministrativeRequestListener.ACTION, PortletSessionAdministrativeRequestListener.SessionAction.CLEAR);
-			httpServletRequest.setAttribute(PortletSessionAdministrativeRequestListener.SCOPE, PortletSession.PORTLET_SCOPE);
-			
-			//TODO modify PortletContainer.doAdmin to create a specific "admin" req/res object and context so we don't have to fake it with a render req
-			//These are required for a render request to be created and admin requests use a render request under the hood
-			final String characterEncoding = httpServletResponse.getCharacterEncoding();
+            httpServletRequest = this.setupPortletRequest(httpServletRequest);
+            httpServletResponse = new PortletHttpServletResponseWrapper(httpServletResponse, portletWindow);
+
+            httpServletRequest.setAttribute(AdministrativeRequestListenerController.DEFAULT_LISTENER_KEY_ATTRIBUTE, "sessionActionListener");
+            httpServletRequest.setAttribute(PortletSessionAdministrativeRequestListener.ACTION, PortletSessionAdministrativeRequestListener.SessionAction.CLEAR);
+            httpServletRequest.setAttribute(PortletSessionAdministrativeRequestListener.SCOPE, PortletSession.PORTLET_SCOPE);
+            
+            //TODO modify PortletContainer.doAdmin to create a specific "admin" req/res object and context so we don't have to fake it with a render req
+            //These are required for a render request to be created and admin requests use a render request under the hood
+            final String characterEncoding = httpServletResponse.getCharacterEncoding();
             httpServletRequest.setAttribute(ATTRIBUTE__PORTLET_OUTPUT_HANDLER, new RenderPortletOutputHandler(characterEncoding));
             httpServletRequest.setAttribute(ATTRIBUTE__PORTLET_CACHE_CONTROL, new CacheControlImpl());
 
-			try {
-				this.portletContainer.doAdmin(portletWindow.getPlutoPortletWindow(), httpServletRequest, httpServletResponse);
-			}
-			catch (PortletException pe) {
-				throw new PortletDispatchException("The portlet window '" + portletWindow + "' threw an exception while executing admin command to clear session.", portletWindow, pe);
-			}
-			catch (PortletContainerException pce) {
-				throw new PortletDispatchException("The portlet container threw an exception while executing admin command to clear session on portlet window '" + portletWindow + "'.", portletWindow, pce);
-			}
-			catch (IOException ioe) {
-				throw new PortletDispatchException("The portlet window '" + portletWindow + "' threw an exception while executing admin command to clear session.", portletWindow, ioe);
-			}
-		} else {
-			logger.debug("ignoring doReset as portletWindowRegistry#getPortletWindow returned a null result for portletWindowId " + portletWindowId);
-		}
+            try {
+                this.portletContainer.doAdmin(portletWindow.getPlutoPortletWindow(), httpServletRequest, httpServletResponse);
+            }
+            catch (PortletException pe) {
+                throw new PortletDispatchException("The portlet window '" + portletWindow + "' threw an exception while executing admin command to clear session.", portletWindow, pe);
+            }
+            catch (PortletContainerException pce) {
+                throw new PortletDispatchException("The portlet container threw an exception while executing admin command to clear session on portlet window '" + portletWindow + "'.", portletWindow, pce);
+            }
+            catch (IOException ioe) {
+                throw new PortletDispatchException("The portlet window '" + portletWindow + "' threw an exception while executing admin command to clear session.", portletWindow, ioe);
+            }
+        } else {
+            logger.debug("ignoring doReset as portletWindowRegistry#getPortletWindow returned a null result for portletWindowId {}", portletWindowId);
+        }
     }
 
     protected HttpServletRequest setupPortletRequest(HttpServletRequest httpServletRequest) {
-        final HttpServletRequest portletHttpServletRequestWrapper = PortletHttpServletRequestWrapper.create(httpServletRequest);
+        final PortletHttpServletRequestWrapper portletHttpServletRequestWrapper = new PortletHttpServletRequestWrapper(httpServletRequest);
         portletHttpServletRequestWrapper.setAttribute(PortletDelegationLocator.PORTLET_DELECATION_LOCATOR_ATTR, this.portletDelegationLocator);
         
         return portletHttpServletRequestWrapper;
     }
 
     /**
-     * Enforces CONFIG mode access control.  If you don't have CONFIG, and the PortletWindow specifies CONFIG, throws
-     * IllegalAccessException.  Otherwise does nothing.
+     * Enforces config mode access control.  If requesting user does not have CONFIG permission,
+     * and the PortletWindow specifies config mode, throws AuthorizationException.  Otherwise does nothing.
      *
-     * @param httpServletRequest the non-null current HttpServletRequest (for determining the requesting user)
-     * @param portletWindow a non-null portlet window that might be in CONFIG mode
-     * @throws org.jasig.portal.AuthorizationException if user is not permitted to access window specifying CONFIG mode
+     * @param httpServletRequest the non-null current HttpServletRequest (for determining requesting user)
+     * @param portletWindow a non-null portlet window that might be in config mode
+     * @throws org.jasig.portal.AuthorizationException if the user is not permitted to access config mode yet
+     * portlet window specifies config mode
      * @throws java.lang.IllegalArgumentException if the request or window are null
+     * @since uPortal 4.0.13.1, 4.0.14, 4.1.
      */
     protected void enforceConfigPermission(final HttpServletRequest httpServletRequest,
-                                           final IPortletWindow portletWindow) {
+                                       final IPortletWindow portletWindow) {
 
-        Validate.notNull(httpServletRequest, "Servlet request must not be null to determine a remote user.");
+        Validate.notNull(httpServletRequest, "Servlet request must not be null to determine remote user.");
         Validate.notNull(portletWindow, "Portlet window must not be null to determine its mode.");
 
         final PortletMode portletMode = portletWindow.getPortletMode();
         if (portletMode != null) {
             if (IPortletRenderer.CONFIG.equals(portletMode)) {
                 final IPerson person = this.personManager.getPerson(httpServletRequest);
+                
                 final EntityIdentifier ei = person.getEntityIdentifier();
                 final AuthorizationService authorizationService = AuthorizationService.instance();
                 final IAuthorizationPrincipal ap = authorizationService.newPrincipal(ei.getKey(), ei.getType());
+                
                 final IPortletEntity portletEntity = portletWindow.getPortletEntity();
                 final IPortletDefinition portletDefinition = portletEntity.getPortletDefinition();
+                
                 if (!ap.canConfigure(portletDefinition.getPortletDefinitionId().getStringId())) {
-                    logger.error("User " + person +
-                                 " attempted to use portlet " + portletDefinition.getFName() +
-                                 " in " + portletMode + " mode " +
-                                    "but lacks permission to use that mode.  " +
-                                    "THIS MAY BE AN ATTEMPT TO EXPLOIT A HISTORICAL SECURITY FLAW.  " +
-                                    "YOU SHOULD PROBABLY FIGURE OUT WHO THIS USER IS AND" +
-                                    " WHY THEY ARE TRYING TO ACCESS UNAUTHORIZED MODES ILLICITLY.  NAUGHTY!");
-                    throw new AuthorizationException(person.getUserName() + " does not have permission to use '" +
-                            portletDefinition.getFName() + "' in " + portletMode + " PortletMode");
+
+                    logger.error("User {} attempted to use portlet {} in {} but lacks permission to use that mode.  " +
+                            "THIS MAY BE AN ATTEMPT TO EXPLOIT A HISTORICAL SECURITY FLAW.  " +
+                            "You should probably figure out who this user is and why they are trying to access " +
+                            "unauthorized portlet modes.",
+                            person.getUserName(), portletDefinition.getFName(), portletMode);
+
+                    throw new AuthorizationException(person.getUserName() + " does not have permission to render '" +
+                            portletDefinition.getFName() + "' in " + portletMode + " PortletMode.");
                 }
             }
         }

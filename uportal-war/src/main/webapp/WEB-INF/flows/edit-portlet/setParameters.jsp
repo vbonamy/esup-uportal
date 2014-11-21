@@ -69,7 +69,10 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
     <!-- Add a note to the page if the portle supports config mode  -->
     <c:if test="${supportsConfig}">
       <div class="portlet-msg-info portlet-msg info" role="alert">
-        <spring:message code="this.portlet.supports.rich.config.message"/>
+        <p class="text-info">
+            <span class="label label-info"><spring:message code="note"/></span>
+            <spring:message code="this.portlet.supports.rich.config.message"/>
+        </p>
       </div>
     </c:if>
 
@@ -80,7 +83,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
         </div>
         <div class="content">
           <p class="note" role="note"><spring:message code="default.preferences.provided.by.portlet.descriptor"/></p>
-          <table class="portlet-table">
+          <table class="portlet-table table table-hover">
             <thead>
               <tr>
                 <th><spring:message code="preferences"/></th>
@@ -121,7 +124,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
           
           <!-- Portlet Parameters -->
           <c:if test="${ fn:length(step.parameters) > 0 }">
-            <table class="portlet-table" summary="<spring:message code="this.table.lists.portlet.parameters"/>">
+            <table class="portlet-table table table-hover" summary="<spring:message code="this.table.lists.portlet.parameters"/>">
               <thead>
                 <tr>
                   <th><spring:message code="parameter"/></th>
@@ -153,7 +156,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
           <c:if test="${ portlet.portlet }">
             <c:if test="${ fn:length(step.preferences) > 0 }">
               <div class="preference-options-section">
-                <table class="portlet-table" summary="<spring:message code="this.table.lists.portlet.parameters"/>">
+                <table class="portlet-table table table-hover" summary="<spring:message code="this.table.lists.portlet.parameters"/>">
                   <thead>
                     <tr>
                       <th><spring:message code="parameter"/></th>
@@ -247,14 +250,14 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
     <div class="buttons">
       <c:choose>
         <c:when test="${ completed }">
-          <input class="button primary" type="submit" value="<spring:message code="review"/>" name="_eventId_review"/>
+          <input class="button btn btn-primary" type="submit" value="<spring:message code="review"/>" name="_eventId_review"/>
         </c:when>
         <c:otherwise>
-          <input class="button primary" type="submit" value="<spring:message code="continue"/>" name="_eventId_next"/>
-          <input class="button" type="submit" value="<spring:message code="back"/>" class="secondary" name="_eventId_back"/>
+          <input class="button btn btn-primary" type="submit" value="<spring:message code="continue"/>" name="_eventId_next"/>
+          <input class="button btn" type="submit" value="<spring:message code="back"/>" class="secondary" name="_eventId_back"/>
         </c:otherwise>
       </c:choose>
-      <input class="button" type="submit" value="<spring:message code="cancel"/>" name="_eventId_cancel"/>
+      <input class="button btn btn-link" type="submit" value="<spring:message code="cancel"/>" name="_eventId_cancel"/>
     </div>
     
     </form:form> <!-- End Form -->

@@ -37,6 +37,10 @@
         <value>false</value>
     </parameter>
     <parameter>
+        <name>configurable</name>
+        <value>true</value>
+    </parameter>
+    <parameter>
         <name>disableDynamicTitle</name>
         <value>true</value>
     </parameter>
@@ -67,6 +71,14 @@
     <parameter>
         <name>hasAbout</name>
         <value>false</value>
+    </parameter>
+    <parameter>
+        <name>iconUrl</name>
+        <value>/ResourceServingWebapp/rs/tango/0.8.90/32x32/apps/internet-mail.png</value>
+    </parameter>
+    <parameter>
+        <name>mobileIconUrl</name>
+        <value>/uPortal/media/skins/icons/mobile/directory.png</value>
     </parameter>
     <portlet-preference>
         <name>protocol</name>

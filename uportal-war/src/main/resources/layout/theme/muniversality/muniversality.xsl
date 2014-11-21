@@ -302,7 +302,7 @@
 | Template contents can be any valid XSL or XHTML.
 -->
 <xsl:template match="/">
-    <html lang="{$USER_LANG}">
+    <html lang="{$USER_LANG}" class="muniversality">
         <head>
             <xsl:call-template name="page.title" />
             <xsl:call-template name="page.meta" />
@@ -323,7 +323,15 @@
                             <xsl:call-template name="mobile.header" />
                         </xsl:otherwise>
                     </xsl:choose>
-                    
+
+                    <!-- Render header portlets -->
+                    <div class="role-alert">
+                        <xsl:copy-of select="//channel/parameter[@name = 'role' and @value = 'alert']/parent::*"/>
+                    </div>
+                    <div class="role-tips">
+                        <xsl:copy-of select="//channel/parameter[@name = 'role' and @value = 'tips']/parent::*"/>
+                    </div>
+
                     <xsl:choose>
                         <xsl:when test="//focused">
                             <xsl:call-template name="mobile.channel.content.focused" />

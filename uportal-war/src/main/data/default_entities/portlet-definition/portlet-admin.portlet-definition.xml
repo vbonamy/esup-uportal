@@ -33,6 +33,7 @@
     <category>uPortal</category>
     <group>Portal Developers</group>
     <group>Portal Administrators</group>
+    <group>Tenant Administrators</group>
     <parameter>
         <name>iconUrl</name>
         <value>/ResourceServingWebapp/rs/tango/0.8.90/32x32/categories/preferences-system.png</value>

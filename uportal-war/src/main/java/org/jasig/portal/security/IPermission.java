@@ -39,6 +39,13 @@ public interface IPermission {
   public static final String PORTLET_SUBSCRIBER_CREATED_ACTIVITY = "SUBSCRIBE_CREATED";
   public static final String PORTLET_SUBSCRIBER_APPROVED_ACTIVITY = "SUBSCRIBE_APPROVED";
   public static final String PORTLET_SUBSCRIBER_EXPIRED_ACTIVITY = "SUBSCRIBE_EXPIRED";
+
+    /**
+     * Portlet subscribe permission to view ("browse") marketplace entry.
+     * @since uPortal 4.1
+     */
+    public static final String PORTLET_BROWSE_ACTIVITY = "BROWSE";
+
   
   /*
    * Portlet render permissions by lifecycle state.  These permissions are not
@@ -49,7 +56,12 @@ public interface IPermission {
   public static final String PORTLET_RENDERER_APPROVED_ACTIVITY = "RENDER_APPROVED";
   public static final String PORTLET_RENDERER_PUBLISHED_ACTIVITY = "RENDER_PUBLISHED";
   public static final String PORTLET_RENDERER_EXPIRED_ACTIVITY = "RENDER_EXPIRED";
-    
+
+  /*
+   * Portlet management permissions by portlet type.
+   */
+  public static final String PORTLET_MANAGER_SELECT_PORTLET_TYPE = "SELECT_PORTLET_TYPE";
+
   /*
    * Portlet management permissions by lifecycle state.
    */
@@ -106,19 +118,22 @@ public interface IPermission {
     A String which, when concatentated with a portlet id, represents a portal
     portlet.  Used, for example, for Permission.target when the portal framework
     grants a Permission to perform some activity on a portlet.
+    See PermissionHelper for a convenience method for correctly using this.
   */
   public static final String PORTLET_PREFIX = "PORTLET_ID.";    
-  
+
+  public static final String ALL_PORTLET_TYPES = "ALL_PORTLET_TYPES";
+
   public static final String ALL_PORTLETS_TARGET = "ALL_PORTLETS";
-  
+
   public static final String ALL_GROUPS_TARGET = "ALL_GROUPS";
-  
+
   public static final String ALL_CATEGORIES_TARGET = "ALL_CATEGORIES";
-  
+
   public static final String ALL_PERMISSIONS_ACTIVITY = "ALL_PERMISSIONS";
-  
+
   public static final String ALL_TARGET = "ALL";
-  
+
   /**
    * Gets the activity associated with this <code>IPermission</code>.
    * @return String

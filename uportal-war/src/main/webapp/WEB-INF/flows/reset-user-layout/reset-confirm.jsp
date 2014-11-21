@@ -58,8 +58,8 @@
 
         <!-- Portlet Buttons -->
         <div class="buttons">
-            <input class="button primary" type="submit" value="<spring:message code="reset.layout"/>" name="_eventId_confirm"/>
-            <input class="button" type="submit" value="<spring:message code="cancel"/>" name="_eventId_cancel"/>
+            <input class="button primary btn" type="submit" value="<spring:message code="reset.layout"/>" name="_eventId_confirm"/>
+            <input class="button btn" type="submit" value="<spring:message code="cancel"/>" name="_eventId_cancel"/>
         </div>
 
         </form>

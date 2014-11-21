@@ -170,9 +170,10 @@
   <!-- ****** LOCALIZATION SETTINGS ****** -->
   <!--
    | GREEN
-   | Locatlization Settings can be used to change the localization of the theme.
+   | Localization Settings can be used to change the localization of the theme.
   -->
 	<xsl:param name="USER_LANG">fr</xsl:param> <!-- Sets the default user language. -->
+
 
   <!-- ****** PORTAL SETTINGS ****** -->
   <!--
@@ -455,8 +456,8 @@
     <xsl:call-template name="logo"/>
 
     <!-- Web Search -->
-    <xsl:call-template name="web.search"/>
-
+    <xsl:copy-of select="//channel/parameter[@name = 'role' and @value = 'searchLauncher']/parent::*"/>
+    
     <!-- Quicklinks
     <xsl:call-template name="quicklinks"/> -->
 
@@ -753,10 +754,6 @@
    | Template contents can be any valid XSL or XHTML.
   -->
   <xsl:template name="content.sidebar.block">
-    <!-- Web Search
-    <xsl:call-template name="web.search"/> -->
-    <!-- Web Search -->
-
     <!-- Main Navigation-->
     <xsl:if test="$TAB_CONTEXT = 'sidebar'">
         <xsl:apply-templates select="//navigation">
@@ -981,11 +978,11 @@
 	          <xsl:value-of select="upMsg:getMessage('uportal.community', $USER_LANG)"/>
 	        </a>
 	        <xsl:call-template name="portal.pipe"/>
-	        <a href="http://www.jasig.org/uportal/privacy" target="_blank" title="{upMsg:getMessage('view.uportal.privacy.policy', $USER_LANG)}">
+	        <a href="http://www.opentracker.net/article/how-write-website-privacy-policy" target="_blank" title="{upMsg:getMessage('view.uportal.privacy.policy', $USER_LANG)}">
 	          <xsl:value-of select="upMsg:getMessage('privacy.policy', $USER_LANG)"/>
 	        </a>
 	        <xsl:call-template name="portal.pipe"/>
-	        <a href="http://www.jasig.org/uportal/accessibility" target="_blank" title="{upMsg:getMessage('view.uportal.accessibility.information', $USER_LANG)}">
+	        <a href="http://wiki.jasig.org/display/UPM40/Accessibility" target="_blank" title="{upMsg:getMessage('view.uportal.accessibility.information', $USER_LANG)}">
 	          <xsl:value-of select="upMsg:getMessage('uportal.accessibility', $USER_LANG)"/>
 	        </a>
 	      </div>
