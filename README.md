@@ -2,14 +2,14 @@ Bienvenue sur esup-uportal, ENT EsupV4
 https://www.esup-portail.org/pages/viewpage.action?pageId=257064972
 
 La documentation de référence pour l'installation d'uportal4 s'applique également au package esup-uportal : 
-https://wiki.jasig.org/display/UPM40/Installing+uPortal
+https://wiki.jasig.org/display/UPM41/Installing+uPortal
 
 
 Notes d'installation :
 
 * installation tomcat
-  * tar xzf apache-tomcat-6.0.35.tar.gz -C /opt
-  * ln -s /opt/apache-tomcat-6.0.35 /opt/tomcat-esup
+  * tar xzf apache-tomcat-7.0.57.tar.gz -C /opt
+  * ln -s /opt/apache-tomcat-7.0.57 /opt/tomcat-esup
   * emacs conf/catalina.properties
     * shared.loader=${catalina.base}/shared/classes,${catalina.base}/shared/lib/*.jar
 
@@ -59,8 +59,8 @@ Notes d'installation :
     * environment.build.ldap.uidAttr=uid
 
 * ajout dépendance Postgresql
-  * emacs pom.xml
-    * on décommente le bloc situé sous le commentaire "<!-- POSTGRESQL driver. Uncomment if you need to -->"
+  * emacs uportal-db/pom.xml
+    * on décommente le bloc relatif à la dépendance sur postgresql
 
 * déploiement
   * la première fois : 
