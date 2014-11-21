@@ -99,7 +99,7 @@
          | character.  If you want to override the default environment.name by 
          | invoking Maven directly, you will have to append a period yourself.
          +-->
-        <env>local</env>
+        <env>esup</env>
         <filters.file>filters/${env}.properties</filters.file>
 
         <!-- WAR Dependency Version Properties -->
@@ -187,6 +187,8 @@
         <person-directory.version>1.5.2-M1</person-directory.version>
         <pluto.version>2.1.0-M3</pluto.version>
         <portlet-api.version>2.0</portlet-api.version>
+        <postgres.version>9.0-801.jdbc4</postgres.version>
+        <mysql.version>5.1.9</mysql.version>
         <quartz.version>2.2.1</quartz.version>
         <resource-server.version>1.0.41</resource-server.version>
         <servlet-api.version>3.0.1</servlet-api.version>
