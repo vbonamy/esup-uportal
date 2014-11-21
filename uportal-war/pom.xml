@@ -292,23 +292,11 @@
         <dependency>
             <groupId>org.jasig.resourceserver</groupId>
             <artifactId>resource-server-api</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>jcl-over-slf4j</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         
         <dependency>
             <groupId>org.jasig.resourceserver</groupId>
             <artifactId>resource-server-utils</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>jcl-over-slf4j</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
@@ -682,6 +670,10 @@
             <exclusion>
                 <groupId>javax.mail</groupId>
                 <artifactId>mail</artifactId>
+            </exclusion>
+            <exclusion>
+            	<artifactId>commons-logging</artifactId>
+            	<groupId>commons-logging</groupId>
             </exclusion>
         </exclusions>
     </dependency>
