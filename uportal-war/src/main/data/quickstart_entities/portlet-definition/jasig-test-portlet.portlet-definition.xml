@@ -24,7 +24,6 @@
     <name>Portlet de test uPortal</name>
     <!-- This fname retains jasig in it so it continues to match upgrades of old deployments of this portlet -->
     <fname>jasig-test-portlet</fname>
-    <desc>Test Portlet from Apereo uPortal</desc>
     <desc>Portlet de test d'uPortal Apereo</desc>
     <type>Portlet</type>
     <timeout>60000</timeout>

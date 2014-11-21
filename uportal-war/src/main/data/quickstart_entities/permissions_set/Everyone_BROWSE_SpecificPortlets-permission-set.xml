@@ -29,24 +29,24 @@
     <!-- Enumerates the categories that everyone,
         including un-authenticated users, may browse in the Marketplace. -->
     <target permission-type="GRANT">
-        <group>Academics</group>
+        <group>Enseignement</group>
     </target>
     <target permission-type="GRANT">
-        <group>Advisor</group>
+        <group>Conseil</group>
     </target>
     <target permission-type="GRANT">
-        <group>Entertainment</group>
+        <group>Divertissement</group>
     </target>
     <target permission-type="GRANT">
         <group>Information</group>
     </target>
     <target permission-type="GRANT">
-        <group>Instructors</group>
+        <group>Enseignants</group>
     </target>
     <target permission-type="GRANT">
-        <group>Library</group>
+        <group>Bibliothèque</group>
     </target>
     <target permission-type="GRANT">
-        <group>News</group>
+        <group>Actualités</group>
     </target>
 </permission-set>

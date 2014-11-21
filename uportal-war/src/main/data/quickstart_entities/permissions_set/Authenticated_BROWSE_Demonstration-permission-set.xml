@@ -31,6 +31,6 @@
     <!-- Authenticated users can browse the Demonstration group.  This demonstrates (ha ha) that
      one can differentiate the browseable set of marketplace entries for non-authenticated and authenticated users. -->
     <target permission-type="GRANT">
-        <group>Demonstration</group>
+        <group>Démonstration</group>
     </target>
 </permission-set>
