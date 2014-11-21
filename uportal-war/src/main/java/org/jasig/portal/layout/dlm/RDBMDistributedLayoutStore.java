@@ -430,7 +430,9 @@ public class RDBMDistributedLayoutStore extends RDBMUserLayoutStore {
 
                     for (final String value : portletPreference.getValues()) {
                         final org.dom4j.Element valueElement = preferenceEntry.addElement("value");
-                        valueElement.setText(value);
+                        if(value != null) {
+                        	valueElement.setText(value);
+                        }
                     }
                 }
             }
@@ -890,7 +892,7 @@ public class RDBMDistributedLayoutStore extends RDBMUserLayoutStore {
                 
                 final Noderef dlmNoderef = nodeReferenceFactory.getNoderefFromPathref(person.getUserName(), dlmPathRef, fname, false, layout);
                 
-                if (dlmNoderef != null && !"".equals(dlmNoderef) && fname != null && !"null".equals(fname)) {
+                if (dlmNoderef != null && fname != null) {
                     final IPortletEntity portletEntity = this.getPortletEntity(fname, dlmNoderef.toString(), ownerUserId);
                     oldPortletEntities.remove(portletEntity);
                     

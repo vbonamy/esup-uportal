@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal.portlets-overlay</groupId>
         <artifactId>uportal-portlets-overlay</artifactId>
-        <version>4.1.1</version>
+        <version>4.1.2</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -137,6 +137,21 @@
                             <exclusion>
                                 <groupId>xalan</groupId>
                                 <artifactId>serializer</artifactId>
+                            </exclusion>
+                            <!-- exclude logback during the build since we can't specify to use commandline-logback.xml
+                                 during the running of this plug-in and logback.xml references CATALINA_BASE.webroot
+                                 which is undefined when running db-init from the command line. -->
+                            <exclusion>
+                                <groupId>ch.qos.logback</groupId>
+                                <artifactId>logback-classic</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>ch.qos.logback</groupId>
+                                <artifactId>logback-core</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>org.slf4j</groupId>
+                                <artifactId>log4j-over-slf4j</artifactId>
                             </exclusion>
                         </exclusions>
                     </dependency>
