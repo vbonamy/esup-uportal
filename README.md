@@ -12,6 +12,8 @@ Notes d'installation :
   * ln -s /opt/apache-tomcat-7.0.57 /opt/tomcat-esup
   * emacs conf/catalina.properties
     * shared.loader=${catalina.base}/shared/classes,${catalina.base}/shared/lib/*.jar
+  * emacs conf/context.xml
+    * <Context> devient <Context sessionCookiePath="/">
 
 * creation base de données postgresql (mysql non recommandé - cf https://wiki.jasig.org/display/UPM41/MySQL )
   * psql
