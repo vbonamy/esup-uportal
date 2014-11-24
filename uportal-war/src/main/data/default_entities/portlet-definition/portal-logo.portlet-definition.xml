@@ -44,7 +44,7 @@
         <readOnly>false</readOnly>
         <value>
             <![CDATA[
-                <h1 class="portal-logo"><a href='/uPortal'>uPortal</a></h1>
+                     <h1><a href="/uPortal" title="Esup-uPortal"><img alt="Esup-uPortal" src="https://www.esup-portail.org/sites/esup-portail.org/files/logo-esup%2Baccroche_2.png" style="height:100.0px; width:374.0px" title=""/></a></h1>
             ]]>
         </value>
     </portlet-preference>
