@@ -13,7 +13,7 @@ Notes d'installation :
   * emacs conf/catalina.properties
     * shared.loader=${catalina.base}/shared/classes,${catalina.base}/shared/lib/*.jar
 
-* creation base de données postgresql (mysql non recommandé - cf https://wiki.jasig.org/display/UPM40/MySQL )
+* creation base de données postgresql (mysql non recommandé - cf https://wiki.jasig.org/display/UPM41/MySQL )
   * psql
     * create USER esup4 with password 'esup4';
     *  create database esup4;
@@ -73,7 +73,7 @@ Notes d'installation :
   * firefox http://ent.univ-ville.fr/uPortal/
 
 * ajout d'un administrateur en ligne de commandes (celui-ci aura alors accès à l'IHM d'administration)
-[https://wiki.jasig.org/display/UPM40/Add+Portal+Admininstrator]
+[https://wiki.jasig.org/display/UPM41/Add+Portal+Admininstrator]
   * ant -Dmaven.test.skip=true data-export -Dtype=group-membership -Dsysid="Portal Administrators" -Ddir=/tmp
   * emacs /tmp/Portal_Administrators.group-membership.xml
   * ant -Dmaven.test.skip=true data-import -Dfile=/tmp/Portal_Administrators.group-membership.xml
