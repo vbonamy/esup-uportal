@@ -20,10 +20,10 @@
 
 -->
 <portlet-definition version="4.0" xsi:schemaLocation="https://source.jasig.org/schemas/uportal/io/portlet-definition https://source.jasig.org/schemas/uportal/io/portlet-definition/portlet-definition-4.0.xsd" xmlns:ns2="https://source.jasig.org/schemas/uportal" xmlns="https://source.jasig.org/schemas/uportal/io/portlet-definition" xmlns:ns4="https://source.jasig.org/schemas/uportal/io/portlet-type" xmlns:ns3="https://source.jasig.org/schemas/uportal/io/user" xmlns:ns5="https://source.jasig.org/schemas/uportal/io/stylesheet-descriptor" xmlns:ns6="https://source.jasig.org/schemas/uportal/io/subscribed-fragment" xmlns:ns7="https://source.jasig.org/schemas/uportal/io/permission-owner" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns8="https://source.jasig.org/schemas/uportal/io/event-aggregation">
-    <title>Announcements</title>
-    <name>Announcements</name>
+    <title>Annonces</title>
+    <name>Annonces</name>
     <fname>announcements</fname>
-    <desc>Announcements for students, staff, and faculty</desc>
+    <desc>Annonces à destination des étudiants, personnels et enseignants</desc>
     <type>Portlet</type>
     <timeout>5000</timeout>
     <portlet-descriptor>
