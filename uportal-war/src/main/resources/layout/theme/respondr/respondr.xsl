@@ -363,16 +363,16 @@
     <footer class="portal-footer-legal" role="contentinfo">
         <div class="container-fluid">
             <div class="portal-power">
-                <h2><a href="http://www.jasig.org/uportal" target="_blank">Powered by uPortal</a>, an open-source project by <a href="http://www.jasig.org" title="Jasig.org - Open for Higher Education">Jasig</a></h2>
+                <h2><a href="http://www.jasig.org/uportal" target="_blank"><xsl:value-of select="upMsg:getMessage('footer.uportal.powered.by', $USER_LANG)"/>Jasig</a></h2>
                 <ul>
                     <li><a href="http://www.jasig.org/" target="_blank">Jasig.org</a></li>
                     <li><a href="http://www.jasig.org/uportal" target="_blank">uPortal.org</a></li>
-                    <li><a href="http://www.jasig.org/uportal/download" target="_blank">Download</a></li>
-                    <li><a href="http://www.jasig.org/uportal/community" target="_blank">Community</a></li>
-                    <li><a href="http://www.opentracker.net/article/how-write-website-privacy-policy" target="_blank">Privacy Policy</a></li>
-                    <li><a href="http://wiki.jasig.org/display/UPM40/Accessibility" target="_blank">Accessibility</a></li>
+                    <li><a href="http://www.jasig.org/uportal/download" target="_blank"><xsl:value-of select="upMsg:getMessage('download.uportal', $USER_LANG)"/></a></li>
+                    <li><a href="http://www.jasig.org/uportal/community" target="_blank"><xsl:value-of select="upMsg:getMessage('uportal.community', $USER_LANG)"/></a></li>
+                    <li><a href="http://www.opentracker.net/article/how-write-website-privacy-policy" target="_blank"><xsl:value-of select="upMsg:getMessage('privacy.policy', $USER_LANG)"/></a></li>
+                    <li><a href="http://wiki.jasig.org/display/UPM40/Accessibility" target="_blank"><xsl:value-of select="upMsg:getMessage('accessibility', $USER_LANG)"/></a></li>
                 </ul>
-                <p><a href="http://www.jasig.org/uportal/about/license" title="uPortal" target="_blank">uPortal</a> is licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0" title="Apache License, Version 2.0" target="_blank">Apache License, Version 2.0</a> as approved by the Open Source Initiative (OSI), an <a href="http://www.opensource.org/docs/osd" title="OSI-certified" target="_blank">OSI-certified</a> ("open") and <a href="http://www.gnu.org/licenses/license-list.html" title="Gnu/FSF-recognized" target="_blank">Gnu/FSF-recognized</a> ("free") license.</p>
+	        <p><a href="http://www.jasig.org/uportal/about/license" title="uPortal" target="_blank">uPortal </a><xsl:value-of select="upMsg:getMessage('footer.uportal.licensed', $USER_LANG)"/><a href="http://www.apache.org/licenses/LICENSE-2.0" title="Apache License, Version 2.0" target="_blank">Apache License, Version 2.0 </a> <xsl:value-of select="upMsg:getMessage('footer.license.approvment', $USER_LANG)"/><a href="http://www.opensource.org/docs/osd" title="{upMsg:getMessage('footer.osi', $USER_LANG)}" target="_blank"><xsl:value-of select="upMsg:getMessage('footer.osi', $USER_LANG)"/> </a><xsl:value-of select="upMsg:getMessage('footer.open.license', $USER_LANG)"/><a href="http://www.gnu.org/licenses/license-list.html" title="{upMsg:getMessage('footer.gnu', $USER_LANG)}" target="_blank"><xsl:value-of select="upMsg:getMessage('footer.gnu', $USER_LANG)"/> </a><xsl:value-of select="upMsg:getMessage('footer.free.license', $USER_LANG)"/></p>
             </div>
         </div>
     </footer>
