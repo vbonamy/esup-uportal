@@ -45,25 +45,23 @@
         <value><![CDATA[
             <div class="container-fluid legal-footer">
                 <div>
-                    <a href="http://www.apereo.org/uportal" target="_blank">Powered by uPortal</a>, an open-source project by <a href="http://www.apereo.org" title="Apereo.org - Serving the Academic Mission">Apereo</a>
+                    <a href="http://www.apereo.org/uportal" target="_blank">Site conçu via uPortal</a>, un projet open-source de <a href="http://www.apereo.org" title="Apereo.org - Serving the Academic Mission">Apereo</a>
                 </div>
                 <div>
                     <a href="http://www.apereo.org/" target="_blank">Apereo.org</a> |
                     <a href="http://www.apereo.org/uportal" target="_blank">uPortal</a> |
-                    <a href="http://www.apereo.org/uportal/download" target="_blank">Download</a> |
-                    <a href="http://www.apereo.org/uportal/community" target="_blank">Community</a> |
-                    <a href="http://www.opentracker.net/article/how-write-website-privacy-policy" target="_blank">Privacy Policy</a> |
-                    <a href="http://wiki.jasig.org/display/UPM40/Accessibility" target="_blank">Accessibility</a>
+                    <a href="https://www.esup-portail.org/" target="_blank">EsupPortail</a> |
+                    <a href="http://wiki.jasig.org/display/UPM40/Accessibility" target="_blank">Accessibilité</a>
                 </div>
                 <div>
                     <a href="http://www.apereo.org/uportal/about/license" title="uPortal" target="_blank">uPortal</a>
-                    is licensed under the
+                    est sous license
                     <a href="http://www.apache.org/licenses/LICENSE-2.0" title="Apache License, Version 2.0" target="_blank">Apache License, Version 2.0</a>
-                    as approved by the Open Source Initiative (OSI), an
-                    <a href="http://www.opensource.org/docs/osd" title="OSI-certified" target="_blank">OSI-certified</a>
-                    ("open") and
+                    approuvée par l'Open Source Initiative (OSI), une license 
+                    <a href="http://www.opensource.org/docs/osd" title="OSI-certified" target="_blank">certifiée OSI</a>
+                    ("ouverte") et
                     <a href="http://www.gnu.org/licenses/license-list.html" title="Gnu/FSF-recognized" target="_blank">Gnu/FSF-recognized</a>
-                    ("free") license.
+                    ("libre")
                 </div>
             </div>
         ]]></value>
