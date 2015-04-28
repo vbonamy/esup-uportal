@@ -1,22 +1,21 @@
 /**
- * Licensed to Jasig under one or more contributor license
+ * Licensed to Apereo under one or more contributor license
  * agreements. See the NOTICE file distributed with this work
  * for additional information regarding copyright ownership.
- * Jasig licenses this file to you under the Apache License,
+ * Apereo licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a
- * copy of the License at:
+ * except in compliance with the License.  You may obtain a
+ * copy of the License at the following location:
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.jasig.portal.portlet.marketplace;
 
 import java.util.List;
@@ -31,8 +30,10 @@ import org.jasig.portal.portlet.om.IPortletWindowId;
 import org.jasig.portal.portlet.registry.IPortletCategoryRegistry;
 import org.jasig.portal.portlet.registry.IPortletDefinitionRegistry;
 import org.jasig.portal.portlet.registry.IPortletWindowRegistry;
+import org.jasig.portal.portlets.groupselector.EntityEnum;
 import org.jasig.portal.portlets.search.IPortalSearchService;
 import org.jasig.portal.search.SearchResult;
+import org.jasig.portal.security.IAuthorizationService;
 import org.jasig.portal.url.IPortalRequestUtils;
 import org.jasig.portal.url.IPortalUrlBuilder;
 import org.jasig.portal.url.IPortalUrlProvider;
@@ -56,7 +57,9 @@ public class MarketplaceSearchService implements IPortalSearchService {
     private IPortalUrlProvider portalUrlProvider;
     private IPortletWindowRegistry portletWindowRegistry;
     private IPortalRequestUtils portalRequestUtils;
+    private IMarketplaceService marketplaceService;
     private IPortletCategoryRegistry portletCategoryRegistry;
+    private IAuthorizationService authorizationService;
 
     @Autowired
     public void setPortletDefinitionRegistry(IPortletDefinitionRegistry portletDefinitionRegistry) {
@@ -82,7 +85,17 @@ public class MarketplaceSearchService implements IPortalSearchService {
     public void setPortletCategoryRegistry(IPortletCategoryRegistry portletCategoryRegistry) {
         this.portletCategoryRegistry = portletCategoryRegistry;
     }
-    
+
+    @Autowired
+    public void setMarketplaceService(final IMarketplaceService marketplaceService) {
+        this.marketplaceService = marketplaceService;
+    }
+
+    @Autowired
+    public void setAuthorizationService(IAuthorizationService authorizationService) {
+        this.authorizationService = authorizationService;
+    }
+
     /**
      * Returns a list of search results that pertain to the marketplace
      * query is the query to search
@@ -99,36 +112,42 @@ public class MarketplaceSearchService implements IPortalSearchService {
         
         final SearchResults results =  new SearchResults();
         for (IPortletDefinition portlet : portlets) {
-            if (this.matches(queryString, new MarketplacePortletDefinition(portlet, this.portletCategoryRegistry))) {
+            if (this.matches(queryString,
+                new MarketplacePortletDefinition(portlet,
+                    this.marketplaceService, this.portletCategoryRegistry))) {
                 final SearchResult result = new SearchResult();
                 result.setTitle(portlet.getTitle());
                 result.setSummary(portlet.getDescription());
                 result.getType().add("marketplace");
 
                 final IPortletWindow portletWindow = this.portletWindowRegistry.getOrCreateDefaultPortletWindowByFname(httpServletRequest, portlet.getFName());
-                if (portletWindow != null) {
+                // portletWindow is null if user does not have access to portlet.
+                // If user does not have browse permission, exclude the portlet.
+                if (portletWindow != null && authorizationService.canPrincipalBrowse(
+                        authorizationService.newPrincipal(request.getRemoteUser(), EntityEnum.PERSON.getClazz()),
+                        portlet)) {
                     final IPortletWindowId portletWindowId = portletWindow.getPortletWindowId();
                     final IPortalUrlBuilder portalUrlBuilder = this.portalUrlProvider.getPortalUrlBuilderByPortletFName(httpServletRequest, portlet.getFName(), UrlType.RENDER);
                     final IPortletUrlBuilder portletUrlBuilder = portalUrlBuilder.getPortletUrlBuilder(portletWindowId);
                     portletUrlBuilder.setWindowState(PortletUtils.getWindowState("maximized"));
-                    result.setExternalUrl(portalUrlBuilder.getUrlString());                    
+                    result.setExternalUrl(portalUrlBuilder.getUrlString());
+
+                    PortletUrl url = new PortletUrl();
+                    url.setType(PortletUrlType.RENDER);
+                    url.setPortletMode("VIEW");
+                    url.setWindowState("maximized");
+                    PortletUrlParameter actionParam = new PortletUrlParameter();
+                    actionParam.setName("action");
+                    actionParam.getValue().add("view");
+                    url.getParam().add(actionParam);
+                    PortletUrlParameter fNameParam = new PortletUrlParameter();
+                    fNameParam.setName("fName");
+                    fNameParam.getValue().add(portlet.getFName());
+                    url.getParam().add(fNameParam);
+                    result.setPortletUrl(url);
+                    //Add the result to list to return
+                    results.getSearchResult().add(result);
                 }
-                
-                PortletUrl url = new PortletUrl();
-                url.setType(PortletUrlType.RENDER);
-                url.setPortletMode("VIEW");
-                url.setWindowState("maximized");
-                PortletUrlParameter actionParam = new PortletUrlParameter();
-                actionParam.setName("action");
-                actionParam.getValue().add("view");
-                url.getParam().add(actionParam);
-                PortletUrlParameter fNameParam = new PortletUrlParameter();
-                fNameParam.setName("fName");
-                fNameParam.getValue().add(portlet.getFName());
-                url.getParam().add(fNameParam);
-                result.setPortletUrl(url);
-                //Add the result to list to return
-                results.getSearchResult().add(result);
             }
     	}
         return results;

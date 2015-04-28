@@ -1,22 +1,21 @@
 /**
- * Licensed to Jasig under one or more contributor license
+ * Licensed to Apereo under one or more contributor license
  * agreements. See the NOTICE file distributed with this work
  * for additional information regarding copyright ownership.
- * Jasig licenses this file to you under the Apache License,
+ * Apereo licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a
- * copy of the License at:
+ * except in compliance with the License.  You may obtain a
+ * copy of the License at the following location:
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.jasig.portal.security.provider;
 
 import java.io.Serializable;
@@ -32,9 +31,6 @@ import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.constructs.blocking.CacheEntryFactory;
 import net.sf.ehcache.constructs.blocking.SelfPopulatingCache;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jasig.portal.AuthorizationException;
 import org.jasig.portal.EntityTypes;
 import org.jasig.portal.concurrency.CachingException;
@@ -42,11 +38,22 @@ import org.jasig.portal.concurrency.caching.RequestCache;
 import org.jasig.portal.groups.GroupsException;
 import org.jasig.portal.groups.IEntityGroup;
 import org.jasig.portal.groups.IGroupMember;
+import org.jasig.portal.permission.IPermissionActivity;
+import org.jasig.portal.permission.dao.IPermissionOwnerDao;
 import org.jasig.portal.portlet.om.IPortletDefinition;
 import org.jasig.portal.portlet.om.PortletCategory;
 import org.jasig.portal.portlet.om.PortletLifecycleState;
 import org.jasig.portal.portlet.registry.IPortletDefinitionRegistry;
-import org.jasig.portal.security.*;
+import org.jasig.portal.security.IAuthorizationPrincipal;
+import org.jasig.portal.security.IAuthorizationService;
+import org.jasig.portal.security.IPermission;
+import org.jasig.portal.security.IPermissionManager;
+import org.jasig.portal.security.IPermissionPolicy;
+import org.jasig.portal.security.IPermissionSet;
+import org.jasig.portal.security.IPermissionStore;
+import org.jasig.portal.security.IPerson;
+import org.jasig.portal.security.IUpdatingPermissionManager;
+import org.jasig.portal.security.PermissionHelper;
 import org.jasig.portal.services.EntityCachingService;
 import org.jasig.portal.services.GroupService;
 import org.jasig.portal.spring.locator.PortletCategoryRegistryLocator;
@@ -55,6 +62,8 @@ import org.jasig.portal.utils.cache.CacheFactory;
 import org.jasig.portal.utils.cache.CacheKey;
 import org.jasig.portal.utils.cache.CacheKey.CacheKeyBuilder;
 import org.jasig.portal.utils.cache.UsernameTaggedCacheEntryPurger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -70,7 +79,7 @@ import org.springframework.stereotype.Service;
 public class AuthorizationImpl implements IAuthorizationService {
 
     /** Instance of log in order to log events. */
-    protected final Log log = LogFactory.getLog(getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     /** Constant representing the separator used in the principal key. */
     private static final String PRINCIPAL_SEPARATOR = ".";
@@ -83,6 +92,9 @@ public class AuthorizationImpl implements IAuthorizationService {
     
     /** Spring-configured portlet definition registry instance */
     private IPortletDefinitionRegistry portletDefinitionRegistry;
+
+    /** Indicates permission activity to permissionTargetProvider. */
+    private IPermissionOwnerDao permissionOwner;
 
     /** The cache to hold the list of principals. */
     private Ehcache principalCache;
@@ -98,7 +110,8 @@ public class AuthorizationImpl implements IAuthorizationService {
 
     /** variable to determine if we should cache permissions or not. */
     private boolean cachePermissions = true;
-    
+
+    private Set<String> nonEntityPermissionTargetProviders = new HashSet<>();
     
     @Autowired
     public void setDefaultPermissionPolicy(IPermissionPolicy newDefaultPermissionPolicy) {
@@ -134,8 +147,17 @@ public class AuthorizationImpl implements IAuthorizationService {
     public void setPortletDefinitionRegistry(IPortletDefinitionRegistry portletDefinitionRegistry) {
         this.portletDefinitionRegistry = portletDefinitionRegistry;
     }
-    
-/**
+
+    @Autowired
+    public void setPermissionOwner(IPermissionOwnerDao permissionOwner) {
+        this.permissionOwner = permissionOwner;
+    }
+
+    public void setNonEntityPermissionTargetProviders(Set<String> nonEntityPermissionTargetProviders) {
+        this.nonEntityPermissionTargetProviders = nonEntityPermissionTargetProviders;
+    }
+
+    /**
  * Adds <code>IPermissions</code> to the back end store.
  * @param permissions IPermission[]
  * @exception AuthorizationException
@@ -221,7 +243,7 @@ public boolean canPrincipalConfigure(IAuthorizationPrincipal principal, String p
  * Answers if the principal has permission to MANAGE this Channel.
  * @return boolean
  * @param principal IAuthorizationPrincipal
- * @param channelPublishId int
+ * @param portletDefinitionId
  * @exception AuthorizationException indicates authorization information could not be retrieved.
  */
 @RequestCache
@@ -252,8 +274,14 @@ throws AuthorizationException
      * may not yet be published or expired.
      */
     
-    String activity = IPermission.PORTLET_MANAGER_EXPIRED_ACTIVITY;
-	if ((order <= PortletLifecycleState.EXPIRED.getOrder() 
+    String activity = IPermission.PORTLET_MANAGER_MAINTENANCE_ACTIVITY;
+    if (order <= PortletLifecycleState.MAINTENANCE.getOrder()
+            && doesPrincipalHavePermission(principal, owner, activity, target)) {
+        return true;
+    }
+
+    activity = IPermission.PORTLET_MANAGER_EXPIRED_ACTIVITY;
+	if ((order <= PortletLifecycleState.EXPIRED.getOrder()
 			|| portlet.getExpirationDate() != null)
 			&& doesPrincipalHavePermission(principal, owner, activity, target)) {
 		return true;
@@ -305,8 +333,14 @@ public boolean canPrincipalManage(IAuthorizationPrincipal principal, PortletLife
     }    
     int order = state.getOrder();
     
-    String activity = IPermission.PORTLET_MANAGER_EXPIRED_ACTIVITY;
-	if (order <= PortletLifecycleState.EXPIRED.getOrder()
+    String activity = IPermission.PORTLET_MANAGER_MAINTENANCE_ACTIVITY;
+    if (order <= PortletLifecycleState.MAINTENANCE.getOrder()
+            && doesPrincipalHavePermission(principal, owner, activity, categoryId)) {
+        return true;
+    }
+
+    activity = IPermission.PORTLET_MANAGER_EXPIRED_ACTIVITY;
+    if (order <= PortletLifecycleState.EXPIRED.getOrder()
 			&& doesPrincipalHavePermission(principal, owner, activity, categoryId)) {
 		return true;
     }
@@ -339,7 +373,7 @@ public boolean canPrincipalManage(IAuthorizationPrincipal principal, PortletLife
  * 
  * @return boolean
  * @param principal IAuthorizationPrincipal
- * @param channelPublishId int
+ * @param portletDefinitionId
  * @exception AuthorizationException indicates authorization information could not be retrieved.
  */
 @RequestCache
@@ -352,11 +386,32 @@ throws AuthorizationException
     return canPrincipalSubscribe(principal, portletDefinitionId);
 }
 
+
+@Override
+@RequestCache
+public boolean canPrincipalBrowse(IAuthorizationPrincipal principal, String portletDefinitionId) {
+
+    // Retrieve the indicated portlet from the channel registry store.
+    IPortletDefinition portlet = this.portletDefinitionRegistry.getPortletDefinition(portletDefinitionId);
+    if (portlet == null){
+        return false;
+    }
+    return canPrincipalBrowse(principal, portlet);
+}
+
+@Override
+@RequestCache
+public boolean canPrincipalBrowse(IAuthorizationPrincipal principal, IPortletDefinition portlet) {
+    String target = PermissionHelper.permissionTargetIdForPortletDefinition(portlet);
+    return doesPrincipalHavePermission(principal, IPermission.PORTAL_SUBSCRIBE, IPermission.PORTLET_BROWSE_ACTIVITY,
+            target);
+}
+
 /**
  * Answers if the principal has permission to SUBSCRIBE to this Channel.
  * @return boolean
  * @param principal IAuthorizationPrincipal
- * @param channelPublishId int
+ * @param portletDefinitionId
  * @exception AuthorizationException indicates authorization information could not be retrieved.
  */
 @RequestCache
@@ -381,8 +436,11 @@ public boolean canPrincipalSubscribe(IAuthorizationPrincipal principal, String p
      * following logic checks the appropriate permission for the lifecycle.
      */
     String permission;
-    if (state.equals(PortletLifecycleState.PUBLISHED)) {
-    	permission = IPermission.PORTLET_SUBSCRIBER_ACTIVITY;
+    if (state.equals(PortletLifecycleState.PUBLISHED)
+            || state.equals(PortletLifecycleState.MAINTENANCE)) {
+        // NB:  There is no separate SUBSCRIBE permission for MAINTENANCE
+        // mode;  everyone simply sees the 'out of service' message
+        permission = IPermission.PORTLET_SUBSCRIBER_ACTIVITY;
     } else if (state.equals(PortletLifecycleState.APPROVED)) {
     	permission = IPermission.PORTLET_SUBSCRIBER_APPROVED_ACTIVITY;
     } else if (state.equals(PortletLifecycleState.CREATED)) {
@@ -395,8 +453,12 @@ public boolean canPrincipalSubscribe(IAuthorizationPrincipal principal, String p
 							+ portletDefinitionId);
     }
 
-    // test the appropriate permission
-    return doesPrincipalHavePermission(principal, owner, permission, target);
+    // Test the appropriate permission.  For subscribe activity permission, you could also have browse permission.
+    boolean allowed = doesPrincipalHavePermission(principal, owner, permission, target);
+    if (!allowed && permission == IPermission.PORTLET_SUBSCRIBER_ACTIVITY) {
+        return canPrincipalBrowse(principal, portlet);
+    }
+    return allowed;
 
 }
 
@@ -503,7 +565,7 @@ throws AuthorizationException
     }
     
     if (log.isTraceEnabled()) {
-    	log.trace("query for all permissions for prcinipal=[" + principal + "], owner=[" + owner + 
+    	log.trace("query for all permissions for principal=[" + principal + "], owner=[" + owner +
     			"], activity=[" + activity + "], target=[" + target + "] returned permissions [" + al + "]");
     }
     
@@ -888,13 +950,17 @@ throws AuthorizationException
 
     /*
      * Get a list of all permissions for the specified principal, then iterate
-     * through them to build a list of the permissions matching the specified
-     * criteria.
+     * through them to build a list of the permissions matching the specified criteria.
      */
 
     IPermission[] perms = primGetPermissionsForPrincipal(principal);
     if ( owner == null && activity == null && target == null )
         { return perms; }
+
+    // If there are no permissions left, no need to look through group mappings.
+    if (perms.length == 0) {
+        return perms;
+    }
 
 	Set<String> containingGroups;
 	
@@ -912,21 +978,39 @@ throws AuthorizationException
                     !IPermission.ALL_GROUPS_TARGET.equals(target) &&
                     !IPermission.ALL_PORTLETS_TARGET.equals(target) &&
                     !IPermission.ALL_TARGET.equals(target)) {
-        	    
-            	IGroupMember targetEntity = GroupService.findGroup(target);
-        		if (targetEntity == null) {
-                    if (target.startsWith(IPermission.PORTLET_PREFIX)) {
-        				targetEntity = GroupService.getGroupMember(target.replace(IPermission.PORTLET_PREFIX, ""), IPortletDefinition.class);
-        			} else {
-        				targetEntity = GroupService.getGroupMember(target, IPerson.class);
-        			}
-        		}
-        		
-        		if (targetEntity != null) {
-        			for (Iterator containing = targetEntity.getAllContainingGroups(); containing.hasNext();) {
-        				containingGroups.add(((IEntityGroup)containing.next()).getKey());
-        			}
-        		}
+
+                // UP-4410; It would be ideal if the target string indicated it was a group or entity that might be
+                // a member of a group so we could determine whether to check what groups the target entity might be
+                // contained within to see if the principal has permission to the containing group, but it does not
+                // (too significant to refactor database values at this point).  If the owner and activity strings map to
+                // a type of target that might be a group name or entity name,create a set of the groups the target
+                // entity is contained in.
+                boolean checkTargetForContainingGroups = true;
+                if (owner != null && activity != null) {
+                    IPermissionActivity permissionActivity = permissionOwner.getPermissionActivity(
+                            owner, activity);
+                    if (nonEntityPermissionTargetProviders.contains(permissionActivity.getTargetProviderKey())) {
+                        checkTargetForContainingGroups = false;
+                    }
+                }
+                if (checkTargetForContainingGroups) {
+                    log.debug("Target '{}' is an entity. Checking for group or groups containing entity", target);
+
+                    IGroupMember targetEntity = GroupService.findGroup(target);
+                    if (targetEntity == null) {
+                        if (target.startsWith(IPermission.PORTLET_PREFIX)) {
+                            targetEntity = GroupService.getGroupMember(target.replace(IPermission.PORTLET_PREFIX, ""), IPortletDefinition.class);
+                        } else {
+                            targetEntity = GroupService.getGroupMember(target, IPerson.class);
+                        }
+                    }
+
+                    if (targetEntity != null) {
+                        for (Iterator containing = targetEntity.getAllContainingGroups(); containing.hasNext();) {
+                            containingGroups.add(((IEntityGroup)containing.next()).getKey());
+                        }
+                    }
+                }
             }
     		
     		this.entityParentsCache.put(new Element(target, containingGroups));
@@ -939,10 +1023,10 @@ throws AuthorizationException
 	}
 
     List<IPermission> al = new ArrayList<IPermission>(perms.length);
-    
+
     for ( int i=0; i<perms.length; i++ ) {
         String permissionTarget = perms[i].getTarget();
-        
+
         if (
         		// owner matches
         		(owner == null || owner.equals(perms[i].getOwner())) &&
@@ -952,9 +1036,9 @@ throws AuthorizationException
                 (target == null || target.equals(permissionTarget) 
                 		|| containingGroups.contains(permissionTarget))    
             ) {
-        	
-            al.add(perms[i]);
-        } 
+
+                al.add(perms[i]);
+        }
         
     }
 

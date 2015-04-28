@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal.portlets-overlay</groupId>
         <artifactId>uportal-portlets-overlay</artifactId>
-        <version>4.1.2</version>
+        <version>4.2.0</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -22,22 +22,6 @@
             <version>${cas-proxy-test-portlet.version}</version>
             <type>war</type>
         </dependency>
-
-        <dependency>
-            <groupId>org.jasig.portlet</groupId>
-            <artifactId>cas-proxy-test-portlet</artifactId>
-            <version>${cas-proxy-test-portlet.version}</version>
-            <type>pom</type>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.portlet</groupId>
-            <artifactId>portlet-api</artifactId>
-            <version>2.0</version>
-            <scope>provided</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
@@ -50,7 +34,7 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
-
+    
         <plugins>
            <plugin>
                 <groupId>org.apache.portals.pluto</groupId>

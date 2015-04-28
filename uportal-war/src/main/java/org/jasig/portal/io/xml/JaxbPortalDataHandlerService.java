@@ -1,22 +1,21 @@
 /**
- * Licensed to Jasig under one or more contributor license
+ * Licensed to Apereo under one or more contributor license
  * agreements. See the NOTICE file distributed with this work
  * for additional information regarding copyright ownership.
- * Jasig licenses this file to you under the Apache License,
+ * Apereo licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a
- * copy of the License at:
+ * except in compliance with the License.  You may obtain a
+ * copy of the License at the following location:
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.jasig.portal.io.xml;
 
 import java.io.BufferedInputStream;
@@ -98,9 +97,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.oxm.Marshaller;
 import org.springframework.oxm.Unmarshaller;
@@ -120,7 +117,7 @@ import com.google.common.io.InputSupplier;
  * @version $Revision$
  */
 @Service("portalDataHandlerService")
-public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, ResourceLoaderAware {
+public class JaxbPortalDataHandlerService implements IPortalDataHandlerService {
     
 	/**
 	 * Tracks the base import directory to allow for easier to read logging when importing 
@@ -170,8 +167,7 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
     private org.jasig.portal.utils.DirectoryScanner directoryScanner;
     private ExecutorService importExportThreadPool;
     private XmlUtilities xmlUtilities;
-    private ResourceLoader resourceLoader;
-    
+
     private long maxWait = -1;
     private TimeUnit maxWaitTimeUnit = TimeUnit.MILLISECONDS;
 
@@ -381,12 +377,7 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
         
         this.portalDataUpgraders = Collections.unmodifiableMap(dataUpgraderMap);
     }
-    
-    @Override
-    public void setResourceLoader(ResourceLoader resourceLoader) {
-        this.resourceLoader = resourceLoader;
-    }
-    
+
     @Override
     public void importDataArchive(Resource archive, BatchImportOptions options) {
         try {
@@ -486,7 +477,7 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
                 }
             }
             
-            importData(tempDir, null, options);
+            importDataDirectory(tempDir, null, options);
         }
         catch (IOException e) {
             throw new RuntimeException("Failed to extract data from '" +resource + "' to '" + tempDir + "' for batch import.", e);
@@ -532,7 +523,7 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
     }
 
     @Override
-    public void importData(File directory, String pattern, final BatchImportOptions options) {
+    public void importDataDirectory(File directory, String pattern, final BatchImportOptions options) {
         if (!directory.exists()) {
             throw new IllegalArgumentException("The specified directory '" + directory + "' does not exist");
         }
@@ -672,23 +663,14 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
         return logDirectory;
     }
 
-    /* (non-Javadoc)
-     * @see org.jasig.portal.io.xml.IDataImportExportService#importData(java.lang.String)
-     */
-    @Override
-    public void importData(String resourceLocation) {
-        final Resource resource = this.resourceLoader.getResource(resourceLocation);
-        this.importData(resource);
-    }
-
     @Override
     public void importData(final Resource resource) {
         this.importData(resource, null);
     }
-    
+
     @Override
     public void importData(Source source) {
-		this.importData(source, null);
+        this.importData(source, null);
     }
 
     @Override
@@ -778,7 +760,7 @@ public class JaxbPortalDataHandlerService implements IPortalDataHandlerService, 
             this.logger.info("Imported : {}", getPartialSystemId(systemId));
             return;
         }
-        
+
         //No importer, see if there is an upgrader, if so upgrade
         final IDataUpgrader dataUpgrader = this.portalDataUpgraders.get(portalDataKey);
         if (dataUpgrader != null) {

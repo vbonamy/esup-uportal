@@ -1,22 +1,21 @@
 /**
- * Licensed to Jasig under one or more contributor license
+ * Licensed to Apereo under one or more contributor license
  * agreements. See the NOTICE file distributed with this work
  * for additional information regarding copyright ownership.
- * Jasig licenses this file to you under the Apache License,
+ * Apereo licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a
- * copy of the License at:
+ * except in compliance with the License.  You may obtain a
+ * copy of the License at the following location:
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.jasig.portal.portlet.rendering;
 
 import java.io.IOException;
@@ -60,7 +59,6 @@ import org.jasig.portal.security.IPerson;
 import org.jasig.portal.security.IPersonManager;
 import org.jasig.portal.services.AuthorizationService;
 import org.jasig.portal.url.IPortalRequestInfo;
-import org.jasig.portal.url.IPortletUrlBuilder;
 import org.jasig.portal.url.IUrlSyntaxProvider;
 import org.jasig.portal.url.ParameterMap;
 import org.jasig.portal.utils.web.PortletHttpServletRequestWrapper;
@@ -543,10 +541,12 @@ public class PortletRendererImpl implements IPortletRenderer {
         enforceConfigPermission(httpServletRequest, portletWindow);
 
         if (cacheState.isUseBrowserData()) {
+            logger.trace("doServeResource-Reusing browser data");
             return doResourceReplayBrowserContent(portletWindow, httpServletRequest, cacheState, portletOutputHandler);
         }
         
         if (cacheState.isUseCachedData()) {
+            logger.trace("doServeResource-Reusing cached data");
             return doResourceReplayCachedContent(portletWindow, httpServletRequest, cacheState, portletOutputHandler, 0);
         }
         
@@ -594,10 +594,12 @@ public class PortletRendererImpl implements IPortletRenderer {
             }
             
             if (cacheState.isBrowserSetEtag()) {
+                logger.trace("doServeResource-useCachedContent, Reusing browser data");
                 //Browser-side content matches, send a 304
                 return doResourceReplayBrowserContent(portletWindow, httpServletRequest, cacheState, portletOutputHandler);
             }
-            
+            logger.trace("doServeResource-useCachedContent, Reusing cached data");
+
             return doResourceReplayCachedContent(portletWindow, httpServletRequest, cacheState, cachingPortletOutputHandler, executionTime);
         }
         

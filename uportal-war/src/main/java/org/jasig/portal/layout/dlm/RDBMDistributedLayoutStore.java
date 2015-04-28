@@ -1,22 +1,21 @@
 /**
- * Licensed to Jasig under one or more contributor license
+ * Licensed to Apereo under one or more contributor license
  * agreements. See the NOTICE file distributed with this work
  * for additional information regarding copyright ownership.
- * Jasig licenses this file to you under the Apache License,
+ * Apereo licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a
- * copy of the License at:
+ * except in compliance with the License.  You may obtain a
+ * copy of the License at the following location:
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.jasig.portal.layout.dlm;
 
 import java.io.StringWriter;
@@ -386,7 +385,7 @@ public class RDBMDistributedLayoutStore extends RDBMUserLayoutStore {
         }
 
         final int struct_count = this.jdbcOperations
-                .queryForInt("SELECT COUNT(*) FROM up_layout_struct WHERE user_id = ?", person.getID());
+                .queryForObject("SELECT COUNT(*) FROM up_layout_struct WHERE user_id = ?", Integer.class, person.getID());
         return struct_count == 0 ? false : true;
 
     }
@@ -418,7 +417,7 @@ public class RDBMDistributedLayoutStore extends RDBMUserLayoutStore {
                         if (layout == null) {
                             final org.dom4j.Document layoutDoc = new org.dom4j.DocumentFactory().createDocument();
                             layout = layoutDoc.addElement("layout");
-                            layout.addNamespace("dlm", "http://www.uportal.org/layout/dlm");
+                            layout.addNamespace("dlm", Constants.NS_URI);
                         }
                         preferencesElement = layout.addElement("preferences");
                     }
@@ -691,7 +690,7 @@ public class RDBMDistributedLayoutStore extends RDBMUserLayoutStore {
     @Transactional
     public void importLayout(org.dom4j.Element layout) {
         if (layout.getNamespaceForPrefix("dlm") == null) {
-            layout.add(new Namespace("dlm", "http://www.uportal.org/layout/dlm"));
+            layout.add(new Namespace("dlm", Constants.NS_URI));
         }
 
         //Remove comments from the DOM they break import
@@ -1878,6 +1877,15 @@ public class RDBMDistributedLayoutStore extends RDBMUserLayoutStore {
 
         public String getTitle(String locale) {
             return "Missing channel";
+        }
+
+        @Override public String getAlternativeMaximizedLink() {
+            return null;
+        }
+        
+        @Override
+        public String getTarget() {
+          return null;
         }
 
         public String getFName() {

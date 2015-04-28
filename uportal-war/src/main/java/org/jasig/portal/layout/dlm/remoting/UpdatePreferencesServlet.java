@@ -1,23 +1,24 @@
 /**
- * Licensed to Jasig under one or more contributor license
+ * Licensed to Apereo under one or more contributor license
  * agreements. See the NOTICE file distributed with this work
  * for additional information regarding copyright ownership.
- * Jasig licenses this file to you under the Apache License,
+ * Apereo licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a
- * copy of the License at:
+ * except in compliance with the License.  You may obtain a
+ * copy of the License at the following location:
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.jasig.portal.layout.dlm.remoting;
+
+import static org.jasig.portal.layout.node.IUserLayoutNodeDescription.LayoutNodeType.FOLDER;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
+import javax.portlet.WindowState;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.xpath.XPath;
@@ -47,6 +50,7 @@ import org.jasig.portal.fragment.subscribe.dao.IUserFragmentSubscriptionDao;
 import org.jasig.portal.groups.IEntity;
 import org.jasig.portal.layout.IStylesheetUserPreferencesService;
 import org.jasig.portal.layout.IStylesheetUserPreferencesService.PreferencesScope;
+import org.jasig.portal.layout.IUserLayout;
 import org.jasig.portal.layout.IUserLayoutManager;
 import org.jasig.portal.layout.IUserLayoutStore;
 import org.jasig.portal.layout.dlm.Constants;
@@ -58,7 +62,9 @@ import org.jasig.portal.layout.node.IUserLayoutNodeDescription;
 import org.jasig.portal.layout.node.UserLayoutChannelDescription;
 import org.jasig.portal.layout.node.UserLayoutFolderDescription;
 import org.jasig.portal.portlet.om.IPortletDefinition;
+import org.jasig.portal.portlet.om.IPortletWindow;
 import org.jasig.portal.portlet.registry.IPortletDefinitionRegistry;
+import org.jasig.portal.portlet.registry.IPortletWindowRegistry;
 import org.jasig.portal.portlets.favorites.FavoritesUtils;
 import org.jasig.portal.security.IAuthorizationPrincipal;
 import org.jasig.portal.security.IPerson;
@@ -71,6 +77,7 @@ import org.jasig.portal.user.IUserInstanceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -108,6 +115,19 @@ public class UpdatePreferencesServlet {
 	private IStylesheetUserPreferencesService stylesheetUserPreferencesService;
 	private IUserLayoutStore userLayoutStore;
     private MessageSource messageSource;
+    private IPortletWindowRegistry portletWindowRegistry;
+    
+    @Value("${org.jasig.portal.layout.dlm.remoting.addedWindowState:null}")
+    private String addedPortletWindowState;
+    
+    private WindowState addedWindowState;
+    
+    @PostConstruct
+    private void initAddedPortletWindowState(){
+        if(addedPortletWindowState!=null && !"null".equalsIgnoreCase(addedPortletWindowState) && !addedPortletWindowState.isEmpty()){
+            addedWindowState = new WindowState(addedPortletWindowState);
+        }
+    }
 
 	@Autowired
     public void setUserLayoutStore(IUserLayoutStore userLayoutStore) {
@@ -143,17 +163,22 @@ public class UpdatePreferencesServlet {
     public void setMessageSource(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
-	// default tab name
-	protected static final String DEFAULT_TAB_NAME = "New Tab";
+    @Autowired
+    public void setPortletWindowRegistry(IPortletWindowRegistry portletWindowRegistry) {
+        this.portletWindowRegistry = portletWindowRegistry;
+    }
+    
+    // default tab name
+    protected static final String DEFAULT_TAB_NAME = "New Tab";
 
-	/**
-	 * Remove an element from the layout.
-	 *
-	 * @param request
-	 * @param response
-	 * @return
-	 * @throws IOException
-	 */
+    /**
+     * Remove an element from the layout.
+     *
+     * @param request
+     * @param response
+     * @return
+     * @throws IOException
+     */
     @RequestMapping(method = RequestMethod.POST, params = "action=removeElement")
     public ModelAndView removeElement(HttpServletRequest request,
             HttpServletResponse response)
@@ -271,6 +296,25 @@ public class UpdatePreferencesServlet {
         }
 
     }
+    
+    @RequestMapping(method = RequestMethod.POST, params = "action=movePortletAjax")
+    public ModelAndView movePortletAjax(HttpServletRequest request, 
+                                        HttpServletResponse response, 
+                                        @RequestParam String sourceId, 
+                                        @RequestParam String previousNodeId, 
+                                        @RequestParam String nextNodeId) {
+      final Locale locale = RequestContextUtils.getLocale(request);
+      if(moveElementInternal(request, sourceId, previousNodeId, "appendAfter")  
+          && moveElementInternal(request, sourceId, nextNodeId, "insertBefore") ) {
+          return new ModelAndView("jsonView",
+              Collections.singletonMap("response", getMessage("success.move.portlet",
+              "Portlet moved successfully", locale)));
+      } else {
+        return new ModelAndView("jsonView",
+            Collections.singletonMap("response", getMessage("error.move.portlet",
+            "There was an issue moving this portlet, please refresh the page and try again.", locale)));
+      }
+    }
 
 	/**
 	 * Move a portlet to another location on the tab.
@@ -282,86 +326,30 @@ public class UpdatePreferencesServlet {
 	 * @throws PortalException
 	 */
     @RequestMapping(method = RequestMethod.POST, params = "action=movePortlet")
-	public ModelAndView movePortlet(HttpServletRequest request, HttpServletResponse response)
-			throws IOException, PortalException {
-
-        IUserInstance ui = userInstanceManager.getUserInstance(request);
-        IPerson per = getPerson(ui, response);
+    public ModelAndView movePortlet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, PortalException {
         final Locale locale = RequestContextUtils.getLocale(request);
 
-        UserPreferencesManager upm = (UserPreferencesManager) ui.getPreferencesManager();
-        IUserLayoutManager ulm = upm.getUserLayoutManager();
+        // portlet to be moved
+        String sourceId = request.getParameter("sourceID");
 
-		// portlet to be moved
-		String sourceId = request.getParameter("sourceID");
+        // Either "insertBefore" or "appendAfter".
+        String method = request.getParameter("method");
 
-		// Either "insertBefore" or "appendAfter".
-		String method = request.getParameter("method");
+        // Target element to move the source element in front of.  This parameter
+        // isn't actually relevant if we're appending the source element.
+        String destinationId = request.getParameter("elementID");
 
-		// Target element to move the source element in front of.  This parameter
-		// isn't actually relevant if we're appending the source element.
-		String destinationId = request.getParameter("elementID");
-
-
-		if (isTab(ulm, destinationId)) {
-			// if the target is a tab type node, move the portlet to
-			// the end of the first column
-		    @SuppressWarnings("unchecked")
-			Enumeration<String> columns = ulm.getChildIds(destinationId);
-			if (columns.hasMoreElements()) {
-				ulm.moveNode(sourceId, columns.nextElement(), null);
-			} else {
-
-				IUserLayoutFolderDescription newColumn = new UserLayoutFolderDescription();
-				newColumn.setName("Column");
-				newColumn.setId("tbd");
-				newColumn
-						.setFolderType(IUserLayoutFolderDescription.REGULAR_TYPE);
-				newColumn.setHidden(false);
-				newColumn.setUnremovable(false);
-				newColumn.setImmutable(false);
-
-				// add the column to our layout
-				IUserLayoutNodeDescription col = ulm.addNode(newColumn,
-						destinationId, null);
-
-				// move the channel
-				ulm.moveNode(sourceId, col.getId(), null);
-			}
-
-		} else if (ulm.getRootFolderId().equals(
-			// if the target is a column type node, we need to just move the portlet
-			// to the end of the column
-			ulm.getParentId(ulm.getParentId(destinationId)))) {
-			ulm.moveNode(sourceId, destinationId, null);
-
-		} else {
-			// If we're moving this element before another one, we need
-			// to know what the target is. If there's no target, just
-			// assume we're moving it to the very end of the column.
-			String siblingId = null;
-			if (method.equals("insertBefore"))
-				siblingId = destinationId;
-
-			// move the node as requested and save the layout
-			ulm.moveNode(sourceId, ulm.getParentId(destinationId), siblingId);
-		}
-
-		try {
-			// save the user's layout
-            ulm.saveUserLayout();
-		} catch (Exception e) {
-			log.warn("Error saving layout", e);
-            return new ModelAndView("jsonView",
-                    Collections.singletonMap("response", getMessage("error.move.portlet",
-                    "There was an issue moving this portlet, please refresh the page and try again.", locale)));
-		}
-
-        return new ModelAndView("jsonView",
-                Collections.singletonMap("response", getMessage("success.move.portlet",
-                "Portlet moved successfully", locale)));
-
-	}
+        if(moveElementInternal(request,sourceId, destinationId, method)) {
+          return new ModelAndView("jsonView",
+              Collections.singletonMap("response", getMessage("success.move.portlet",
+              "Portlet moved successfully", locale)));
+        } else {
+          return new ModelAndView("jsonView",
+              Collections.singletonMap("response", getMessage("error.move.portlet",
+              "There was an issue moving this portlet, please refresh the page and try again.", locale)));
+        }
+    }
 
 	/**
 	 * Change the number of columns on a specified tab.  In the event that the user is
@@ -687,10 +675,15 @@ public class UpdatePreferencesServlet {
 		try {
 			// save the user's layout
             ulm.saveUserLayout();
-		} catch (Exception e) {
-			log.warn("Error saving layout", e);
-			return new ModelAndView("jsonView", Collections.singletonMap("error", getMessage("error.persisting.layout.change", "Can''t add a new channel", locale)));
-		}
+            if(addedWindowState!=null){
+                IPortletWindow portletWindow = this.portletWindowRegistry.getOrCreateDefaultPortletWindowByFname(request, channel.getFunctionalName());
+                portletWindow.setWindowState(addedWindowState);
+                this.portletWindowRegistry.storePortletWindow(request, portletWindow);
+            }
+        } catch (Exception e) {
+            log.warn("Error saving layout", e);
+            return new ModelAndView("jsonView", Collections.singletonMap("error", getMessage("error.persisting.layout.change", "Can''t add a new channel", locale)));
+        }
 
 		Map<String, String> model = new HashMap<String, String>();
 		model.put("response", getMessage("success.add.portlet", "Added a new channel", locale));
@@ -1060,4 +1053,99 @@ public class UpdatePreferencesServlet {
 			throws PortalException {
 		return isTab(ulm, ulm.getParentId(folderId));
 	}
+
+    protected String getTabIdFromName(IUserLayout userLayout, String tabName) {
+        @SuppressWarnings("unchecked")
+        Enumeration<String> childrenOfRoot = userLayout.getChildIds(userLayout.getRootId());
+        
+        while (childrenOfRoot.hasMoreElements()) { //loop over folders that might be the favorites folder
+            String nodeId = childrenOfRoot.nextElement();
+
+            try {
+
+                IUserLayoutNodeDescription nodeDescription = userLayout.getNodeDescription(nodeId);
+                IUserLayoutNodeDescription.LayoutNodeType nodeType = nodeDescription.getType();
+
+                if (FOLDER.equals(nodeType)
+                        && nodeDescription instanceof IUserLayoutFolderDescription) {
+                    IUserLayoutFolderDescription folderDescription = (IUserLayoutFolderDescription) nodeDescription;
+
+                    if (tabName.equalsIgnoreCase(folderDescription.getName())) {
+                        return folderDescription.getId();
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Error getting the nodeID of the tab name " + tabName, e);
+            }
+        }
+
+        log.warn("Tab " + tabName + " was searched for but not found");
+        return null; //didn't find tab
+    }
+    
+    private boolean moveElementInternal(HttpServletRequest request, 
+                                        String sourceId, 
+                                        String destinationId, 
+                                        String method) {
+      if(StringUtils.isEmpty(destinationId)) {//shortcut for beginning and end
+        return true;
+      }
+      IUserInstance ui = userInstanceManager.getUserInstance(request);
+      UserPreferencesManager upm = (UserPreferencesManager) ui.getPreferencesManager();
+      IUserLayoutManager ulm = upm.getUserLayoutManager();
+
+      if (isTab(ulm, destinationId)) {
+          // if the target is a tab type node, move the portlet to
+          // the end of the first column
+          @SuppressWarnings("unchecked")
+          Enumeration<String> columns = ulm.getChildIds(destinationId);
+          if (columns.hasMoreElements()) {
+              ulm.moveNode(sourceId, columns.nextElement(), null);
+          } else {
+
+              IUserLayoutFolderDescription newColumn = new UserLayoutFolderDescription();
+              newColumn.setName("Column");
+              newColumn.setId("tbd");
+              newColumn
+                      .setFolderType(IUserLayoutFolderDescription.REGULAR_TYPE);
+              newColumn.setHidden(false);
+              newColumn.setUnremovable(false);
+              newColumn.setImmutable(false);
+
+              // add the column to our layout
+              IUserLayoutNodeDescription col = ulm.addNode(newColumn,
+                      destinationId, null);
+
+              // move the channel
+              ulm.moveNode(sourceId, col.getId(), null);
+          }
+
+      } else if (ulm.getRootFolderId().equals(
+          // if the target is a column type node, we need to just move the portlet
+          // to the end of the column
+          ulm.getParentId(ulm.getParentId(destinationId)))) {
+          ulm.moveNode(sourceId, destinationId, null);
+
+      } else {
+          // If we're moving this element before another one, we need
+          // to know what the target is. If there's no target, just
+          // assume we're moving it to the very end of the column.
+          String siblingId = null;
+          if (method.equals("insertBefore"))
+              siblingId = destinationId;
+
+          // move the node as requested and save the layout
+          ulm.moveNode(sourceId, ulm.getParentId(destinationId), siblingId);
+      }
+
+      try {
+          // save the user's layout
+          ulm.saveUserLayout();
+      } catch (Exception e) {
+          log.warn("Error saving layout", e);
+          return false;
+      }
+      
+      return true;
+    }
 }

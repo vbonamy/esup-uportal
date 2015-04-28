@@ -1,24 +1,23 @@
 <%--
 
-    Licensed to Jasig under one or more contributor license
+    Licensed to Apereo under one or more contributor license
     agreements. See the NOTICE file distributed with this work
     for additional information regarding copyright ownership.
-    Jasig licenses this file to you under the Apache License,
+    Apereo licenses this file to you under the Apache License,
     Version 2.0 (the "License"); you may not use this file
-    except in compliance with the License. You may obtain a
-    copy of the License at:
+    except in compliance with the License.  You may obtain a
+    copy of the License at the following location:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on
-    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied. See the License for the
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
     specific language governing permissions and limitations
     under the License.
 
 --%>
-
 <%@ include file="/WEB-INF/jsp/include.jsp" %>
 
 <c:set var="n"><portlet:namespace/></c:set>
@@ -44,12 +43,12 @@
 </portlet:actionURL>
 <portlet:actionURL var="deleteUrl" escapeXml="false">
   <portlet:param name="execution" value="${flowExecutionKey}" />
-  <portlet:param name="_eventId" value="deletePermission"/>
+  <portlet:param name="_eventId" value="delete"/>
   <portlet:param name="owner" value="OWNER"/>
-  <portlet:param name="principalType" value="PRINCIPALTYPE"/>
+  <portlet:param name="principalKey" value="PRINCIPALKEY"/>
   <portlet:param name="principalName" value="PRINCIPALNAME"/>
   <portlet:param name="activity" value="ACTIVITY"/>
-  <portlet:param name="target" value="TARGET"/>
+  <portlet:param name="targetName" value="TARGET"/>
   <portlet:param name="permissionType" value="PERMISSIONTYPE"/>
 </portlet:actionURL>
 
@@ -187,9 +186,9 @@ up.jQuery(function() {
     };
 
     // delete anchor tag generating helper function
-    var getDeleteAnchorTag = function(owner, principalType, principalKey, activity, target, permissionType) {
+    var getDeleteAnchorTag = function(owner, principalName, principalKey, activity, target, permissionType) {
         var url = "${deleteUrl}".replace("OWNER", owner)
-                                .replace("PRINCIPALTYPE", principalType)
+                                .replace("PRINCIPALNAME", principalName)
                                 .replace("PRINCIPALKEY", principalKey)
                                 .replace("ACTIVITY", activity)
                                 .replace("TARGET", target)
@@ -259,12 +258,12 @@ up.jQuery(function() {
             },
             // Add links to the proper columns after we get the data
             fnRowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-            	// Get edit anchor tag
+                // Get edit anchor tag
                 $('td:eq(3)', nRow).html( getEditAnchorTag(aData.owner, aData.activity, aData.target) );
 
                 // Get delete anchor tag
                 $('td:eq(4)', nRow).html( getDeleteAnchorTag(aData.owner,
-                                                             aData.principalType,
+                                                             aData.principalName,
                                                              aData.principalKey,
                                                              aData.activity,
                                                              aData.target,

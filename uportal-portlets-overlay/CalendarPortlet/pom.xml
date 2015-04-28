@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal.portlets-overlay</groupId>
         <artifactId>uportal-portlets-overlay</artifactId>
-        <version>4.1.2</version>
+        <version>4.2.0</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -35,7 +35,17 @@
                     <groupId>xalan</groupId>
                     <artifactId>serializer</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.jasig.cas</groupId>
+                    <artifactId>cas-client-core</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- Use same version as uPortal to ease debugging -->
+        <dependency>
+            <groupId>org.jasig.cas.client</groupId>
+            <artifactId>cas-client-core</artifactId>
         </dependency>
 
         <dependency>
@@ -198,7 +208,7 @@
                         <property name="plugin_classpath" refid="maven.plugin.classpath" />
 
                         <java failonerror="true" classname="org.danann.cernunnos.runtime.Main">
-                            <sysproperty key="log4j.configuration" value="command-line.log4j.properties" />
+                            <sysproperty key="logback.configurationFile" value="command-line.logback.xml" />
                             <classpath>
                                 <pathelement path="${project.build.directory}/${project.artifactId}/WEB-INF" />
                                 <pathelement path="${runtime_classpath}" />

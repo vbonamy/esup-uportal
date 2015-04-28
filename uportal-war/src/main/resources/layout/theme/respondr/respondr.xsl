@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 
-    Licensed to Jasig under one or more contributor license
+    Licensed to Apereo under one or more contributor license
     agreements. See the NOTICE file distributed with this work
     for additional information regarding copyright ownership.
-    Jasig licenses this file to you under the Apache License,
+    Apereo licenses this file to you under the Apache License,
     Version 2.0 (the "License"); you may not use this file
-    except in compliance with the License. You may obtain a
-    copy of the License at:
+    except in compliance with the License.  You may obtain a
+    copy of the License at the following location:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on
-    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied. See the License for the
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
     specific language governing permissions and limitations
     under the License.
 
 -->
-
 <!--
  | Respondr is a theme based on the principals of Responsive Design
  | and Twitter Bootstrap technology.  It was developed by Gary Thompson (Unicon)
@@ -215,7 +214,16 @@
  | Template contents can be any valid XSL or XHTML.
  -->
 <xsl:template name="page.title">
-   <title><xsl:value-of select="upMsg:getMessage('portal.page.title', $USER_LANG)" /></title>
+    <title>
+        <xsl:choose>
+            <xsl:when test="//focused">
+                {up-portlet-title(<xsl:value-of select="//focused/channel/@ID" />)} | <xsl:value-of select="upMsg:getMessage('portal.page.title', $USER_LANG)" />
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="/layout/navigation/tab[@activeTab='true']/@name"/> | <xsl:value-of select="upMsg:getMessage('portal.page.title', $USER_LANG)" />
+            </xsl:otherwise>
+       </xsl:choose>
+   </title>
 </xsl:template>
 <!-- ========================================================================= -->
 
@@ -277,6 +285,20 @@
 
         navMenuToggle();
       });
+
+      $(document).ready(function() {
+          if (up.lightboxConfig) {
+            up.lightboxConfig.init();
+          }
+
+          // Unhide the portlet's options menu if there are option items to display.
+          $('div.portlet-options-menu').has('li').removeClass('hidden');
+
+          // If portlet chrome is configured to not show (shows on hover) and the portlet is not movable, the portlet chrome
+          // is hidden.  However if there are option items to display, allow the portlet chrome to show on hover.
+          $('div.hover-toolbar').filter('.hidden').has('li').removeClass('hidden');
+      });
+
     })(up.jQuery);
   </script>
 </xsl:template>
@@ -287,98 +309,80 @@
 <!-- ========================================================================= -->
 <!-- 
  | YELLOW
- | This template renders the tabs at the top of the page.
+ | This template renders site navigation at the bottom of the page.  CONVERT TO PORTLET
  -->
 <xsl:template name="footer.nav">
-    <footer class="portal-footer-nav" role="contentinfo">
-        <div class="container-fluid">
+    <div class="container-fluid">
 
-            <!--
-             | Tab layout:
-             | Tab1          Tab2          Tab3          Tab4         (<== limited to $TAB_WRAP_COUNT)
-             |   -portlet1     -portlet5     -portlet7     -portlet8
-             |   -portlet2     -portlet6                   -portlet9
-             |   -portlet3                                 -portlet10
-             |   -portlet4
-             |
-             | Tab5 ....
-             +-->
+        <!--
+         | Tab layout:
+         | Tab1          Tab2          Tab3          Tab4         (<== limited to $TAB_WRAP_COUNT)
+         |   -portlet1     -portlet5     -portlet7     -portlet8
+         |   -portlet2     -portlet6                   -portlet9
+         |   -portlet3                                 -portlet10
+         |   -portlet4
+         |
+         | Tab5 ....
+         +-->
 
-            <a name="sitemap"></a>
-            <xsl:variable name="TAB_WRAP_COUNT" select="4" />
+        <a name="sitemap"></a>
+        <xsl:variable name="TAB_WRAP_COUNT" select="4" />
 
-            <xsl:for-each select="//navigation/tab">
-                <xsl:if test="(position() mod $TAB_WRAP_COUNT)=1">
-                    <xsl:variable name="ROW_NUM" select="ceiling(position() div $TAB_WRAP_COUNT)" />
-                    <div class="row">
-                        <xsl:for-each select="//navigation/tab">
-                            <xsl:if test="ceiling(position() div $TAB_WRAP_COUNT) = $ROW_NUM">
-                                <xsl:variable name="tabLinkUrl">
-                                    <xsl:call-template name="portalUrl">
-                                        <xsl:with-param name="url">
-                                            <url:portal-url>
-                                                <url:layoutId><xsl:value-of select="@ID" /></url:layoutId>
-                                            </url:portal-url>
-                                        </xsl:with-param>
-                                    </xsl:call-template>
-                                </xsl:variable>
-                                <div class="col-md-3">
-                                    <h4><a href="{$tabLinkUrl}"><xsl:value-of select="upElemTitle:getTitle(@ID, $USER_LANG, @name)"/></a></h4>
-                                    <ul>
-                                        <xsl:for-each select="tabChannel">
-                                            <xsl:variable name="portletLinkUrl">
-                                                <xsl:call-template name="portalUrl">
-                                                    <xsl:with-param name="url">
-                                                        <url:portal-url>
-                                                            <url:layoutId><xsl:value-of select="@ID" /></url:layoutId>
-                                                            <url:portlet-url state="MAXIMIZED" />
-                                                        </url:portal-url>
-                                                    </xsl:with-param>
-                                                </xsl:call-template>
-                                            </xsl:variable>
-                                            <li><a href="{$portletLinkUrl}"><xsl:value-of select="@name" /></a></li>
-                                        </xsl:for-each>
-                                    </ul>
-                                </div>
-                            </xsl:if>
-                        </xsl:for-each>
-                    </div>
-                </xsl:if>
-            </xsl:for-each>
+        <xsl:for-each select="//navigation/tab">
+            <xsl:if test="(position() mod $TAB_WRAP_COUNT)=1">
+                <xsl:variable name="ROW_NUM" select="ceiling(position() div $TAB_WRAP_COUNT)" />
+                <div class="row">
+                    <xsl:for-each select="//navigation/tab">
+                        <xsl:if test="ceiling(position() div $TAB_WRAP_COUNT) = $ROW_NUM">
+                            <xsl:variable name="NAV_TRANSIENT">
+                                <xsl:choose>
+                                    <xsl:when test="@transient='true'">disabled</xsl:when>
+                                    <xsl:otherwise></xsl:otherwise>
+                                </xsl:choose>
+                            </xsl:variable>
+                            <xsl:variable name="tabLinkUrl">
+                                <!-- For a transient tab, attempting to calculate a tab URL generates an
+                                     exception because the tab is not in the layout so generate a safe URL. -->
+                                <xsl:choose>
+                                    <xsl:when test="@transient='true'">javascript:;</xsl:when>
+                                    <xsl:otherwise>
+                                        <xsl:call-template name="portalUrl">
+                                            <xsl:with-param name="url">
+                                                <url:portal-url>
+                                                    <url:layoutId><xsl:value-of select="@ID" /></url:layoutId>
+                                                </url:portal-url>
+                                            </xsl:with-param>
+                                        </xsl:call-template>
+                                    </xsl:otherwise>
+                                </xsl:choose>
+                            </xsl:variable>
+                            <div class="col-md-3">
+                                <h4><a href="{$tabLinkUrl}" class="{$NAV_TRANSIENT}"><xsl:value-of select="upElemTitle:getTitle(@ID, $USER_LANG, @name)"/></a></h4>
+                                <ul>
+                                    <xsl:for-each select="tabChannel">
+                                        <xsl:variable name="portletLinkUrl">
+                                            <xsl:call-template name="portalUrl">
+                                                <xsl:with-param name="url">
+                                                    <url:portal-url>
+                                                        <url:layoutId><xsl:value-of select="@ID" /></url:layoutId>
+                                                        <url:portlet-url state="MAXIMIZED" />
+                                                    </url:portal-url>
+                                                </xsl:with-param>
+                                            </xsl:call-template>
+                                        </xsl:variable>
+                                        <li><a href="{$portletLinkUrl}"><xsl:value-of select="@title" /></a></li>
+                                    </xsl:for-each>
+                                </ul>
+                            </div>
+                        </xsl:if>
+                    </xsl:for-each>
+                </div>
+            </xsl:if>
+        </xsl:for-each>
 
-        </div>
-    </footer>
+    </div>
 </xsl:template>
 <!-- ========================================================================= -->
-
-
-<!-- ========================================================================= -->
-<!-- ========== TEMPLATE: FOOTER LEGAL ==================================== -->
-<!-- ========================================================================= -->
-<!-- 
- | YELLOW
- | This template renders the tabs at the top of the page.
- -->
-<xsl:template name="footer.legal">
-    <footer class="portal-footer-legal" role="contentinfo">
-        <div class="container-fluid">
-            <div class="portal-power">
-                <h2><a href="http://www.jasig.org/uportal" target="_blank"><xsl:value-of select="upMsg:getMessage('footer.uportal.powered.by', $USER_LANG)"/>Jasig</a></h2>
-                <ul>
-                    <li><a href="http://www.jasig.org/" target="_blank">Jasig.org</a></li>
-                    <li><a href="http://www.jasig.org/uportal" target="_blank">uPortal.org</a></li>
-                    <li><a href="http://www.jasig.org/uportal/download" target="_blank"><xsl:value-of select="upMsg:getMessage('download.uportal', $USER_LANG)"/></a></li>
-                    <li><a href="http://www.jasig.org/uportal/community" target="_blank"><xsl:value-of select="upMsg:getMessage('uportal.community', $USER_LANG)"/></a></li>
-                    <li><a href="http://www.opentracker.net/article/how-write-website-privacy-policy" target="_blank"><xsl:value-of select="upMsg:getMessage('privacy.policy', $USER_LANG)"/></a></li>
-                    <li><a href="http://wiki.jasig.org/display/UPM40/Accessibility" target="_blank"><xsl:value-of select="upMsg:getMessage('accessibility', $USER_LANG)"/></a></li>
-                </ul>
-	        <p><a href="http://www.jasig.org/uportal/about/license" title="uPortal" target="_blank">uPortal </a><xsl:value-of select="upMsg:getMessage('footer.uportal.licensed', $USER_LANG)"/><a href="http://www.apache.org/licenses/LICENSE-2.0" title="Apache License, Version 2.0" target="_blank">Apache License, Version 2.0 </a> <xsl:value-of select="upMsg:getMessage('footer.license.approvment', $USER_LANG)"/><a href="http://www.opensource.org/docs/osd" title="{upMsg:getMessage('footer.osi', $USER_LANG)}" target="_blank"><xsl:value-of select="upMsg:getMessage('footer.osi', $USER_LANG)"/> </a><xsl:value-of select="upMsg:getMessage('footer.open.license', $USER_LANG)"/><a href="http://www.gnu.org/licenses/license-list.html" title="{upMsg:getMessage('footer.gnu', $USER_LANG)}" target="_blank"><xsl:value-of select="upMsg:getMessage('footer.gnu', $USER_LANG)"/> </a><xsl:value-of select="upMsg:getMessage('footer.free.license', $USER_LANG)"/></p>
-            </div>
-        </div>
-    </footer>
-</xsl:template>
-<!-- ========================================================================= -->
-
 
 <!-- ========================================================================= -->
 <!-- ========== TEMPLATE: PAGE DIALOGS ==================================== -->
@@ -661,13 +665,11 @@
                 <xsl:call-template name="region.hidden-top" />
                 <xsl:call-template name="region.page-top" />
                 <header class="portal-header" role="banner">
-                    <div class="portal-global">
-                        <div class="container-fluid">
+                    <div class="container-fluid">
+                        <div class="portal-global row">
                             <xsl:call-template name="region.pre-header" />
                         </div>
-                    </div>
-                    <chunk-point/> <!-- Performance Optimization, see ChunkPointPlaceholderEventSource -->
-                    <div class="container-fluid">
+                        <chunk-point/> <!-- Performance Optimization, see ChunkPointPlaceholderEventSource -->
                         <div class="row">
                             <xsl:call-template name="region.header-left" />
                             <xsl:call-template name="region.header-right" />
@@ -679,6 +681,7 @@
                 <chunk-point/> <!-- Performance Optimization, see ChunkPointPlaceholderEventSource -->
                 <div id="portalPageBody" class="portal-content" role="main"><!-- #portalPageBody selector is used with BackgroundPreference framework portlet -->
                     <xsl:call-template name="region.customize" />
+                    <xsl:call-template name="region.mezzanine" />
                     <chunk-point/> <!-- Performance Optimization, see ChunkPointPlaceholderEventSource -->
                     <div class="container-fluid">
                         <div class="row"><!-- Fixed-grid row containing content (pre-, regular, and post-), plus optionally sidebar-left, sidebar-right, or both -->
@@ -739,8 +742,8 @@
                     </div>
                 </div>
                 <chunk-point/> <!-- Performance Optimization, see ChunkPointPlaceholderEventSource -->
-                <xsl:call-template name="footer.nav" />
-                <xsl:call-template name="footer.legal" />
+                <xsl:call-template name="region.footer.first" />
+                <xsl:call-template name="region.footer.second" />
                 <xsl:call-template name="region.page-bottom" />
                 <xsl:call-template name="region.hidden-bottom" />
                 <chunk-point/> <!-- Performance Optimization, see ChunkPointPlaceholderEventSource -->

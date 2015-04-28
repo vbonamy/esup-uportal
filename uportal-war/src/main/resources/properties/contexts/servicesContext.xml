@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Licensed to Jasig under one or more contributor license
+    Licensed to Apereo under one or more contributor license
     agreements. See the NOTICE file distributed with this work
     for additional information regarding copyright ownership.
-    Jasig licenses this file to you under the Apache License,
+    Apereo licenses this file to you under the Apache License,
     Version 2.0 (the "License"); you may not use this file
-    except in compliance with the License. You may obtain a
-    copy of the License at:
+    except in compliance with the License.  You may obtain a
+    copy of the License at the following location:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on
-    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied. See the License for the
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
     specific language governing permissions and limitations
     under the License.
 
 -->
-
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns="http://www.springframework.org/schema/beans" 
        xmlns:util="http://www.springframework.org/schema/util"
@@ -28,11 +27,35 @@
            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd">
            
-    <bean id="httpConnectionManager" class="org.jasig.portal.services.MultiThreadedHttpConnectionManagerFactoryBean" />
+    <bean id="webServiceMessageSender" class="org.springframework.ws.transport.http.HttpComponentsMessageSender">
+        <property name="httpClient" ref="httpClient"/>
+    </bean>
+    <bean id="clientHttpRequestFactory" class="org.springframework.http.client.HttpComponentsClientHttpRequestFactory">
+        <property name="httpClient" ref="httpClient" />
+    </bean>
     
-    <!-- Each client object needs its own HttpClient -->
-    <bean id="httpClient" class="org.jasig.portal.services.HttpClientFactoryBean" scope="prototype">
-        <property name="httpConnectionManager" ref="httpConnectionManager" />
+    <bean id="httpClient" class="org.jasig.apache.http.impl.client.ResponseHeaderHandlingHttpClient" depends-on="httpConnectionParamBean, clientParamBean">
+        <constructor-arg ref="httpConnectionManager" />
+        <constructor-arg ref="httpParams"/>
+    </bean>
+    <bean id="httpConnectionManager" class="org.jasig.apache.http.impl.conn.CleanShutdownPoolingClientConnectionManager" destroy-method="shutdown">
+        <property name="defaultMaxPerRoute" value="1000" />
+        <property name="maxTotal" value="1000" />
+    </bean>
+    <bean id="httpParams" class="org.apache.http.params.BasicHttpParams"/>
+    <bean id="httpConnectionParamBean" class="org.apache.http.params.HttpConnectionParamBean">
+        <constructor-arg index="0">
+            <ref bean="httpParams"/>
+        </constructor-arg>
+        <property name="connectionTimeout" value="5000"/>
+        <property name="soTimeout" value="30000"/>
+        <property name="staleCheckingEnabled" value="true"/>
+    </bean>
+    <bean id="clientParamBean" class="org.apache.http.client.params.ClientParamBean">
+        <constructor-arg index="0">
+            <ref bean="httpParams"/>
+        </constructor-arg>
+        <property name="cookiePolicy" value="ignoreCookies"/>
     </bean>
     
     <bean id="restTemplate" class="org.springframework.web.client.RestTemplate">
@@ -56,11 +79,7 @@
                 </bean>
             </util:list>
         </property>
-        <property name="requestFactory">
-            <bean class="org.springframework.http.client.CommonsClientHttpRequestFactory">
-                <property name="httpClient" ref="httpClient" />
-            </bean>
-        </property>
+        <property name="requestFactory" ref="clientHttpRequestFactory" />
     </bean>
     
     <util:set id="UsernameCacheTagPurger_IgnoredUsernames">
@@ -138,6 +157,23 @@
         <!--<value>${org.jasig.portal.portlets.directory.search.result.type}</value>-->
     </util:set>
 
+
+    <bean id="authorizationService" class="org.jasig.portal.security.provider.AuthorizationImpl">
+        <!-- Set of permissionTargetProviders that are not entities and permission checks on a target
+             string value do not need to search through groups or group member target names for a match.
+             See bean permissionTargetProviderRegistry. -->
+        <property name="nonEntityPermissionTargetProviders">
+            <set>
+                <value>errorChannelTargetProvider</value>
+                <value>portalSystemTargetProvider</value>
+                <value>userAttributesTargetProvider</value>
+            </set>
+        </property>
+    </bean>
+    <!--
+    | The permissionTargetProvider key names must be synchronized between src/main/data/default_entities/permission_owner/*.xml
+    | files, here, and authorizationService.
+    +-->
     <bean id="permissionTargetProviderRegistry" class="org.jasig.portal.permission.target.PermissionTargetProviderRegistryImpl">
         <property name="providers">
             <map>

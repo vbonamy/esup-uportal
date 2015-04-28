@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Licensed to Jasig under one or more contributor license
+    Licensed to Apereo under one or more contributor license
     agreements. See the NOTICE file distributed with this work
     for additional information regarding copyright ownership.
-    Jasig licenses this file to you under the Apache License,
+    Apereo licenses this file to you under the Apache License,
     Version 2.0 (the "License"); you may not use this file
-    except in compliance with the License. You may obtain a
-    copy of the License at:
+    except in compliance with the License.  You may obtain a
+    copy of the License at the following location:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on
-    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied. See the License for the
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
     specific language governing permissions and limitations
     under the License.
 
 -->
-
 <portlet-app xmlns="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:schemaLocation="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd"
@@ -324,6 +323,25 @@
         <portlet-info>
             <title>Sql Query</title>
         </portlet-info>
+        <portlet-preferences>
+            <!--
+             | The name of the cache in ehcache.xml to cache the sql results set.  A preconfigured cache named
+             | org.jasig.portal.portlets.sqlquery.SqlQueryPortletController.queryResults exists in ehcache.xml,
+             | but you can define other cache names in ehcache.xml with whatever retention characteristics are
+             | needed and configure different SqlQuery Portlet instances to use the different caches.
+             |
+             | The cache key includes the query string so multiple SqlQuery Portlet instances could share the
+             | same cache if desired.
+             |
+             | To disable caching, use an empty cache name.  WARNING!  To avoid performance issues, disable caching
+             | ONLY for admin portlets or portlets that have VERY low usage!  Configure a new cache with a low
+             | time to live if you want infrequent caching.
+             +-->
+            <preference>
+                <name>cacheName</name>
+                <value></value>
+            </preference>
+        </portlet-preferences>
     </portlet>
     
     <portlet>
@@ -618,14 +636,26 @@
             </preference>
             <preference>
                 <name>PREFcolor2</name>
-                <value>#8AA9D8</value>
+                <value>#F68923</value>
             </preference>
             <preference>
                 <name>PREFcolor3</name>
-                <value>#F68923</value>
+                <value>#428BCA</value>
+            </preference>
+            <preference>
+                <name>PREFcolor4</name>
+                <value>#ADADAD</value>
+            </preference>
+            <preference>
+                <name>PREFcolor5</name>
+                <value>#333333</value>
+            </preference>
+            <preference>
+                <name>PREFcolor6</name>
+                <value>#E5E5E5</value>
             </preference>
         </portlet-preferences>
-        
+
         <container-runtime-option>
             <name>javax.portlet.renderHeaders</name>
             <value>true</value>
@@ -703,7 +733,7 @@
             <qname xmlns:x="https://source.jasig.org/schemas/uportal/search">x:SearchResults</qname>
         </supported-publishing-event>
     </portlet>
-    
+
     <portlet>
         <portlet-name>Directory</portlet-name>
         <display-name xml:lang="en">Directory</display-name>
@@ -907,7 +937,7 @@
             <!-- HTML element or class to apply background image to -->
             <preference>
                 <name>mobileBackgroundContainerSelector</name>
-                <value>#page-inner</value>
+                <value>#portalPageBody</value>
             </preference>
             <preference>
                 <name>mobileBackgroundImages</name>
@@ -958,6 +988,58 @@
                 <value>$tenant</value>
             </preference>
         </portlet-preferences>
+    </portlet>
+
+    <portlet>
+        <portlet-name>SessionTimeout</portlet-name>
+        <display-name xml:lang="en">Session Timeout</display-name>
+        <portlet-class>org.springframework.web.portlet.HeaderHandlingDispatcherPortlet</portlet-class>
+        <init-param>
+            <name>contextConfigLocation</name>
+            <value>classpath:/properties/contexts/portlet/SessionTimeout-portlet.xml</value>
+        </init-param>
+        <supports>
+            <mime-type>text/html</mime-type>
+            <portlet-mode>view</portlet-mode>
+        </supports>
+        <supported-locale>en</supported-locale>
+        <portlet-info>
+            <title>Session Timeout</title>
+        </portlet-info>
+        <portlet-preferences>
+            <preference>
+                <name>enabled</name>
+                <value>true</value>
+                <read-only>false</read-only>
+            </preference>
+            <preference>
+                <!-- The session timeout warning will start displaying this many seconds before
+                     the end of the user's session and will remain on the screen for this many seconds
+                     (until the end of the session) at which point the portlet will redirect to the
+                     logout URL specified in logoutURLFragment.
+                -->
+                <name>dialogDisplaySeconds</name>
+                <value>60</value>
+                <read-only>false</read-only>
+            </preference>
+            <preference>
+                <!-- This URL is relative to the root of the uPortal instance -->
+                <name>resetSessionURLFragment</name>
+                <value>/api/ajax-success</value>
+                <read-only>false</read-only>
+            </preference>
+            <preference>
+                <!-- This URL is relative to the root of the uPortal instance -->
+                <name>logoutURLFragment</name>
+                <value>/Logout</value>
+                <read-only>false</read-only>
+            </preference>
+        </portlet-preferences>
+
+        <container-runtime-option>
+            <name>javax.portlet.renderHeaders</name>
+            <value>true</value>
+        </container-runtime-option>
     </portlet>
 
     <custom-portlet-mode>

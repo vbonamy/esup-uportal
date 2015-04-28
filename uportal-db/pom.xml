@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal</groupId>
         <artifactId>uportal-parent</artifactId>
-        <version>4.1.2</version>
+        <version>4.2.0</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -35,7 +35,7 @@
          +-->
 	    <!--
 	    <dependency>
-                <groupId>org.postgresql</groupId>
+            <groupId>org.postgresql</groupId>
 	        <artifactId>postgresql</artifactId>
 	        <version>${postgres.version}</version>
 	        <scope>compile</scope>

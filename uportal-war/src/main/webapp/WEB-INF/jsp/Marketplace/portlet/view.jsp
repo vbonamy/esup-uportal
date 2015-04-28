@@ -1,24 +1,23 @@
 <%--
 
-    Licensed to Jasig under one or more contributor license
+    Licensed to Apereo under one or more contributor license
     agreements. See the NOTICE file distributed with this work
     for additional information regarding copyright ownership.
-    Jasig licenses this file to you under the Apache License,
+    Apereo licenses this file to you under the Apache License,
     Version 2.0 (the "License"); you may not use this file
-    except in compliance with the License. You may obtain a
-    copy of the License at:
+    except in compliance with the License.  You may obtain a
+    copy of the License at the following location:
 
-    http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on
-    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied. See the License for the
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
     specific language governing permissions and limitations
     under the License.
 
 --%>
-
 <%@ include file="/WEB-INF/jsp/include.jsp"%>
 <c:set var="n"><portlet:namespace/></c:set>
 
@@ -53,11 +52,6 @@
     background-color: white;
 }
 
-#${n}marketplace  .dataTables_filter {
-    width: 100%;
-    float: right;
-}
-
 #${n}marketplace .dataTables_paginate{
     white-space:nowrap;
 }
@@ -68,23 +62,23 @@
  */
 
 #${n}marketplace .sorting_asc {
-    background: url('/uPortal/media/org/jasig/portal/channels/marketplace/sort_asc.png') no-repeat center right;
+    background: url('<c:url value="/media/org/jasig/portal/channels/marketplace/sort_asc.png"/>') no-repeat center right;
 }
 
 #${n}marketplace .sorting_desc {
-    background: url('/uPortal/media/org/jasig/portal/channels/marketplace/sort_desc.png') no-repeat center right;
+    background: url('<c:url value="/media/org/jasig/portal/channels/marketplace/sort_desc.png"/>') no-repeat center right;
 }
 
 #${n}marketplace .sorting {
-    background: url('/uPortal/media/org/jasig/portal/channels/marketplace/sort_both.png') no-repeat center right;
+    background: url('<c:url value="/media/org/jasig/portal/channels/marketplace/sort_both.png"/>') no-repeat center right;
 }
 
 #${n}marketplace .sorting_asc_disabled {
-    background: url('/uPortal/media/org/jasig/portal/channels/marketplace/sort_asc_disabled.png') no-repeat center right;
+    background: url('<c:url value="/media/org/jasig/portal/channels/marketplace/sort_asc_disabled.png"/>') no-repeat center right;
 }
 
 #${n}marketplace .sorting_desc_disabled {
-    background: url('/uPortal/media/org/jasig/portal/channels/marketplace/sort_desc_disabled.png') no-repeat center right;
+    background: url('<c:url value="/media/org/jasig/portal/channels/marketplace/sort_desc_disabled.png"/>') no-repeat center right;
 }
  
 #${n}marketplace table.display thead th:active,
@@ -112,7 +106,8 @@
  }
 
 #${n}marketplace label>input{
-    width:90%;
+    height: 30px;
+    margin-right: 10px;
  }
 
 #${n}marketplace.top .dataTables_info {
@@ -138,7 +133,7 @@
 }
 
 #${n}marketplace .paging_full_numbers a:active {
-    outline: none
+    outline: none;
 }
 
 #${n}marketplace .paging_full_numbers a:hover {
@@ -196,13 +191,13 @@
     text-align: left;
 }
 
-#${n}marketplace .sort_buttons_group{
-    display: block;
-}
-
 #${n}marketplace .marketplace_center_text, .dataTables_paginate,
 .dataTables_processing{
     text-align:center;
+}
+
+#${n}marketplace .marketplace_center_text {
+    margin-top: 30px;
 }
 
 #${n}marketplace .dataTables_length, .dataTables_filter {
@@ -210,7 +205,7 @@
 }
 
 #${n}marketplace a:hover {
- cursor:pointer;
+    cursor:pointer;
 }
 
 #${n}marketplace .${n}bottom{
@@ -218,11 +213,75 @@
     padding-top: 1em;
 }
 
-#${n}marketplace .marketplaceSection{
-    border-bottom-style:dotted;
-    border-width:thin;
+#${n}marketplace .marketplaceSection .panel {
+    padding: 0;
+    border: none;
 }
 
+#${n}marketplace .marketplaceSection .panel .portlet-box {
+    height: 112px;
+    max-height: 112px;
+    margin: 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #dddddd;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.25);
+    -webkit-box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.25);
+    -moz-box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+#${n}marketplace .marketplaceSection .panel .portlet-box:hover {
+    background-color: #eee;
+    cursor: pointer;
+}
+
+#${n}marketplace .marketplaceSection .panel .portlet-box a {
+    width: 100%;
+    display: block;
+}
+
+#${n}marketplace .marketplaceSection .panel .portlet-box a:hover {
+    text-decoration: none;
+    color: #000000;
+}
+
+#${n}marketplace .marketplaceSection .panel .portlet-box .portlet-icon {
+    width: 92px;
+    height: 92px;
+    max-height: 92px;
+    background-color: #eee;
+    margin-right: 15px;
+    float: left;
+    border:3px solid #999;
+    text-align: center;
+}
+
+#${n}marketplace .marketplaceSection .panel .portlet-box .portlet-icon img {
+    width: 72px;
+    height: 72px;
+    margin-top: 7px;
+
+}
+
+#${n}marketplace .marketplaceSection .panel .portlet-box .portlet-details {
+    text-align: left;
+    color: #000;
+    margin-right: 0;
+}
+
+#${n}marketplace .marketplaceSection .panel .portlet-box .portlet-details h5 {
+    font-size: 16px;
+    margin: 0 0 3px 0;
+}
+
+
+#${n}marketplace .marketplaceSection .panel .portlet-box .portlet-details p {
+    font-size: 11px;
+    margin: 0;
+}
 </style>
 
 
@@ -231,37 +290,39 @@
 <c:if test="${fn:length(featuredList) > 0}">
     <div id="${n}featured" class="marketplaceSection">
         <div>
-            <span><strong><spring:message code="featured" text="Featured" /></strong></span><br>
+            <h3><strong><spring:message code="featured" text="Featured" /></strong></h3><br>
         </div>
-        <c:set var="endRowPortletCounter" value="0"/>
         <div class="row">
-            <c:if test="${fn:length(featuredList)mod 2!=0 }">
-                <div class="col-xs-3">
-                <c:set var="endRowPortletCounter" value="1" />
-                </div>
-            </c:if>
-            <c:forEach var="featuredPortlet" items="${featuredList}" varStatus="status">
+            <c:url value="/media/skins/icons/mobile/default.png" var="defaultIcon"/>
+            <c:forEach var="featuredPortlet" items="${featuredEntries}" varStatus="status">
                 <portlet:renderURL var="entryURL" windowState="MAXIMIZED" >
                     <portlet:param name="action" value="view"/>
-                    <portlet:param name="fName" value="${featuredPortlet.FName}"/>
+                    <portlet:param name="fName" value="${featuredPortlet.fname}"/>
                 </portlet:renderURL>
-                <div class="col-xs-6 col-sm-6 text-center">
+                <div class="col-sm-6 col-lg-3">
                     <div class="panel panel-default">
-                        <div class="panel-heading">
-                        <a href="${entryURL}">
-                            <div>
-                                <c:out value="${featuredPortlet.title}"/>
-                            </div>
-                        </a>
-                        </div>
-                        <div class="panel-body">
-                            <div>
-                                <c:out value="${featuredPortlet.description}"/>
-                            </div>
+                        <div class="row portlet-box">
+                            <a href="${entryURL}">
+                                <div class="portlet-icon">
+                                    <c:choose>
+                                        <c:when test="${empty featuredPortlet.getParameter('mobileIconUrl')}">
+
+                                            <img src="${defaultIcon}">
+                                        </c:when>
+                                        <c:otherwise>
+                                            <img src="${featuredPortlet.getParameter('mobileIconUrl').value}">
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <div class="portlet-details">
+                                    <h5><c:out value="${featuredPortlet.title}"/></h5>
+                                    <p><c:out value="${featuredPortlet.description}"/></p>
+                                </div>
+                            </a>
                         </div>
                     </div>
                 </div>
-                <c:if test="${(endRowPortletCounter + status.count) mod 2 ==0}">
+                <c:if test="${(status.index + 1) mod 4 == 0}">
                     <div class="clearfix"></div>
                 </c:if>
             </c:forEach>
@@ -269,14 +330,36 @@
     </div>
 </c:if>
 
+<div class="sort_filter_group">
+    <div class="row">
+        <div class="col-sm-1">
+            <p><strong><spring:message code="label.browseBy" text="Browse By"/></strong></p>
+        </div>
+        <div class="col-sm-8">
+            <div class="sort_buttons_group">
+                <button type="button" id="${n}alphabetical-sort-button" class="btn btn-default"><spring:message code="label.azIndex" text="A-Z Index" /></button>
+                <button type="button" id="${n}category-sort-button" class="btn btn-default"><spring:message code="label.category" text="Categories" /></button>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="input-group">
+                <input type="text" class="form-control" id="${n}portletTable_filter" placeholder="Search Portlets">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" id="${n}clear_filter_button"><spring:message code="label.clear" text="Clear" /></button>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div id="${n}categoryListContainer" class="marketplace_center_text panel panel-default" style="display:none">
     <div class="panel-body">
-        <c:set var="categoryCount" value="0"/>
+        <c:set var="categoryCount" value="0" />
         <c:forEach var="category" items="${categoryList}">
             <c:if test="${categoryCount mod 4 == 0}">
                 <div class="row">
-                <div class="col-xs-0 col-md-2"></div>
+                    <div class="col-xs-0 col-md-2"></div>
             </c:if>
             <div class="col-xs-6 col-sm-3 col-md-2">
                 <a class="${n}marketplace_category_link">${category.name}</a>
@@ -307,23 +390,23 @@
             </tr>
         </thead>
         <tbody>
-            <c:forEach var="portlet" items="${channelBeanList}">
+            <c:forEach var="portlet" items="${marketplaceEntries}">
                 <tr>
                     <td class="essential" style="white-space: nowrap; border:none;">
-                        <a href="${portlet.renderUrl}">${portlet.title}</a>
+                        <strong><a href="${portlet.renderUrl}">${portlet.title} <i class="fa fa-external-link"></i></a></strong>
                     </td>
                     <td class="optional" style="border:none;">
                         ${portlet.description}
                     </td>
                     <portlet:renderURL var="entryURL" windowState="MAXIMIZED" >
                         <portlet:param name="action" value="view"/>
-                        <portlet:param name="fName" value="${portlet.FName}"/>
+                        <portlet:param name="fName" value="${portlet.fname}"/>
                     </portlet:renderURL>
                     <td class="essential" style="border:none;">
-                        <a href="${entryURL}"><spring:message code="label.details" text="Details" /></a>
+                        <a href="${entryURL}"><spring:message code="label.details" text="Details" /> <i class="fa fa-edit"></i></a>
                     </td>
                     <td>
-                        <c:forEach var="category" items="${portlet.parentCategories}">
+                        <c:forEach var="category" items="${portlet.marketplacePortletDefinition.parentCategories}">
                             ${category.name}
                         </c:forEach>
                     </td>
@@ -334,12 +417,8 @@
     </div>
 </div>
 
-<spring:message code="label.search" var="labelSearch" text="Search" />
 <spring:message code="label.mostPopular" var="mostPopular" text="Most Popular" />
-<spring:message code="label.azIndex" var="azIndex" text="A-Z index" />
 <spring:message code="label.audience" var="audience" text="Audience" />
-<spring:message code="label.browseby" var="browseBy" text="Browse by" />
-<spring:message code="category" var="categoryLabel" text="Category" />
 
 <script type="text/javascript">
     var $ = up.jQuery;
@@ -360,7 +439,7 @@
 
             var applyEllipsis = function (nrow,col,txtlen){
                    var $cell = $('td:eq('+col+')', nrow);
-                   $cell.text(ellipsis($cell.text(),txtlen)); // ellipsis() from 2. above
+                   $cell.text(ellipsis($cell.text(),txtlen));
                    return nrow;
             };
 
@@ -377,33 +456,17 @@
             var myDataTable = $('#${n}portletTable').dataTable({
                 "aoColumnDefs": [{"bSortable": false, "aTargets": [ 2 ] }, { "bVisible": false, "aTargets": [ 3 ] }],
                 "fnRowCallback": function(nRow, aData, iDisplayIndex, iDisplayIndexFull){
-                       // *** NOTE *** applyEllipsis(nrow,col,txtlen) col is 0-based,
-                       // however, don't include hidden columns in count
                        applyEllipsis(nRow,1,75);
                       },
-                "sDom": '<"top"f><"sort_info"><"${n}sort_buttons"><rt'+
+                "sDom": '<rt'+
                     '<"row ${n}bottom" <"col-xs-6 col-sm-8 col-md-3" i>'+
                     '<"col-xs-6 col-md-push-6 col-sm-4 col-md-3"l>'+
                     '<"col-xs-12 col-md-pull-3 col-md-6"p>>',
-                "bStateSave": true,
+                "bStateSave": false,
                 "bAutoWidth":false
             });
 
-            $("#${n}marketplace div.${n}sort_buttons")
-            .html(    
-                "<div class=\"btn-group row container-fluid sort_buttons_group\">"+
-                  "<div class=\"col-sm-6 \">"+
-                    "<button type=\"button\" id=\"${n}alphabetical-sort-button\" class=\"btn btn-default btn-block\">${azIndex}</button>"+
-                  "</div>"+
-                  "<div class=\"col-sm-6 \">"+
-                    "<button type=\"button\" id=\"${n}category-sort-button\" class=\"btn btn-default btn-block\">${categoryLabel}</button>"+
-                  "</div>"+
-                "</div>"+
-                "<br><br>");
-            $("#${n}categoryListContainer").insertAfter($(".${n}sort_buttons"));
             $("#${n}featured").insertAfter($("#${n}marketplace .top"));
-            $("#${n}marketplace div.sort_info").html("<div><BR><BR><span><strong>${browseBy}</strong><br><br></div>");
-            $("#${n}marketplace div.dataTables_filter").append("<form action='${entryURL}'><button>${labelSearch}</button></form><br>");
 
             var setFilter = function(text){
                 myDataTable.fnFilter(text);
@@ -412,19 +475,31 @@
             var sortColumns = function(column){
                 myDataTable.fnSort([[column, 'asc']]);
             }
-            
-            $("#${n}marketplace .dataTables_filter").addClass("marketplaceSection");
 
             $(".${n}marketplace_category_link").click(function(){
                 setFilter(this.textContent);
             });
 
+            $("#${n}alphabetical-sort-button").addClass("active");
+            $("#${n}category-sort-button").removeClass("active");
+
             $("#${n}alphabetical-sort-button").click(function(){
                 sortColumns(0);
+                $(this).toggleClass("active");
             });
 
             $("#${n}category-sort-button").click(function(){
                 $("#${n}categoryListContainer").toggle();
+                $(this).toggleClass("active");
+            });
+
+            $("#${n}portletTable_filter").keyup(function(e) {
+                setFilter(this.value);
+            });
+
+            $("#${n}clear_filter_button").click(function(){
+                myDataTable.fnFilter("");
+                $("#${n}portletTable_filter").val("").focus();
             });
 
             if("${initialFilter}"){
@@ -434,3 +509,5 @@
     });
 })(up.jQuery);
 </script>
+
+
