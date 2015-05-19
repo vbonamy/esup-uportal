@@ -27,6 +27,7 @@
 # you are in a Windows environment!
 #
 
+maven.test.skip=true
 
 #==================== File and Directory Names ========================
 
