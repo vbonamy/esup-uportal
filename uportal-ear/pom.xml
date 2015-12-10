@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jasig.portal</groupId>
         <artifactId>uportal-parent</artifactId>
-        <version>4.2.0</version>
+        <version>4.2.1</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -149,8 +149,8 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.portlet</groupId>
-            <artifactId>portlet-api</artifactId>
+            <groupId>org.apache.portals</groupId>
+            <artifactId>portlet-api_2.1.0_spec</artifactId>
             <scope>compile</scope>
         </dependency>
         
