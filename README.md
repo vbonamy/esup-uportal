@@ -2,20 +2,22 @@ Bienvenue sur esup-uportal, ENT EsupV4
 https://www.esup-portail.org/pages/viewpage.action?pageId=257064972
 
 La documentation de référence pour l'installation d'uportal4 s'applique également au package esup-uportal : 
-https://wiki.jasig.org/display/UPM41/Installing+uPortal
+https://wiki.jasig.org/display/UPM42/Installing+uPortal
 
 
 Notes d'installation :
 
 * installation tomcat
-  * tar xzf apache-tomcat-7.0.57.tar.gz -C /opt
-  * ln -s /opt/apache-tomcat-7.0.57 /opt/tomcat-esup
-  * emacs conf/catalina.properties
+  * tar xzf apache-tomcat-7.0.65.tar.gz -C /opt
+  * ln -s /opt/apache-tomcat-7.0.65 /opt/tomcat-esup
+  * emacs /opt/tomcat-esup/conf/catalina.properties
     * shared.loader=${catalina.base}/shared/classes,${catalina.base}/shared/lib/*.jar
-  * emacs conf/context.xml
+  * emacs /opt/tomcat-esup/conf/context.xml
     * <Context> devient <Context sessionCookiePath="/">
+  * rm -rf /opt/tomcat-esup/webapps/*
+  * éventuellement, affinage de conf/logging.properties, mise en place de psi-probe (et donc paramétrage de conf/tomcat-users.xml)
 
-* creation base de données postgresql (mysql non recommandé - cf https://wiki.jasig.org/display/UPM41/MySQL )
+* creation base de données postgresql (mysql non recommandé - cf https://wiki.jasig.org/display/UPM42/MySQL )
   * psql
     * create USER esup4 with password 'esup4';
     *  create database esup4;
@@ -27,7 +29,10 @@ Notes d'installation :
   * ProxyPass / ajp://tomcat.univ-ville.fr:8009/
 
 * récupération esup-uportal 
-  * git clone git://github.com/EsupPortail/esup-uportal.git
+  * git clone https://github.com/EsupPortail/esup-uportal.git
+  * branche esup-4.2 : git checkout -b esup-4.2 origin/esup-4.2
+  * récupération du patch pour postgresql et pb de caractères accentués (issue UP-3488)
+    - git merge origin/UP-3488
 
 * build.properties
   * ln -s build.properties.sample build.properties
@@ -75,7 +80,7 @@ Notes d'installation :
   * firefox http://ent.univ-ville.fr/uPortal/
 
 * ajout d'un administrateur en ligne de commandes (celui-ci aura alors accès à l'IHM d'administration)
-[https://wiki.jasig.org/display/UPM41/Add+Portal+Admininstrator]
+[https://wiki.jasig.org/display/UPM42/Add+Portal+Admininstrator]
   * ant -Dmaven.test.skip=true data-export -Dtype=group-membership -Dsysid="Portal Administrators" -Ddir=/tmp
   * emacs /tmp/Portal_Administrators.group-membership.xml
   * ant -Dmaven.test.skip=true data-import -Dfile=/tmp/Portal_Administrators.group-membership.xml
