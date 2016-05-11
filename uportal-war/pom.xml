@@ -621,6 +621,11 @@
 
 
         <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+        </dependency>
+
+        <dependency>       
             <groupId>org.lesscss</groupId>
             <artifactId>lesscss</artifactId>
             <exclusions>
@@ -888,6 +893,9 @@
                         <include>io/subscribed-fragment/*.xsd</include>
                         <include>portlet-publishing/*.xsd</include>
                     </schemaIncludes>
+                    <schemaExcludes>
+                        <exclude>io/portlet-definition/portlet-definition-4.1.xsd</exclude>
+                    </schemaExcludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -910,6 +918,10 @@
                         <phase>generate-sources</phase>
                         <configuration>
                             <outputDirectory>target/generated-sources/annotations</outputDirectory>
+                            <outputDiagnostics>false</outputDiagnostics>
+                            <processors>
+                                <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                            </processors>
                             <optionMap>
                                 <fullyAnnotationConfigured>false</fullyAnnotationConfigured>
                                 <addGeneratedAnnotation>true</addGeneratedAnnotation>
