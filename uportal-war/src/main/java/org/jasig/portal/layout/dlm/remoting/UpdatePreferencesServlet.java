@@ -18,9 +18,8 @@
  */
 package org.jasig.portal.layout.dlm.remoting;
 
-import static org.jasig.portal.layout.node.IUserLayoutNodeDescription.LayoutNodeType.FOLDER;
-
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -35,9 +34,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.beanutils.BeanPredicate;
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.functors.EqualPredicate;
 import org.apache.commons.lang.StringUtils;
@@ -67,6 +68,7 @@ import org.jasig.portal.portlet.registry.IPortletDefinitionRegistry;
 import org.jasig.portal.portlet.registry.IPortletWindowRegistry;
 import org.jasig.portal.portlets.favorites.FavoritesUtils;
 import org.jasig.portal.security.IAuthorizationPrincipal;
+import org.jasig.portal.security.IPermission;
 import org.jasig.portal.security.IPerson;
 import org.jasig.portal.security.PersonFactory;
 import org.jasig.portal.security.provider.RestrictedPerson;
@@ -80,6 +82,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -89,11 +92,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import static org.jasig.portal.layout.node.IUserLayoutNodeDescription.LayoutNodeType.FOLDER;
+
 /**
  * Provides targets for AJAX preference setting calls.
  *
  * @author jennifer.bourey@yale.edu
- * @version $Revision$ $Date$
  */
 @Controller
 @RequestMapping("/layout")
@@ -101,27 +105,23 @@ public class UpdatePreferencesServlet {
 
     private static final String TAB_GROUP_PARAMETER = "tabGroup";  // matches incoming JS
     private static final String TAB_GROUP_DEFAULT = "DEFAULT_TABGROUP";  // matches default in structure transform
-    
-    private static final String ADDTAB_PERMISSION_OWNER = "UP_SYSTEM";
-    private static final String ADDTAB_PERMISSION_ACTIVITY = "ADD_TAB";
-    private static final String ADDTAB_PERMISSION_TARGET = "ALL";
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private IPortletDefinitionRegistry portletDefinitionRegistry;
-	private IUserIdentityStore userIdentityStore;
-	private IUserFragmentSubscriptionDao userFragmentInfoDao;
-	private IUserInstanceManager userInstanceManager;
-	private IStylesheetUserPreferencesService stylesheetUserPreferencesService;
-	private IUserLayoutStore userLayoutStore;
+    private IPortletDefinitionRegistry portletDefinitionRegistry;
+    private IUserIdentityStore userIdentityStore;
+    private IUserFragmentSubscriptionDao userFragmentInfoDao;
+    private IUserInstanceManager userInstanceManager;
+    private IStylesheetUserPreferencesService stylesheetUserPreferencesService;
+    private IUserLayoutStore userLayoutStore;
     private MessageSource messageSource;
     private IPortletWindowRegistry portletWindowRegistry;
-    
+
     @Value("${org.jasig.portal.layout.dlm.remoting.addedWindowState:null}")
     private String addedPortletWindowState;
-    
+
     private WindowState addedWindowState;
-    
+
     @PostConstruct
     private void initAddedPortletWindowState(){
         if(addedPortletWindowState!=null && !"null".equalsIgnoreCase(addedPortletWindowState) && !addedPortletWindowState.isEmpty()){
@@ -129,20 +129,20 @@ public class UpdatePreferencesServlet {
         }
     }
 
-	@Autowired
+    @Autowired
     public void setUserLayoutStore(IUserLayoutStore userLayoutStore) {
         this.userLayoutStore = userLayoutStore;
     }
 
     @Autowired
-	public void setStylesheetUserPreferencesService(IStylesheetUserPreferencesService stylesheetUserPreferencesService) {
+    public void setStylesheetUserPreferencesService(IStylesheetUserPreferencesService stylesheetUserPreferencesService) {
         this.stylesheetUserPreferencesService = stylesheetUserPreferencesService;
     }
 
     @Autowired
-	public void setPortletDefinitionRegistry(IPortletDefinitionRegistry portletDefinitionRegistry) {
-	    this.portletDefinitionRegistry = portletDefinitionRegistry;
-	}
+    public void setPortletDefinitionRegistry(IPortletDefinitionRegistry portletDefinitionRegistry) {
+        this.portletDefinitionRegistry = portletDefinitionRegistry;
+    }
 
     @Autowired
     public void setUserIdentityStore(IUserIdentityStore userStore) {
@@ -167,7 +167,7 @@ public class UpdatePreferencesServlet {
     public void setPortletWindowRegistry(IPortletWindowRegistry portletWindowRegistry) {
         this.portletWindowRegistry = portletWindowRegistry;
     }
-    
+
     // default tab name
     protected static final String DEFAULT_TAB_NAME = "New Tab";
 
@@ -203,17 +203,19 @@ public class UpdatePreferencesServlet {
             } else {
                 // Delete the requested element node.  This code is the same for
                 // all node types, so we can just have a generic action.
-               ulm.deleteNode(elementId);
+               if (!ulm.deleteNode(elementId)) {
+                   log.info("Failed to remove element ID {} from layout root folder ID {}, delete node returned false", elementId, ulm.getRootFolderId());
+                   response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                   return new ModelAndView("jsonView", Collections.singletonMap("error", getMessage("error.element.update", "Unable to update element", RequestContextUtils.getLocale(request))));
+               }
             }
 
             ulm.saveUserLayout();
 
             return new ModelAndView("jsonView", Collections.EMPTY_MAP);
 
-        } catch (Exception e) {
-            log.warn("Failed to remove element from layout", e);
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return null;
+        } catch (PortalException e) {
+            return handlePersistError(request, response, e);
         }
     }
 
@@ -241,7 +243,7 @@ public class UpdatePreferencesServlet {
         if (StringUtils.isBlank(fragmentOwnerName)) {
             log.warn("Attempted to subscribe to tab with null owner ID");
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return null;
+            return new ModelAndView("jsonView", Collections.singletonMap("error", "Attempted to subscribe to tab with null owner ID"));
         }
         RestrictedPerson fragmentOwner = PersonFactory.createRestrictedPerson();
         fragmentOwner.setUserName(fragmentOwnerName);
@@ -275,12 +277,12 @@ public class UpdatePreferencesServlet {
             // attempt to find the new subscribed tab in the layout so we can
             // move it
             StringBuilder expression = new StringBuilder("//folder[@type='root']/folder[starts-with(@ID,'")
-                                       .append(Constants.FRAGMENT_ID_USER_PREFIX)
-                                       .append(uid)
-                                       .append("')]");
+                    .append(Constants.FRAGMENT_ID_USER_PREFIX)
+                    .append(uid)
+                    .append("')]");
             XPathFactory fac = XPathFactory.newInstance();
             XPath xpath = fac.newXPath();
-            NodeList nodes = (NodeList) xpath.evaluate(expression.toString(), layoutDocument,  XPathConstants.NODESET);
+            NodeList nodes = (NodeList) xpath.evaluate(expression.toString(), layoutDocument, XPathConstants.NODESET);
             String sourceId = nodes.item(0).getAttributes().getNamedItem("ID").getTextContent();
             ulm.moveNode(sourceId, ulm.getParentId(destinationId), destinationId);
 
@@ -288,89 +290,143 @@ public class UpdatePreferencesServlet {
 
             return new ModelAndView("jsonView", Collections.singletonMap("tabId", sourceId));
 
-        } catch (Exception e) {
-            log.warn("Error subscribing to fragment owned by "
-                    + fragmentOwnerName, e);
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return null;
+        } catch (XPathExpressionException e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return new ModelAndView("jsonView", Collections.singletonMap("error", "Xpath error"));
+        } catch (PortalException e) {
+            return handlePersistError(request, response, e);
         }
 
     }
-    
+
+    /**
+     * Moves the portlet either before nextNodeId or after previousNodeId as appropriate.
+     *
+     * @param request HttpRequest
+     * @param response HttpResponse
+     * @param sourceId nodeId to move
+     * @param previousNodeId if nextNodeId is not blank, moves portlet to end of list previousNodeId is in
+     * @param nextNodeId nodeId to insert sourceId before.
+     * @return
+     */
     @RequestMapping(method = RequestMethod.POST, params = "action=movePortletAjax")
-    public ModelAndView movePortletAjax(HttpServletRequest request, 
-                                        HttpServletResponse response, 
-                                        @RequestParam String sourceId, 
-                                        @RequestParam String previousNodeId, 
+    public ModelAndView movePortletAjax(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        @RequestParam String sourceId,
+                                        @RequestParam String previousNodeId,
                                         @RequestParam String nextNodeId) {
-      final Locale locale = RequestContextUtils.getLocale(request);
-      if(moveElementInternal(request, sourceId, previousNodeId, "appendAfter")  
-          && moveElementInternal(request, sourceId, nextNodeId, "insertBefore") ) {
-          return new ModelAndView("jsonView",
-              Collections.singletonMap("response", getMessage("success.move.portlet",
-              "Portlet moved successfully", locale)));
-      } else {
-        return new ModelAndView("jsonView",
-            Collections.singletonMap("response", getMessage("error.move.portlet",
-            "There was an issue moving this portlet, please refresh the page and try again.", locale)));
-      }
+        final Locale locale = RequestContextUtils.getLocale(request);
+        boolean success = false;
+        if (StringUtils.isNotBlank(nextNodeId)) {
+            success = moveElementInternal(request, sourceId, nextNodeId, "insertBefore");
+        } else {
+            success = moveElementInternal(request, sourceId, previousNodeId, "appendAfter");
+        }
+        if (success) {
+            return new ModelAndView("jsonView",Collections.singletonMap("response", getMessage("success.move.element", "Element moved successfully", locale)));
+        } else {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return new ModelAndView("jsonView", Collections.singletonMap("response", getMessage("error.move.element", "Error moving element.", locale)));
+        }
     }
 
-	/**
-	 * Move a portlet to another location on the tab.
-	 *
-	 * @param ulm
-	 * @param request
-	 * @param response
-	 * @throws IOException
-	 * @throws PortalException
-	 */
+    /**
+     * Move a portlet to another location on the tab.
+     *
+     * This deprecated method is replaced by the method/action "moveElement".
+     * The code is the same, but the naming better abstracts the action. This method is here for
+     * backwards compatibility with anything using the "movePortlet" action of the API.
+     *
+     * Used by Respondr UI when moving portlets around in content area. uPortal 4.2 and prior behavior:<ul>
+     *   <li>If destination is a tab either adds to end of 1st column or if no columns, creates one and adds it. AFAIK
+     *       this was not actually used by the UI.</li>
+     *   <li>If target is a column (2 down from root), portlet always added to end of column. Used by UI to drop
+     *       portlet into empty column (UI did insertBefore with elementId=columnId)</li>
+     *   <li>If method=insertBefore does insert before elementId (always a portlet in 4.2).</li>
+     *   <li>If method=appendAfter does append at end of parent(elementId), result of which is a column.
+     *       Used by UI to add to end of column (elementId is last portlet in column).</li>
+     * </ul>
+     *
+     * @param request
+     * @param response
+     * @throws IOException
+     * @throws PortalException
+     * @deprecated - replaced by the method/action "moveElement"
+     */
     @RequestMapping(method = RequestMethod.POST, params = "action=movePortlet")
-    public ModelAndView movePortlet(HttpServletRequest request, HttpServletResponse response)
+    @Deprecated
+    public ModelAndView movePortlet(HttpServletRequest request, HttpServletResponse response,
+                                    @RequestParam(value="sourceID") String  sourceId,
+                                    @RequestParam String method,
+                                    @RequestParam(value = "elementID") String destinationId)
+            throws IOException, PortalException {
+        return moveElement(request, response, sourceId, method, destinationId);
+    }
+
+    /**
+     * Move an element to another location on the tab.
+     *
+     * Used by Respondr UI when moving portlets around in content area. Will be made more generic
+     * to support ngPortal UI which supports arbitrary nesting of folders.  When that code is
+     * merged in, the behavior of this method will need to change slightly (make sure movePortlet
+     * behavior doesn't change though). Current behavior:<ul>
+     *   <li>If destination is a tab either adds to end of 1st column or if no columns, creates one and adds it. AFAIK
+     *       this was not actually used by the UI.</li>
+     *   <li>If target is a column (2 down from root), portlet always added to end of column. Used by UI to drop
+     *       portlet into empty column (UI did insertBefore with elementId=columnId)</li>
+     *   <li>If method=insertBefore does insert before elementId (always a portlet in 4.2).</li>
+     *   <li>If method=appendAfter does append at end of parent(elementId), result of which is a column.
+     *       Used by UI to add to end of column (elementId is last portlet in column).</li>
+     * </ul>
+     *
+     * @param request
+     * @param response
+     * @param sourceId id of the element to move
+     * @param method insertBefore or appendAfter
+     * @param destinationId Id of element. If a tab, sourceID added to end of a folder/column in the tab.
+     *         If a folder, sourceID added to the end of the folder. Otherwise sourceID added before
+     *         elementID.
+     * @throws IOException
+     * @throws PortalException
+     */
+    @RequestMapping(method = RequestMethod.POST, params = "action=moveElement")
+    public ModelAndView moveElement(HttpServletRequest request, HttpServletResponse response,
+                                    @RequestParam(value="sourceID") String  sourceId,
+                                    @RequestParam String method,
+                                    @RequestParam(value = "elementID") String destinationId)
             throws IOException, PortalException {
         final Locale locale = RequestContextUtils.getLocale(request);
 
-        // portlet to be moved
-        String sourceId = request.getParameter("sourceID");
-
-        // Either "insertBefore" or "appendAfter".
-        String method = request.getParameter("method");
-
-        // Target element to move the source element in front of.  This parameter
-        // isn't actually relevant if we're appending the source element.
-        String destinationId = request.getParameter("elementID");
-
-        if(moveElementInternal(request,sourceId, destinationId, method)) {
-          return new ModelAndView("jsonView",
-              Collections.singletonMap("response", getMessage("success.move.portlet",
-              "Portlet moved successfully", locale)));
+        if(moveElementInternal(request, sourceId, destinationId, method)) {
+            return new ModelAndView("jsonView", Collections.singletonMap("response",
+                    getMessage("success.move.element", "Element moved successfully", locale)));
         } else {
-          return new ModelAndView("jsonView",
-              Collections.singletonMap("response", getMessage("error.move.portlet",
-              "There was an issue moving this portlet, please refresh the page and try again.", locale)));
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return new ModelAndView("jsonView", Collections.singletonMap("response",
+                    getMessage("error.move.element", "Error moving element", locale)));
         }
     }
 
-	/**
-	 * Change the number of columns on a specified tab.  In the event that the user is
-	 * decreasing the number of columns, extra columns will be stripped from the
-	 * right-hand side.  Any channels in these columns will be moved to the bottom of
-	 * the last preserved column.
-	 *
-	 * @param per
-	 * @param upm
-	 * @param ulm
-	 * @param request
-	 * @param response
-	 * @throws IOException
-	 * @throws PortalException
-	 */
+    /**
+     * Change the number of columns on a specified tab.  In the event that the user is
+     * decreasing the number of columns, extra columns will be stripped from the
+     * right-hand side.  Any channels in these columns will be moved to the bottom of
+     * the last preserved column.
+     *
+     * @param widths array of column widths
+     * @param deleted array of deleted column IDs
+     * @param acceptor not sure what this is
+     * @param request HttpRequest
+     * @param response HttpResponse
+     * @throws IOException
+     * @throws PortalException
+     */
     @RequestMapping(method = RequestMethod.POST, params = "action=changeColumns")
-	public ModelAndView changeColumns(HttpServletRequest request,
-			HttpServletResponse response, @RequestParam("tabId") String tabId,
-			@RequestParam("widths[]") String[] widths,
-			@RequestParam(value = "deleted[]", required = false) String[] deleted,
-			@RequestParam(value = "acceptor", required = false) String acceptor) throws IOException, PortalException {
+    public ModelAndView changeColumns(HttpServletRequest request,
+            HttpServletResponse response, @RequestParam("tabId") String tabId,
+            @RequestParam("widths[]") String[] widths,
+            @RequestParam(value = "deleted[]", required = false) String[] deleted,
+            @RequestParam(value = "acceptor", required = false) String acceptor) throws IOException, PortalException {
 
         IUserInstance ui = userInstanceManager.getUserInstance(request);
         IPerson per = getPerson(ui, response);
@@ -378,57 +434,55 @@ public class UpdatePreferencesServlet {
         UserPreferencesManager upm = (UserPreferencesManager) ui.getPreferencesManager();
         IUserLayoutManager ulm = upm.getUserLayoutManager();
 
-		int newColumnCount = widths.length;
+        int newColumnCount = widths.length;
 
-		// build a list of the current columns for this tab
-        @SuppressWarnings("unchecked")
-		Enumeration<String> columns = ulm.getChildIds(tabId);
-		List<String> columnList = new ArrayList<String>();
-		while (columns.hasMoreElements()) {
-			columnList.add(columns.nextElement());
-		}
+        // build a list of the current columns for this tab
+        Enumeration<String> columns = ulm.getChildIds(tabId);
+        List<String> columnList = new ArrayList<String>();
+        while (columns.hasMoreElements()) {
+            columnList.add(columns.nextElement());
+        }
         int oldColumnCount = columnList.size();
 
         Map<String, Object> model = new HashMap<String, Object>();
 
         // if the new layout has more columns
-		if (newColumnCount > oldColumnCount) {
-	        List<String> newColumnIds = new ArrayList<String>();
-			for (int i = columnList.size(); i < newColumnCount; i++) {
+        if (newColumnCount > oldColumnCount) {
+            List<String> newColumnIds = new ArrayList<String>();
+            for (int i = columnList.size(); i < newColumnCount; i++) {
 
-				// create new column element
-				IUserLayoutFolderDescription newColumn = new UserLayoutFolderDescription();
-				newColumn.setName("Column");
-				newColumn.setId("tbd");
-				newColumn
-						.setFolderType(IUserLayoutFolderDescription.REGULAR_TYPE);
-				newColumn.setHidden(false);
-				newColumn.setUnremovable(false);
-				newColumn.setImmutable(false);
+                // create new column element
+                IUserLayoutFolderDescription newColumn = new UserLayoutFolderDescription();
+                newColumn.setName("Column");
+                newColumn.setId("tbd");
+                newColumn
+                        .setFolderType(IUserLayoutFolderDescription.REGULAR_TYPE);
+                newColumn.setHidden(false);
+                newColumn.setUnremovable(false);
+                newColumn.setImmutable(false);
 
-				// add the column to our layout
-				IUserLayoutNodeDescription node = ulm.addNode(newColumn, tabId,
-						null);
-				newColumnIds.add(node.getId());
+                // add the column to our layout
+                IUserLayoutNodeDescription node = ulm.addNode(newColumn, tabId,
+                        null);
+                newColumnIds.add(node.getId());
 
-	            model.put("newColumnIds", newColumnIds);
-				columnList.add(node.getId());
+                model.put("newColumnIds", newColumnIds);
+                columnList.add(node.getId());
 
-			}
+            }
 
-		}
+        }
 
-		// if the new layout has fewer columns
-		else if (deleted != null && deleted.length > 0) {
+        // if the new layout has fewer columns
+        else if (deleted != null && deleted.length > 0) {
 
-	        if (columnList.size() != widths.length + deleted.length) {
-	            // TODO: error?
-	        }
+            if (columnList.size() != widths.length + deleted.length) {
+                // TODO: error?
+            }
 
-		    for (String columnId : deleted) {
+            for (String columnId : deleted) {
 
                 // move all channels in the current column to the last valid column
-                @SuppressWarnings("unchecked")
                 Enumeration channels = ulm.getChildIds(columnId);
                 while (channels.hasMoreElements()) {
                     ulm.addNode(ulm.getNode((String) channels.nextElement()),
@@ -440,45 +494,47 @@ public class UpdatePreferencesServlet {
 
                 columnList.remove(columnId);
             }
-		}
+        }
 
-		int count = 0;
-		for (String columnId : columnList) {
-		    this.stylesheetUserPreferencesService.setLayoutAttribute(request, PreferencesScope.STRUCTURE, columnId, "width", widths[count] + "%");
-			try {
-				// This sets the column attribute in memory but doesn't persist it.  Comment says saves changes "prior to persisting"
-	            Element folder = ulm.getUserLayoutDOM().getElementById(columnId);
-				UserPrefsHandler.setUserPreference(folder, "width", per);
-			} catch (Exception e) {
-				log.error("Error saving new column widths", e);
-			}
-			count++;
-		}
+        int count = 0;
+        for (String columnId : columnList) {
+            this.stylesheetUserPreferencesService.setLayoutAttribute(request, PreferencesScope.STRUCTURE, columnId, "width", widths[count] + "%");
+            try {
+                // This sets the column attribute in memory but doesn't persist it.  Comment says saves changes "prior to persisting"
+                Element folder = ulm.getUserLayoutDOM().getElementById(columnId);
+                UserPrefsHandler.setUserPreference(folder, "width", per);
+            } catch (Exception e) {
+                log.error("Error saving new column widths", e);
+            }
+            count++;
+        }
 
-		try {
-		    ulm.saveUserLayout();
-		} catch (Exception e) {
-			log.warn("Error saving layout", e);
-		}
+        try {
+            ulm.saveUserLayout();
+        } catch (PortalException e) {
+            log.warn("Error saving layout", e);
+        }
 
         return new ModelAndView("jsonView", model);
 
-	}
+    }
 
-	/**
-	 * Move a tab left or right.
-	 *
-	 * @param per
-	 * @param upm
-	 * @param ulm
-	 * @param request
-	 * @param response
-	 * @throws PortalException
-	 * @throws IOException
-	 */
+    /**
+     * Move a tab left or right.
+     *
+     * @param sourceId node ID of tab to move
+     * @param method insertBefore or appendAfter. If appendAfter, tab is added as last tab (parent of destinationId).
+     * @param destinationId insertBefore: node ID of tab to move sourceId before. insertAfter: node ID of another tab
+     * @param request
+     * @param response
+     * @throws PortalException
+     * @throws IOException
+     */
     @RequestMapping(method = RequestMethod.POST, params = "action=moveTab")
-	public ModelAndView moveTab(HttpServletRequest request,
-			HttpServletResponse response) throws IOException {
+    public ModelAndView moveTab(HttpServletRequest request, HttpServletResponse response,
+                                @RequestParam(value="sourceID") String  sourceId,
+                                @RequestParam String method,
+                                @RequestParam(value = "elementID") String destinationId) throws IOException {
 
         IUserInstance ui = userInstanceManager.getUserInstance(request);
 
@@ -486,48 +542,43 @@ public class UpdatePreferencesServlet {
         IUserLayoutManager ulm = upm.getUserLayoutManager();
         final Locale locale = RequestContextUtils.getLocale(request);
 
-		// gather the parameters we need to move a channel
-		String destinationId = request.getParameter("elementID");
-		String sourceId = request.getParameter("sourceID");
-		String method = request.getParameter("method");
-
-		// If we're moving this element before another one, we need
-		// to know what the target is. If there's no target, just
-		// assume we're moving it to the very end of the list.
-		String siblingId = null;
-		if ("insertBefore".equals(method))
-			siblingId = destinationId;
+        // If we're moving this element before another one, we need
+        // to know what the target is. If there's no target, just
+        // assume we're moving it to the very end of the list.
+        String siblingId = null;
+        if ("insertBefore".equals(method))
+            siblingId = destinationId;
 
         try {
             // move the node as requested and save the layout
-            ulm.moveNode(sourceId, ulm.getParentId(destinationId), siblingId);
+            if (!ulm.moveNode(sourceId, ulm.getParentId(destinationId), siblingId)) {
+                log.warn("Failed to move tab in user layout. moveNode returned false");
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return new ModelAndView("jsonView",
+                        Collections.singletonMap("response", getMessage("error.move.tab",
+                                "There was an issue moving the tab, please refresh the page and try again.", locale)));
+            }
             ulm.saveUserLayout();
-		} catch (Exception e) {
-			log.warn("Failed to move tab in user layout", e);
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return new ModelAndView("jsonView",
-                    Collections.singletonMap("response", getMessage("error.move.tab",
-                    "There was an issue moving the tab, please refresh the page and try again.", locale)));
-		}
+        } catch (PortalException e) {
+            return handlePersistError(request, response, e);
+        }
 
         return new ModelAndView("jsonView",
-                Collections.singletonMap("response", getMessage("success.move.tab",
-                "Tab moved successfully", locale)));
-
-	}
+                Collections.singletonMap("response", getMessage("success.move.tab", "Tab moved successfully", locale)));
+    }
 
     @RequestMapping(method= RequestMethod.POST , params = "action=addFavorite")
-    public ModelAndView addFavorite(@RequestParam String channelId, HttpServletRequest request) {
+    public ModelAndView addFavorite(@RequestParam String channelId, HttpServletRequest request, HttpServletResponse response) {
         //setup
         IUserInstance ui = userInstanceManager.getUserInstance(request);
 
         UserPreferencesManager upm = (UserPreferencesManager) ui.getPreferencesManager();
         IUserLayoutManager ulm = upm.getUserLayoutManager();
-        
+
         IUserLayoutChannelDescription channel = new UserLayoutChannelDescription(portletDefinitionRegistry.getPortletDefinition(channelId));
-        
+
         final Locale locale = RequestContextUtils.getLocale(request);
-        
+
         //get favorite tab
         String favoriteTabNodeId = FavoritesUtils.getFavoriteTabNodeId(ulm.getUserLayout());
 
@@ -536,40 +587,36 @@ public class UpdatePreferencesServlet {
             IUserLayoutNodeDescription node = addNodeToTab(ulm, channel, favoriteTabNodeId);
 
             if (node == null) {
-                return new ModelAndView("jsonView",
-                        Collections.singletonMap("response",
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return new ModelAndView("jsonView", Collections.singletonMap("response",
                                 getMessage("error.add.portlet.in.tab", "Can''t add a new favorite", locale)));
             }
 
             try {
                 // save the user's layout
                 ulm.saveUserLayout();
-            } catch (Exception e) {
-                log.warn("Error saving layout", e);
-                return new ModelAndView("jsonView",
-                        Collections.singletonMap("response",
-                                getMessage("error.persisting.layout.change", "Can''t add a new favorite", locale)));
+            } catch (PortalException e) {
+                return handlePersistError(request, response, e);
             }
 
             //document success for notifications
             Map<String, String> model = new HashMap<String, String>();
             final String channelTitle = channel.getTitle();
-            model.put("response",
-                    getMessage("favorites.added.favorite", channelTitle,
+            model.put("response", getMessage("favorites.added.favorite", channelTitle,
                             "Added " + channelTitle + " as a favorite.", locale));
             model.put("newNodeId", node.getId());
             return new ModelAndView("jsonView", model);
        } else {
-            return new ModelAndView("jsonView",
-                    Collections.singletonMap("response",
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return new ModelAndView("jsonView", Collections.singletonMap("response",
                             getMessage("error.finding.favorite.tab", "Can''t find favorite tab", locale)));
        }
     }
-    
+
     /**
      * This method removes the channelId specified from favorites. Note that even if you pass in the layout channel id, it will always remove from the favorites.
      * @param channelId The long channel ID that is used to determine which fname to remove from favorites
-     * @param request 
+     * @param request
      * @param response
      * @return returns a mav object with a response attribute for noty
      * @throws IOException if it has problem reading the layout file.
@@ -580,31 +627,29 @@ public class UpdatePreferencesServlet {
         IUserLayoutManager ulm = upm.getUserLayoutManager();
         final Locale locale = RequestContextUtils.getLocale(request);
         IPortletDefinition portletDefinition = portletDefinitionRegistry.getPortletDefinition(channelId);
-        
+
         if(portletDefinition != null &&  StringUtils.isNotBlank(portletDefinition.getFName())) {
             String functionalName = portletDefinition.getFName();
             List<IUserLayoutNodeDescription> favoritePortlets = FavoritesUtils.getFavoritePortlets(ulm.getUserLayout());
-            
+
             //search for the favorite to delete
             EqualPredicate nameEqlPredicate = new EqualPredicate(functionalName);
             Object result = CollectionUtils.find(favoritePortlets, new BeanPredicate("functionalName",nameEqlPredicate));
-            
+
             if(result != null && result instanceof UserLayoutChannelDescription) {
                 UserLayoutChannelDescription channelDescription = (UserLayoutChannelDescription)result;
                 try {
                     if (!ulm.deleteNode(channelDescription.getChannelSubscribeId())) {
                         log.warn("Error deleting the node" + channelId + "from favorites for user " + (upm.getPerson() == null ? "unknown" : upm.getPerson().getID()));
-                        response.setStatus(HttpServletResponse.SC_ACCEPTED);
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                         return new ModelAndView("jsonView", Collections.singletonMap("response", getMessage("error.remove.favorite", "Can''t remove favorite", locale)));
                     }
                     // save the user's layout
                     ulm.saveUserLayout();
-                } catch (Exception e) {
-                    log.warn("Error saving layout", e);
-                    response.setStatus(HttpServletResponse.SC_ACCEPTED);
-                    return new ModelAndView("jsonView", Collections.singletonMap("response", getMessage("error.remove.favorite", "Can''t remove favorite", locale)));
+                } catch (PortalException e) {
+                    return handlePersistError(request, response, e);
                 }
-                
+
                 //document success for notifications
                 Map<String, String> model = new HashMap<String, String>();
                 model.put("response", getMessage("success.remove.portlet", "Removed from Favorites successfully", locale));
@@ -616,86 +661,99 @@ public class UpdatePreferencesServlet {
         return new ModelAndView("jsonView", Collections.singletonMap("response", getMessage("error.finding.favorite", "Can''t find favorite", locale)));
     }
 
-	/**
-	 * Add a new channel.
-	 *
-	 * @param per
-	 * @param upm
-	 * @param ulm
-	 * @param request
-	 * @param response
-	 * @throws IOException
-	 * @throws PortalException
-	 */
+    /**
+     * Add a new channel.
+     *
+     * @param request
+     * @param response
+     * @throws IOException
+     * @throws PortalException
+     */
     @RequestMapping(method = RequestMethod.POST, params = "action=addPortlet")
-	public ModelAndView addPortlet(HttpServletRequest request, HttpServletResponse response) throws IOException, PortalException {
+    public ModelAndView addPortlet(HttpServletRequest request, HttpServletResponse response) throws IOException, PortalException {
 
         IUserInstance ui = userInstanceManager.getUserInstance(request);
-
         UserPreferencesManager upm = (UserPreferencesManager) ui.getPreferencesManager();
         IUserLayoutManager ulm = upm.getUserLayoutManager();
+        final Locale locale = RequestContextUtils.getLocale(request);
 
-		// gather the parameters we need to move a channel
-		String destinationId = request.getParameter("elementID");
-		String sourceId = request.getParameter("channelID");
-		String method = request.getParameter("position");
+        // gather the parameters we need to move a channel
+        String destinationId = request.getParameter("elementID");
+        String sourceId = request.getParameter("channelID");
+        String method = request.getParameter("position");
+        String fname = request.getParameter("fname");
 
-		IPortletDefinition definition = portletDefinitionRegistry.getPortletDefinition(sourceId);
+        if(destinationId == null) {
+            String tabName = request.getParameter("tabName");
+            if(tabName != null) {
+                destinationId = getTabIdFromName(ulm.getUserLayout(),tabName);
+            }
+        }
+
+        IPortletDefinition definition = null;
+        if(sourceId != null)
+            definition = portletDefinitionRegistry.getPortletDefinition(sourceId);
+        else if (fname != null)
+            definition = portletDefinitionRegistry.getPortletDefinitionByFname(fname);
+        else {
+            log.error("SourceId or fname invalid when adding a portlet");
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return new ModelAndView("jsonView", Collections.singletonMap("error", "SourceId or fname invalid"));
+        }
 
         IUserLayoutChannelDescription channel = new UserLayoutChannelDescription(definition);
 
-		IUserLayoutNodeDescription node = null;
-		if (isTab(ulm, destinationId)) {
+        IUserLayoutNodeDescription node = null;
+        if (isTab(ulm, destinationId)) {
             node = addNodeToTab(ulm,channel, destinationId);
 
-		} else if (isColumn(ulm, destinationId)) {
-			// move the channel into the column
-			node = ulm.addNode(channel, destinationId, null);
-		} else {
-			// If we're moving this element before another one, we need
-			// to know what the target is. If there's no target, just
-			// assume we're moving it to the very end of the column.
-			String siblingId = null;
-			if (method.equals("insertBefore"))
-				siblingId = destinationId;
+        } else {
+            boolean isInsert = method != null && method.equals("insertBefore");
 
-			// move the node as requested and save the layout
-			node = ulm.addNode(channel, ulm.getParentId(destinationId),
-					siblingId);
-		}
+            //If neither an insert or type folder - Can't "insert into" non-folder
+            if (!(isInsert || isFolder(ulm, destinationId))) {
+                log.error("Cannot insert into portlet element");
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return new ModelAndView("jsonView", Collections.singletonMap("error", "Cannot insert into portlet element"));
+            }
 
-		final Locale locale = RequestContextUtils.getLocale(request);
+            String siblingId = isInsert ? destinationId : null;
+            String target = isInsert ? ulm.getParentId(destinationId) : destinationId;
 
-		if (node == null) {
-			return new ModelAndView("jsonView", Collections.singletonMap("error", getMessage("error.add.portlet.in.tab", "Can''t add a new channel", locale)));
-		}
+            // move the channel into the column
+            node = ulm.addNode(channel, target, siblingId);
+        }
 
-		String nodeId = node.getId();
 
-		try {
-			// save the user's layout
+        if (node == null) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return new ModelAndView("jsonView", Collections.singletonMap("error", getMessage("error.add.element", "Unable to add element", locale)));
+        }
+
+        String nodeId = node.getId();
+
+        try {
+            // save the user's layout
             ulm.saveUserLayout();
             if(addedWindowState!=null){
                 IPortletWindow portletWindow = this.portletWindowRegistry.getOrCreateDefaultPortletWindowByFname(request, channel.getFunctionalName());
                 portletWindow.setWindowState(addedWindowState);
                 this.portletWindowRegistry.storePortletWindow(request, portletWindow);
             }
-        } catch (Exception e) {
-            log.warn("Error saving layout", e);
-            return new ModelAndView("jsonView", Collections.singletonMap("error", getMessage("error.persisting.layout.change", "Can''t add a new channel", locale)));
+        } catch (PortalException e) {
+            return handlePersistError(request, response, e);
         }
 
-		Map<String, String> model = new HashMap<String, String>();
-		model.put("response", getMessage("success.add.portlet", "Added a new channel", locale));
-		model.put("newNodeId", nodeId);
-		return new ModelAndView("jsonView", model);
+        Map<String, String> model = new HashMap<String, String>();
+        model.put("response", getMessage("success.add.portlet", "Added a new channel", locale));
+        model.put("newNodeId", nodeId);
+        return new ModelAndView("jsonView", model);
 
-	}
+    }
 
     private IUserLayoutNodeDescription addNodeToTab(IUserLayoutManager ulm, IUserLayoutChannelDescription channel, String tabId) {
         IUserLayoutNodeDescription node = null;
 
-        @SuppressWarnings("unchecked")
         Enumeration<String> columns = ulm.getChildIds(tabId);
         if (columns.hasMoreElements()) {
             while (columns.hasMoreElements()) {
@@ -726,37 +784,34 @@ public class UpdatePreferencesServlet {
         return node;
     }
 
-	/**
-	 * Update the user's preferred skin.
-	 *
-	 * @param per
-	 * @param upm
-	 * @param ulm
-	 * @param request
-	 * @param response
-	 * @throws IOException
-	 * @throws PortalException
-	 */
+    /**
+     * Update the user's preferred skin.
+     *
+     * @param request HTTP Request
+     * @param response HTTP Response
+     * @param skinName name of the Skin
+     * @throws IOException
+     * @throws PortalException
+     */
     @RequestMapping(method = RequestMethod.POST, params="action=chooseSkin")
-	public ModelAndView chooseSkin(HttpServletRequest request,
-			HttpServletResponse response) throws IOException {
+    public ModelAndView chooseSkin(HttpServletRequest request, HttpServletResponse response,
+                                   @RequestParam String skinName) throws IOException {
 
-		String skinName = request.getParameter("skinName");
-		this.stylesheetUserPreferencesService.setStylesheetParameter(request, PreferencesScope.THEME, "skin", skinName);
+        this.stylesheetUserPreferencesService.setStylesheetParameter(request, PreferencesScope.THEME, "skin", skinName);
 
-		return new ModelAndView("jsonView", Collections.EMPTY_MAP);
-	}
+        return new ModelAndView("jsonView", Collections.EMPTY_MAP);
+    }
 
 
-	/**
-	 * Add a new tab to the layout.  The new tab will be appended to the end of the
-	 * list and named with the BLANK_TAB_NAME variable.
-	 *
-	 * @param request
-	 * @throws IOException
-	 */
+    /**
+     * Add a new tab to the layout.  The new tab will be appended to the end of the
+     * list and named with the BLANK_TAB_NAME variable.
+     *
+     * @param request
+     * @throws IOException
+     */
     @RequestMapping(method = RequestMethod.POST, params="action=addTab")
-	public ModelAndView addTab(HttpServletRequest request, HttpServletResponse response, @RequestParam("widths[]") String[] widths) throws IOException {
+    public ModelAndView addTab(HttpServletRequest request, HttpServletResponse response, @RequestParam("widths[]") String[] widths) throws IOException {
 
         IUserInstance ui = userInstanceManager.getUserInstance(request);
         IPerson per = getPerson(ui, response);
@@ -765,36 +820,36 @@ public class UpdatePreferencesServlet {
 
         // Verify that the user has permission to add this tab
         final IAuthorizationPrincipal authPrincipal = this.getUserPrincipal(per.getUserName());
-        if (!authPrincipal.hasPermission(ADDTAB_PERMISSION_OWNER, ADDTAB_PERMISSION_ACTIVITY, ADDTAB_PERMISSION_TARGET)) {
+        if (!authPrincipal.hasPermission(IPermission.PORTAL_SYSTEM, IPermission.ADD_TAB_ACTIVITY, IPermission.ALL_TARGET)) {
             log.warn("Attempt to add a tab through the REST API by unauthorized user '" + per.getUserName() + "'");
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return null;
+            return new ModelAndView("jsonView", Collections.singletonMap("error", "Add tab disabled"));
         }
-        
-		// construct a brand new tab
-		String id = "tbd";
+
+        // construct a brand new tab
+        String id = "tbd";
         String tabName = request.getParameter("tabName");
         if (StringUtils.isBlank(tabName)) tabName = DEFAULT_TAB_NAME;
-		IUserLayoutFolderDescription newTab = new UserLayoutFolderDescription();
-		newTab.setName(tabName);
-		newTab.setId(id);
-		newTab.setFolderType(IUserLayoutFolderDescription.REGULAR_TYPE);
-		newTab.setHidden(false);
-		newTab.setUnremovable(false);
-		newTab.setImmutable(false);
+        IUserLayoutFolderDescription newTab = new UserLayoutFolderDescription();
+        newTab.setName(tabName);
+        newTab.setId(id);
+        newTab.setFolderType(IUserLayoutFolderDescription.REGULAR_TYPE);
+        newTab.setHidden(false);
+        newTab.setUnremovable(false);
+        newTab.setImmutable(false);
 
-		// add the tab to the layout
-		ulm.addNode(newTab, ulm.getRootFolderId(), null);
+        // add the tab to the layout
+        ulm.addNode(newTab, ulm.getRootFolderId(), null);
 
-		try {
-			// save the user's layout
+        try {
+            // save the user's layout
             ulm.saveUserLayout();
-		} catch (Exception e) {
-			log.warn("Error saving layout", e);
-		}
+        } catch (PortalException e) {
+            return handlePersistError(request, response, e);
+        }
 
-		// get the id of the newly added tab
-		String tabId = newTab.getId();
+        // get the id of the newly added tab
+        String tabId = newTab.getId();
 
         for (String width : widths) {
 
@@ -842,62 +897,195 @@ public class UpdatePreferencesServlet {
         try {
             // save the user's layout
             ulm.saveUserLayout();
-        } catch (Exception e) {
-            log.warn("Error saving layout", e);
+        } catch (PortalException e) {
+            return handlePersistError(request, response, e);
         }
 
-		return new ModelAndView("jsonView", Collections.singletonMap("tabId", tabId));
-	}
+        return new ModelAndView("jsonView", Collections.singletonMap("tabId", tabId));
+    }
 
-	/**
-	 * Rename a specified tab.
-	 *
-	 * @param request
-	 * @throws IOException
-	 */
+    /**
+     * Add a new folder to the layout.
+     *
+     * @param request
+     * @param response
+     * @param targetId - id of the folder node to add the new folder to. By default, the folder will be inserted after other
+     *                   existing items in the node unless a siblingId is provided.
+     * @param siblingId - if set, insert new folder prior to the node with this id, otherwise simple insert at the end of the list.
+     * @param attributes - if included, parse the JSON name-value pairs in the body as the attributes of the folder. These
+     *                     will override the defaults.
+     * e.g. :
+     * {
+     *      "structureAttributes" : {"display" : "row", "other" : "another" },
+     *      "attributes" : {"hidden": "true", "type" : "header-top" }
+     * }
+     */
+    @RequestMapping(method = RequestMethod.POST, params = "action=addFolder")
+    public ModelAndView addFolder(HttpServletRequest request,
+                                  HttpServletResponse response,
+                                  @RequestParam("targetId") String targetId,
+                                  @RequestParam(value="siblingId", required=false) String siblingId,
+                                  @RequestParam(value="display", required=false) String display,
+                                  @RequestBody(required=false) Map<String, Map<String, String>> attributes) {
+        IUserLayoutManager ulm = userInstanceManager.getUserInstance(request).getPreferencesManager().getUserLayoutManager();
+        final Locale locale = RequestContextUtils.getLocale(request);
+
+        if (!ulm.getNode(targetId).isAddChildAllowed()) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return new ModelAndView("jsonView", Collections.singletonMap("error", getMessage("error.add.element", "Unable to add element", locale)));
+        }
+
+        UserLayoutFolderDescription newFolder = new UserLayoutFolderDescription();
+        newFolder.setHidden(false);
+        newFolder.setImmutable(false);
+        newFolder.setAddChildAllowed(true);
+        newFolder.setFolderType(IUserLayoutFolderDescription.REGULAR_TYPE);
+
+        // Update the attributes based on the supplied JSON (optional request body name-value pairs)
+        if (attributes != null && !attributes.isEmpty()) {
+            setObjectAttributes(newFolder, request, attributes);
+        }
+
+        ulm.addNode(newFolder, targetId, siblingId);
+
+        try {
+            ulm.saveUserLayout();
+        } catch (PortalException e) {
+            return handlePersistError(request, response, e);
+        }
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("response", getMessage("success.add.folder", "Added a new folder", locale));
+        model.put("folderId", newFolder.getId());
+        model.put("immutable", newFolder.isImmutable());
+        return new ModelAndView("jsonView", model);
+    }
+
+    /**
+     * Attempt to map the attribute values to the given object.
+     * @param node
+     * @param request
+     * @param attributes
+     */
+    private void setObjectAttributes(IUserLayoutNodeDescription node, HttpServletRequest request, Map<String, Map<String, String>> attributes) {
+        // Attempt to set the object attributes
+        for(String name : attributes.get("attributes").keySet()) {
+            try {
+              BeanUtils.setProperty(node, name, attributes.get(name));
+            }
+            catch (IllegalAccessException | InvocationTargetException e) {
+                log.warn("Unable to set attribute: " + name + "on object of type: " + node.getType());
+            }
+        }
+
+        // Set the structure-attributes, whatever they may be
+        Map<String, String> structureAttributes = attributes.get("structureAttributes");
+        if (structureAttributes != null) {
+            for(String name : structureAttributes.keySet()) {
+                this.stylesheetUserPreferencesService.setLayoutAttribute(request,
+                                                                         PreferencesScope.STRUCTURE,
+                                                                         node.getId(),
+                                                                         name,
+                                                                         structureAttributes.get(name));
+            }
+        }
+    }
+
+    /**
+     * Update the attributes for the node. Unrecognized attributes will log a warning, but are otherwise ignored.
+     *
+     * @param request
+     * @param response
+     * @param targetId - the id of the node whose attributes will be updated.
+     * @param attributes - parse the JSON name-value pairs in the body as the attributes of the folder.
+     * e.g. :
+     * {
+     *      "structureAttributes" : {"display" : "row", "other" : "another" },
+     *      "attributes" : {"hidden": "true", "type" : "header-top" }
+     * }
+     */
+    @RequestMapping(method = RequestMethod.POST, params = "action=updateAttributes")
+    public ModelAndView updateAttributes(HttpServletRequest request,
+                                         HttpServletResponse response,
+                                         @RequestParam("targetId") String targetId,
+                                         @RequestBody Map<String, Map<String, String>> attributes) {
+        IUserLayoutManager ulm = userInstanceManager.getUserInstance(request).getPreferencesManager().getUserLayoutManager();
+
+        if (!ulm.getNode(targetId).isEditAllowed()) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return new ModelAndView("jsonView", Collections.singletonMap("error", getMessage("error.element.update", "Unable to update element", RequestContextUtils.getLocale(request))));
+        }
+
+        // Update the attributes based on the supplied JSON (request body name-value pairs)
+        IUserLayoutNodeDescription node = ulm.getNode(targetId);
+        if (node == null) {
+            log.warn("[updateAttributes()] Unable to locate node with id: " + targetId);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return new ModelAndView("jsonView", Collections.singletonMap("error", "Unable to locate node with id: " + targetId));
+        } else {
+            setObjectAttributes(node, request, attributes);
+
+            final Locale locale = RequestContextUtils.getLocale(request);
+            try {
+                ulm.saveUserLayout();
+            } catch (PortalException e) {
+                return handlePersistError(request, response, e);
+            }
+
+            Map<String, String> model = Collections.singletonMap("success", getMessage("success.element.update", "Updated element attributes", locale));
+            return new ModelAndView("jsonView", model);
+        }
+    }
+
+    /**
+     * Rename a specified tab.
+     *
+     * @param request
+     * @throws IOException
+     */
     @RequestMapping(method = RequestMethod.POST, params = "action=renameTab")
-	public ModelAndView renameTab(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public ModelAndView renameTab(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         IUserInstance ui = userInstanceManager.getUserInstance(request);
         UserPreferencesManager upm = (UserPreferencesManager) ui.getPreferencesManager();
         IUserLayoutManager ulm = upm.getUserLayoutManager();
 
-		// element ID of the tab to be renamed
-		String tabId = request.getParameter("tabId");
+        // element ID of the tab to be renamed
+        String tabId = request.getParameter("tabId");
         IUserLayoutFolderDescription tab = (IUserLayoutFolderDescription) ulm
             .getNode(tabId);
 
-		// desired new name
-		String tabName = request.getParameter("tabName");
+        // desired new name
+        String tabName = request.getParameter("tabName");
 
-		if (!ulm.canUpdateNode(tab)) {
-		    log.warn("Attempting to rename an immutable tab");
-		    response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-		    return null;
-		}
+        if (!ulm.canUpdateNode(tab)) {
+            log.warn("Attempting to rename an immutable tab");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return new ModelAndView("jsonView", Collections.singletonMap("error", getMessage("error.element.update", "Unable to update element", RequestContextUtils.getLocale(request))));
+        }
 
-		/*
-		 * Update the tab and save the layout
-		 */
-	    tab.setName(StringUtils.isBlank(tabName) ? DEFAULT_TAB_NAME : tabName);
-		final boolean updated = ulm.updateNode(tab);
+        /*
+         * Update the tab and save the layout
+         */
+        tab.setName(StringUtils.isBlank(tabName) ? DEFAULT_TAB_NAME : tabName);
+        final boolean updated = ulm.updateNode(tab);
 
-		if (updated) {
-    		try {
-    			// save the user's layout
+        if (updated) {
+            try {
+                // save the user's layout
                 ulm.saveUserLayout();
-    		} catch (Exception e) {
-    			log.warn("Error saving layout", e);
-    		}
+            } catch (PortalException e) {
+                return handlePersistError(request, response, e);
+            }
 
-    		//TODO why do we have to do this, shouldn't modifying the layout be enough to trigger a full re-render (layout's cache key changes)
-    		this.stylesheetUserPreferencesService.setLayoutAttribute(request, PreferencesScope.STRUCTURE, tabId, "name", tabName);
-		}
+            //TODO why do we have to do this, shouldn't modifying the layout be enough to trigger a full re-render (layout's cache key changes)
+            this.stylesheetUserPreferencesService.setLayoutAttribute(request, PreferencesScope.STRUCTURE, tabId, "name", tabName);
+        }
 
         Map<String, String> model = Collections.singletonMap("message", "saved new tab name");
         return new ModelAndView("jsonView", model);
 
-	}
+    }
 
     @RequestMapping(method = RequestMethod.POST, params = "action=updatePermissions")
     public ModelAndView updatePermissions(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -912,7 +1100,7 @@ public class UpdatePreferencesServlet {
         if (node == null){
             log.warn("Failed to locate node for permissions update");
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return null;
+            return new ModelAndView("jsonView", Collections.singletonMap("error", "Invalid node id " + elementId));
         }
 
         String deletable = request.getParameter("deletable");
@@ -940,19 +1128,27 @@ public class UpdatePreferencesServlet {
         try {
             // save the user's layout
             ulm.saveUserLayout();
-        } catch (Exception e) {
-            log.warn("Error saving layout", e);
+        } catch (PortalException e) {
+            return handlePersistError(request, response, e);
         }
 
         return new ModelAndView("jsonView", Collections.EMPTY_MAP);
 
     }
 
+    private ModelAndView handlePersistError(HttpServletRequest request, HttpServletResponse response, Exception e) {
+        log.warn("Error saving layout", e);
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        return new ModelAndView("jsonView", Collections.singletonMap("error",
+                getMessage("error.persisting.attribute.change", "Unable to save attribute changes",
+                RequestContextUtils.getLocale(request))));
+    }
+
     protected void removeSubscription(IPerson per, String elementId, IUserLayoutManager ulm) {
 
         // get the fragment owner's ID from the element string
         String userIdString = StringUtils.substringBetween(elementId, Constants.FRAGMENT_ID_USER_PREFIX, Constants.FRAGMENT_ID_LAYOUT_PREFIX);
-        int userId = NumberUtils.toInt(userIdString,0);
+        int userId = NumberUtils.toInt(userIdString, 0);
 
         // construct a new person object representing the fragment owner
         RestrictedPerson fragmentOwner = PersonFactory.createRestrictedPerson();
@@ -975,19 +1171,19 @@ public class UpdatePreferencesServlet {
 
     }
 
-	/**
-	 * A folder is a tab if its parent element is the layout element
-	 *
-	 * @param folder the folder in question
-	 * @return <code>true</code> if the folder is a tab, otherwise <code>false</code>
-	 */
-	protected boolean isTab(IUserLayoutManager ulm, String folderId)
-			throws PortalException {
-		// we could be a bit more careful here and actually check the type
-		return ulm.getRootFolderId().equals(ulm.getParentId(folderId));
-	}
+    /**
+     * A folder is a tab if its parent element is the layout element
+     *
+     * @param ulm User Layout Manager
+     * @param folderId the folder in question
+     * @return <code>true</code> if the folder is a tab, otherwise <code>false</code>
+     */
+    protected boolean isTab(IUserLayoutManager ulm, String folderId) throws PortalException {
+        // we could be a bit more careful here and actually check the type
+        return ulm.getRootFolderId().equals(ulm.getParentId(folderId));
+    }
 
-	protected IPerson getPerson(IUserInstance ui, HttpServletResponse response) throws IOException {
+    protected IPerson getPerson(IUserInstance ui, HttpServletResponse response) throws IOException {
         IPerson per = ui.getPerson();
         if (per.isGuest()) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -996,7 +1192,7 @@ public class UpdatePreferencesServlet {
 
         return per;
 
-	}
+    }
 
     /**
      * Syntactic sugar for safely resolving a no-args message from message bundle.
@@ -1038,26 +1234,26 @@ public class UpdatePreferencesServlet {
         if (user == null) {
             return null;
         }
-        
+
         final AuthorizationService authService = AuthorizationService.instance();
         return authService.newPrincipal(user);
     }
 
     /**
-	 * A folder is a column if its parent is a tab element
-	 *
-	 * @param folder the folder in question
-	 * @return <code>true</code> if the folder is a column, otherwise <code>false</code>
-	 */
-	protected boolean isColumn(IUserLayoutManager ulm, String folderId)
-			throws PortalException {
-		return isTab(ulm, ulm.getParentId(folderId));
-	}
+     * A folder is a column if its parent is a tab element
+     *
+     * @param ulm User Layout Manager
+     * @param folderId the folder in question
+     * @return <code>true</code> if the folder is a column, otherwise <code>false</code>
+     */
+    protected boolean isColumn(IUserLayoutManager ulm, String folderId) throws PortalException {
+        return isTab(ulm, ulm.getParentId(folderId));
+    }
 
     protected String getTabIdFromName(IUserLayout userLayout, String tabName) {
         @SuppressWarnings("unchecked")
         Enumeration<String> childrenOfRoot = userLayout.getChildIds(userLayout.getRootId());
-        
+
         while (childrenOfRoot.hasMoreElements()) { //loop over folders that might be the favorites folder
             String nodeId = childrenOfRoot.nextElement();
 
@@ -1082,11 +1278,26 @@ public class UpdatePreferencesServlet {
         log.warn("Tab " + tabName + " was searched for but not found");
         return null; //didn't find tab
     }
-    
-    private boolean moveElementInternal(HttpServletRequest request, 
-                                        String sourceId, 
-                                        String destinationId, 
+
+    /**
+     * Moves the source element.
+     *
+     * - If the destination is a tab, the new element automatically goes to the end of the first column or in a
+     * new column.
+     * - If the destination is a folder, the element is added to the end of the folder.
+     * - Otherwise, the element is inserted before the destination (the destination can't be a
+     *   tab or folder so it must be a portlet).
+     *
+     * @return true if the element was moved and saved.
+     */
+    private boolean moveElementInternal(HttpServletRequest request,
+                                        String sourceId,
+                                        String destinationId,
                                         String method) {
+
+      log.debug("moveElementInternal invoked for sourceId={}, destinationId={}, method={}",
+                                                      sourceId, destinationId, method);
+
       if(StringUtils.isEmpty(destinationId)) {//shortcut for beginning and end
         return true;
       }
@@ -1094,58 +1305,69 @@ public class UpdatePreferencesServlet {
       UserPreferencesManager upm = (UserPreferencesManager) ui.getPreferencesManager();
       IUserLayoutManager ulm = upm.getUserLayoutManager();
 
+      boolean success = false;
       if (isTab(ulm, destinationId)) {
-          // if the target is a tab type node, move the portlet to
-          // the end of the first column
-          @SuppressWarnings("unchecked")
+          // If the target is a tab type node, move the element to the end of the first column.
+          // TODO Try to insert it into the first available column if multiple columns
           Enumeration<String> columns = ulm.getChildIds(destinationId);
           if (columns.hasMoreElements()) {
-              ulm.moveNode(sourceId, columns.nextElement(), null);
+              success = attemptNodeMove(ulm, sourceId, columns.nextElement(), null);
           } else {
+              // Attempt to create a new column
 
               IUserLayoutFolderDescription newColumn = new UserLayoutFolderDescription();
               newColumn.setName("Column");
               newColumn.setId("tbd");
-              newColumn
-                      .setFolderType(IUserLayoutFolderDescription.REGULAR_TYPE);
+              newColumn.setFolderType(IUserLayoutFolderDescription.REGULAR_TYPE);
               newColumn.setHidden(false);
               newColumn.setUnremovable(false);
               newColumn.setImmutable(false);
 
               // add the column to our layout
-              IUserLayoutNodeDescription col = ulm.addNode(newColumn,
-                      destinationId, null);
+              IUserLayoutNodeDescription col = ulm.addNode(newColumn, destinationId, null);
 
-              // move the channel
-              ulm.moveNode(sourceId, col.getId(), null);
+              // If column was created (might not if the tab had addChild=false), move the channel.
+              if (col != null) {
+                  success = attemptNodeMove(ulm, sourceId, col.getId(), null);
+              } else {
+                  log.info("Unable to move item into existing columns on tab {} and unable to create new column",
+                          destinationId);
+              }
           }
 
-      } else if (ulm.getRootFolderId().equals(
-          // if the target is a column type node, we need to just move the portlet
-          // to the end of the column
-          ulm.getParentId(ulm.getParentId(destinationId)))) {
-          ulm.moveNode(sourceId, destinationId, null);
-
       } else {
-          // If we're moving this element before another one, we need
-          // to know what the target is. If there's no target, just
-          // assume we're moving it to the very end of the column.
-          String siblingId = null;
-          if (method.equals("insertBefore"))
-              siblingId = destinationId;
-
-          // move the node as requested and save the layout
-          ulm.moveNode(sourceId, ulm.getParentId(destinationId), siblingId);
+          // If destination is a column, attempt to move into end of column
+          if (isFolder(ulm, destinationId)) {
+              success = attemptNodeMove(ulm, sourceId, destinationId, null);
+          } else {
+              // If insertBefore move to prior to node else to end of folder containing node
+              success = attemptNodeMove(ulm, sourceId, ulm.getParentId(destinationId),
+                      "insertBefore".equals(method) ? destinationId : null);
+          }
       }
 
       try {
-          // save the user's layout
-          ulm.saveUserLayout();
-      } catch (Exception e) {
+          if (success) {
+              ulm.saveUserLayout();
+          }
+      } catch (PortalException e) {
           log.warn("Error saving layout", e);
           return false;
       }
-      
-      return true;
+
+      return success;
+    }
+
+    private boolean attemptNodeMove(IUserLayoutManager ulm, String sourceId, String destinationId, String beforeNode) {
+        boolean success = ulm.moveNode(sourceId, destinationId, beforeNode);
+        if (!success) {
+            log.warn("moveNode returned false for sourceId={}, destinationId={}, method={};  "
+                    + "Aborting node movement", sourceId, destinationId, beforeNode);
+        }
+        return success;
+    }
+
+    private boolean isFolder(IUserLayoutManager ulm, String id) {
+        return ulm.getNode(id).getType().equals(IUserLayoutNodeDescription.LayoutNodeType.FOLDER);
     }
 }

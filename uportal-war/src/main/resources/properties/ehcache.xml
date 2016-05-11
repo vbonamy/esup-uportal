@@ -176,19 +176,29 @@
      +-->
     <cache name="org.jasig.portal.security.provider.AuthorizationImpl.ENTITY_PARENTS_CACHE"
         eternal="false" maxElementsInMemory="1000" overflowToDisk="false" diskPersistent="false"
-        timeToIdleSeconds="0" timeToLiveSeconds="60" memoryStoreEvictionPolicy="LRU" statistics="true" />
+        timeToIdleSeconds="0" timeToLiveSeconds="180" memoryStoreEvictionPolicy="LRU" statistics="true" />
 
     <!--
-     | Caches principal specific permission checks
-     | 1 x principal x permission
+     | Caches user-specific permission checks in AuthorizationImpl
+     | 1 x user x permission
      | - not replicated - doesn't represent an updatable data store
      +-->
     <cache name="org.jasig.portal.security.provider.AuthorizationImpl.PRINCIPAL_HAS_PERMISSION"
         eternal="false" maxElementsInMemory="50000" overflowToDisk="false" diskPersistent="false"
-        timeToIdleSeconds="0" timeToLiveSeconds="60" memoryStoreEvictionPolicy="LRU" statistics="true" >
+        timeToIdleSeconds="0" timeToLiveSeconds="180" memoryStoreEvictionPolicy="LRU" statistics="true" >
         <cacheEventListenerFactory class="org.jasig.portal.utils.cache.SpringCacheEventListenerFactory" properties="beanName=tagTrackingCacheEventListener" listenFor="local" />
     </cache>
 
+    <!--
+     | Caches low-level permission checks in AnyUnblockedGrantPermissionPolicy
+     | 1 x principal x permission
+     | - not replicated - doesn't represent an updatable data store
+     +-->
+    <cache name="org.jasig.portal.security.provider.AnyUnblockedGrantPermissionPolicy.HAS_UNBLOCKED_GRANT"
+        eternal="false" maxElementsInMemory="100000" overflowToDisk="false" diskPersistent="false"
+        timeToIdleSeconds="0" timeToLiveSeconds="300" memoryStoreEvictionPolicy="LRU" statistics="true" >
+        <cacheEventListenerFactory class="org.jasig.portal.utils.cache.SpringCacheEventListenerFactory" properties="beanName=tagTrackingCacheEventListener" listenFor="local" />
+    </cache>
 
     <!--
      | Caches fragment layouts
@@ -362,12 +372,51 @@
 
     <!--
      | Caches IEntity objects
-     | - 1 x group member (channels, users)
+     | - 1 x group member (channels, users, groups)
      | - replicated by invalidation
      +-->
     <cache name="org.jasig.portal.groups.IEntity"
         eternal="false" maxElementsInMemory="1000" overflowToDisk="false" diskPersistent="false"
         timeToIdleSeconds="0" timeToLiveSeconds="21600" memoryStoreEvictionPolicy="LRU" statistics="true" >
+        <cacheEventListenerFactory
+            class="net.sf.ehcache.distribution.jgroups.JGroupsCacheReplicatorFactory"
+            properties="replicateAsynchronously=true,
+                replicatePuts=false,
+                replicateUpdates=true, replicateUpdatesViaCopy=false,
+                replicateRemovals=true "/>
+    </cache>
+
+    <!--
+     | Caches containing groups for GroupMemberImpl objects.  There is code to
+     | invalidate (and replicate) them when they change, but the GaP code is
+     | bloated and hard to follow.  TTL is set to 5 min in case invalidation
+     | doesn't cover all paths that make changes to relationships.
+     | - 1 x group member (channels, users, groups)
+     | - replicated by invalidation
+     +-->
+    <cache name="org.jasig.portal.groups.GroupMemberImpl.parentGroups"
+        eternal="false" maxElementsInMemory="5000" overflowToDisk="false" diskPersistent="false"
+        timeToIdleSeconds="0" timeToLiveSeconds="300" memoryStoreEvictionPolicy="LRU" statistics="true" >
+        <cacheEventListenerFactory
+            class="net.sf.ehcache.distribution.jgroups.JGroupsCacheReplicatorFactory"
+            properties="replicateAsynchronously=true,
+                replicatePuts=false,
+                replicateUpdates=true, replicateUpdatesViaCopy=false,
+                replicateRemovals=true "/>
+    </cache>
+
+    <!--
+     | Caches members for EntityGroupImpl objects.  (This cache is the
+     | opposite of parentGroups, above) There is code to invalidate (and
+     | replicate) them when they change, but the GaP code is bloated and hard to
+     | follow.  TTL is set to 5 min in case invalidation doesn't cover all paths
+     | that make changes to relationships.
+     | - 1 x group (both of users and channels)
+     | - replicated by invalidation
+     +-->
+    <cache name="org.jasig.portal.groups.EntityGroupImpl.children"
+        eternal="false" maxElementsInMemory="1000" overflowToDisk="false" diskPersistent="false"
+        timeToIdleSeconds="0" timeToLiveSeconds="300" memoryStoreEvictionPolicy="LRU" statistics="true" >
         <cacheEventListenerFactory
             class="net.sf.ehcache.distribution.jgroups.JGroupsCacheReplicatorFactory"
             properties="replicateAsynchronously=true,
@@ -1324,11 +1373,17 @@
            eternal="false" maxElementsInMemory="1000" overflowToDisk="false" diskPersistent="false"
            timeToIdleSeconds="0" timeToLiveSeconds="300" memoryStoreEvictionPolicy="LRU" statistics="true" />
 
-    <!-- caches MarketplacePortletDefinitions by user.  not replicated.  This cache holds Futures that are
+    <!-- Caches MarketplacePortletDefinitions by user.  not replicated.  This cache holds Futures that are
         not serializable, so don't overflow to disk.  -->
     <cache name="org.jasig.portal.portlet.marketplace.MarketplaceService.marketplaceUserPortletDefinitionCache"
            eternal="false" maxElementsInMemory="1000" overflowToDisk="false" diskPersistent="false"
            timeToIdleSeconds="0" timeToLiveSeconds="300" memoryStoreEvictionPolicy="LRU" statistics="true" />
+
+    <!-- Caches a few odds and ends related to limiting which categories are
+         displayed in a single publication of the Marketplace;  not replicated -->
+    <cache name="org.jasig.portal.portlet.marketplace.MarketplaceService.marketplaceCategoryCache"
+           eternal="false" maxElementsInMemory="20" overflowToDisk="false" diskPersistent="false"
+           timeToIdleSeconds="0" timeToLiveSeconds="600" memoryStoreEvictionPolicy="LRU" statistics="true" />
 
 
     <!-- ********************************************************** -->
@@ -1855,10 +1910,39 @@
            eternal="false" overflowToDisk="false" diskPersistent="false"
            maxElementsInMemory="100" timeToIdleSeconds="60" timeToLiveSeconds="60" memoryStoreEvictionPolicy="LRU" statistics="true"/>
 
-    <!-- PAGS Group Definition Cache, not replicated -->
-    <cache name="org.jasig.portal.groups.pags.dao.EntityPersonAttributesGroupStore"
+    <!--
+     | Stores objects of type IEntityGroup (concrete class EntityGroupImpl), which are
+     | the things emitted by this flavor of GaP (or any flavor) and used by the rest
+     | of the portal.  Historically, it was a big problem if multiple copies of the same
+     | logical group existed simultaneously in memory.  Due to recent changes, that
+     | shouldn't be a major issue (but it's still a good idea to cache them).  Not
+     | replicated.
+     |
+     | - 1 x PAGS groups in the portal
+     +-->
+    <cache name="org.jasig.portal.groups.pags.dao.EntityPersonAttributesGroupStore.entityGroup"
            eternal="false" overflowToDisk="false" diskPersistent="false"
-           maxElementsInMemory="100" timeToIdleSeconds="0" timeToLiveSeconds="180" memoryStoreEvictionPolicy="LRU" statistics="true"/>
+           maxElementsInMemory="300" timeToIdleSeconds="0" timeToLiveSeconds="180" memoryStoreEvictionPolicy="LRU" statistics="true"/>
+
+    <!--
+     | Stores objects of type PagsGroup, which are used to test users' attributes for
+     | membership.  (It may make sense to refactor this class out of the picture when
+     | we have an opportunity.)  Not replicated.
+     |
+     | - 1 x PAGS groups in the portal
+     +-->
+    <cache name="org.jasig.portal.groups.pags.dao.EntityPersonAttributesGroupStore.pagsGroup"
+           eternal="false" overflowToDisk="false" diskPersistent="false"
+           maxElementsInMemory="300" timeToIdleSeconds="0" timeToLiveSeconds="180" memoryStoreEvictionPolicy="LRU" statistics="true"/>
+
+    <!--
+     | Remembers membership decisions calculated by EntityPersonAttributesGroupStore
+     |
+     | - 1 x PAGS groups in the portal x concurrent users since TTL
+     +-->
+    <cache name="org.jasig.portal.groups.pags.dao.EntityPersonAttributesGroupStore.membership"
+           eternal="false" overflowToDisk="false" diskPersistent="false"
+           maxElementsInMemory="50000" timeToIdleSeconds="0" timeToLiveSeconds="180" memoryStoreEvictionPolicy="LRU" statistics="true"/>
 
     <!-- PAGS Store Cache, not replicated -->
     <cache name="org.jasig.portal.groups.pags.dao.jpa.PersonAttributesGroupDefinitionImpl"
@@ -1888,6 +1972,15 @@
     <cache name="org.jasig.portal.groups.pags.dao.jpa.PersonAttributesGroupTestGroupDefinitionImpl.tests"
            eternal="false" overflowToDisk="false" diskPersistent="false"
            maxElementsInMemory="350" timeToIdleSeconds="0" timeToLiveSeconds="0" memoryStoreEvictionPolicy="LRU" statistics="true"/>
+
+    <!--
+     | Caches hash strings representing thread calls into the AdHocGroupTester test() method. This is part
+     | of the check for recursion. Leveraging TTL to handle any strings that become orphaned due to exceptions, etc.
+     | - 1 x thread x ad hoc test
+     -->
+    <cache name="org.jasig.portal.groups.pags.testers.AdHocGroupTester"
+           eternal="false" overflowToDisk="false" diskPersistent="false"
+           maxElementsInMemory="1000" timeToIdleSeconds="60" timeToLiveSeconds="60" memoryStoreEvictionPolicy="LRU" statistics="true"/>
 
     <!-- ****************************************************************** -->
     <!-- ******************** uPortal Portlet Caches ******************** -->

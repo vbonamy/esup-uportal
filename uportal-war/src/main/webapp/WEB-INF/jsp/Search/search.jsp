@@ -55,16 +55,18 @@
                     </div>
                 </c:if>
 
-                <c:if test="${not empty results}">
+                <c:choose>
+
+                <c:when test="${not empty results}">
 
                     <div class="portlet-section" role="region">
 
                         <div class="content">
                             <div id="${n}searchResults" class="hidden">
                                 <ul class="searchTabsContainer">
-                                    <li><a href="#${n}_DEFAULT_TAB"><span><spring:message code="${defaultTabKey}"/></span></a></li>
+                                    <li><a href="#${n}_DEFAULT_TAB"><span><spring:message code="${defaultTabKey}"/></span> <span class="badge"><c:out value="${fn:length(results[defaultTabKey])}" /></span></a></li>
                                     <c:forEach var="tabKey" items="${tabKeys}" varStatus="loopStatus">
-                                        <li><a href="#${n}_${loopStatus.index}"><span><spring:message code="${tabKey}"/></span></a></li>
+                                        <li><a href="#${n}_${loopStatus.index}"><span><spring:message code="${tabKey}"/></span> <span class="badge"><c:out value="${fn:length(results[tabKey])}" /></span></a></li>
                                     </c:forEach>
                                 </ul>
 
@@ -120,7 +122,13 @@
                             </div>
                         </div>
                     </div>
-                </c:if>
+                </c:when>
+                    <c:otherwise>
+                        <div class="search-results-empty">
+                            <p><spring:message code="no.results"/></p>
+                        </div>
+                </c:otherwise>
+                </c:choose>
             </div>
         </div>
     </div>

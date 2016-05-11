@@ -94,7 +94,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                         data-placement="top"></span>
                             </span>
                             <div class="col-sm-8">
-                                <form:input path="title" type="text" class="form-control" id="portletTitle"/>
+                                <form:input path="title" type="text" class="form-control" id="portletTitle" autocomplete="off" autocorrect="off"/>
                             </div>
                         </div>
                         <div class="form-group">
@@ -105,7 +105,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                             data-placement="top"></span>
                             </span>
                             <div class="col-sm-8">
-                                <form:input path="name" type="text" class="form-control" id="portletName"/>
+                                <form:input path="name" type="text" class="form-control" id="portletName" autcomplete="off" autocorrect="off"/>
                             </div>
                         </div>
                         <div class="form-group name-title-mismatch-warn" style="display: none">
@@ -123,7 +123,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                 data-placement="top"></span>
                             </span>
                             <div class="col-sm-8">
-                                <form:input path="fname" type="text" class="form-control" id="portletFname"/>
+                                <form:input path="fname" type="text" class="form-control" id="portletFname" autcomplete="off" autocorrect="off"/>
                             </div>
                         </div>
                         <div class="form-group">
@@ -134,7 +134,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                 data-placement="top"></span>
                             </span>
                             <div class="col-sm-8">
-                                <form:input path="description" type="text" class="form-control" id="portletDescription"/>
+                                <form:input path="description" type="text" class="form-control" id="portletDescription" autcomplete="off" autocorrect="off"/>
                             </div>
                         </div>
                     </div>
@@ -290,7 +290,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                                                 </c:when>
                                                                 <c:otherwise>
                                                                     <tr>
-                                                                        <td class="text-right"><span class="uportal-label">
+                                                                        <td class="text-right">
                                                                             <div class="control-label">
                                                                                 <spring:message code="${parameter.label}"/>
                                                                                 <c:if test="${not empty parameter.description}">
@@ -426,7 +426,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
             <div class="portlet-section" role="region">
                 <div class="titlebar">
                     <h3 class="title" role="heading">
-                        <spring:message code="Permissions.and.categories" text="Permissions and Categories"/>
+                        <spring:message code="principals.and.categories" text="Principals and Categories"/>
                     </h3>
                 </div>
                 <div class="content row">
@@ -434,9 +434,9 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                     <!-- Portlet principals -->
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label h4"><spring:message code="permissions"/></label>
+                            <label class="col-sm-3 control-label h4"><spring:message code="principals"/></label>
                             <div class="col-sm-9">
-                                <button type="submit" class="button btn btn-primary" name="_eventId_choosePrincipal"><spring:message code="edit.permissions"/>&nbsp;&nbsp;<i class="fa fa-users"></i></button>
+                                <button type="submit" class="button btn btn-primary" name="_eventId_choosePrincipal"><spring:message code="edit.principals"/>&nbsp;&nbsp;<i class="fa fa-users"></i></button>
                                 <c:if test="${empty portlet.principals}">
                                     <p class="text-warning">You should specify a principal or no one will be able to view the portlet</p>
                                 </c:if>
@@ -506,7 +506,9 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                 </c:if>
                                 <ul class="config-list">
                                     <c:forEach items="${ portlet.categories }" var="category">
-                                        <li><a href="${ chooseCategoryUrl }">${ fn:escapeXml(category.name )}</a></li>
+                                        <li>
+                                            <i class="fa fa-folder-open"></i> ${fn:escapeXml(category.name )}
+                                        </li>
                                     </c:forEach>
                                 </ul>
                             </div>
@@ -587,8 +589,8 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                        </c:forEach>
                                     </form:select>
                                      <form:select path="publishAmPm">
-                                         <form:option value="0" label="${am}"/>
-                                         <form:option value="1" label="${pm}"/>
+                                         <form:option value="0" label="${ amLabel }"/>
+                                         <form:option value="1" label="${ pmLabel }"/>
                                      </form:select>
                              (<a class="clear-date" href="javascript:;"><spring:message code="reset"/></a>)
                          </span>
@@ -634,8 +636,8 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                             </c:forEach>
                                         </form:select>
                                         <form:select path="expirationAmPm">
-                                            <form:option value="0" label="${am}"/>
-                                            <form:option value="1" label="${pm}"/>
+                                            <form:option value="0" label="${ amLabel }"/>
+                                            <form:option value="1" label="${ pmLabel }"/>
                                         </form:select>
                                         (<a class="clear-date" href="javascript:;"><spring:message code="reset"/></a>)
                                     </span>

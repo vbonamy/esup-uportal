@@ -91,10 +91,13 @@ public interface IGroupService {
   public void updateGroupMembers(IEntityGroup group) throws GroupsException;
 
   /**
-   * Returns the containing groups for the <code>IGroupMember</code>
+   * Returns the containing groups for the <code>IGroupMember</code>.
+   * IMPORTANT!  This method does not appear to be in use, but it's critical to
+   * something.  The portal breaks badly if it is removed.
+   *
    * @param gm IGroupMember
    */
-  public Iterator findContainingGroups(IGroupMember gm) throws GroupsException;
+  public Iterator findParentGroups(IGroupMember gm) throws GroupsException;
 
   /**
    * Returns the member groups for the <code>IEntityGroup</code>

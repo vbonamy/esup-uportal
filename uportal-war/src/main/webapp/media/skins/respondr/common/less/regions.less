@@ -32,7 +32,6 @@
     /* ==========================================================================
        General-purpose styles that apply to all regions
        ========================================================================== */
-
     [id^="region-"] {
 
         [id^="portlet_"] {
@@ -62,17 +61,25 @@
     /* ==========================================================================
        Namespace: .region-pre-header
        ========================================================================== */
+    #up-sticky-nav {
+        position: fixed;
+        top: 0px;
+        z-index: 1000;
+        width: 100%;
 
-    #region-pre-header {
-        .up-portlet-wrapper {
-            display: inline-block;
+        #region-pre-header {
+            padding: 2px 0;
+
+            .up-portlet-wrapper {
+                display: inline-block;
+                margin-left: 4px;
+            }
         }
     }
 
     /* ==========================================================================
        Namespace: .region-header-bottom
        ========================================================================== */
-
     #region-header-bottom  {
         .up-portlet-wrapper {
             color: @white;
@@ -83,16 +90,6 @@
             a:hover {
                 color: @white;
             }
-        }
-    }
-
-    /* ==========================================================================
-       Namespace: .region-system-tray
-       ========================================================================== */
-
-    #region-system-tray {
-        .up-portlet-wrapper {
-            display: inline-block;
         }
     }
 
@@ -138,24 +135,45 @@
             content: "\f0d8";
         }
     }
+
+    /* ==========================================================================
+       Namespace: .region-pre-content
+       ========================================================================== */
+    #region-pre-content {
+        margin-top: 8px;
+    }
+
 }
 
 @media only screen and (min-width: 769px) {
 
-    #region-header-left {
-        padding-left: 32px;
+    .portal {
 
-        section.up-portlet-wrapper {
-            margin-top: 16px;
+        /* Undo sticky header styles */
+        #up-sticky-nav {
+            position: static;
+            z-index: auto;
         }
-    }
 
-    #region-header-right {
-        padding-right: 32px;
+        #region-header-left {
+            padding-left: 32px;
 
-        section.up-portlet-wrapper {
-            margin-top: 16px;
+            section.up-portlet-wrapper {
+                display : inline-block;
+                margin-top: 16px;
+                margin-left: 4px;
+                margin-right: 4px;
+            }
         }
+
+        #region-header-right {
+            padding-right: 32px;
+
+            section.up-portlet-wrapper {
+                margin-top: 16px;
+            }
+        }
+
     }
 
 }

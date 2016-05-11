@@ -39,12 +39,11 @@ public interface IPermission {
   public static final String PORTLET_SUBSCRIBER_APPROVED_ACTIVITY = "SUBSCRIBE_APPROVED";
   public static final String PORTLET_SUBSCRIBER_EXPIRED_ACTIVITY = "SUBSCRIBE_EXPIRED";
 
-    /**
-     * Portlet subscribe permission to view ("browse") marketplace entry.
-     * @since uPortal 4.1
-     */
-    public static final String PORTLET_BROWSE_ACTIVITY = "BROWSE";
-
+  /**
+   * Portlet subscribe permission to view ("browse") marketplace entry.
+   * @since uPortal 4.1
+   */
+  public static final String PORTLET_BROWSE_ACTIVITY = "BROWSE";
 
   /*
    * Portlet render permissions by lifecycle state.  These permissions are not
@@ -72,9 +71,10 @@ public interface IPermission {
    */
   public static final String PORTLET_MANAGER_MAINTENANCE_ACTIVITY = "MANAGE_MAINTENANCE";
 
-  /*
-   * All management permissions in one handy array
+  /**
+   * All management permissions in one handy array.  Used within the edit-portlet flow.
    */
+  @SuppressWarnings("ucd")
   public static final String[] PORTLET_MANAGER_MANAGE_ACTIVITIES = new String[] {
       PORTLET_MANAGER_CREATED_ACTIVITY, PORTLET_MANAGER_APPROVED_ACTIVITY,
       PORTLET_MANAGER_ACTIVITY, PORTLET_MANAGER_EXPIRED_ACTIVITY,
@@ -91,6 +91,33 @@ public interface IPermission {
    */
 
   public static final String VIEW_GROUP_ACTIVITY = "VIEW_GROUP";
+  public static final String CREATE_GROUP_ACTIVITY = "CREATE_GROUP";
+  public static final String DELETE_GROUP_ACTIVITY = "DELETE_GROUP";
+  public static final String EDIT_GROUP_ACTIVITY = "EDIT_GROUP";
+
+  /**
+   * Activity string for adding a tab to your personal layout
+   */
+  public static final String ADD_TAB_ACTIVITY = "ADD_TAB";
+
+  /**
+   * Non-owner-specific view activity (used by ERROR_PORTLET)
+   */
+  public static final String VIEW_ACTIVITY = "VIEW";
+
+  public static final String VIEW_USER_ACTIVITY = "VIEW_USER";
+  public static final String VIEW_USER_ATTRIBUTE_ACTIVITY = "VIEW_USER_ATTRIBUTE";
+  public static final String IMPERSONATE_USER_ACTIVITY = "IMPERSONATE";
+
+  public static final String VIEW_PERMISSIONS_ACTIVITY = "VIEW_PERMISSIONS";
+  public static final String EDIT_PERMISSIONS_ACTIVITY = "EDIT_PERMISSIONS";
+
+  /*
+   * These two are used in the ImportExportPortlet;  the command-line tool does
+   * not check permissions.
+   */
+  public static final String EXPORT_ACTIVITY = "EXPORT_ENTITY";
+  public static final String DELETE_ACTIVITY = "DELETE_ENTITY";
 
   /*
     Permission types.  At present only 2, but that could change.
@@ -117,6 +144,11 @@ public interface IPermission {
 
   public static final String PORTAL_SUBSCRIBE = "UP_PORTLET_SUBSCRIBE";
 
+  public static final String PORTAL_USERS = "UP_USERS";
+
+  public static final String PORTAL_PERMISSIONS = "UP_PERMISSIONS";
+
+  public static final String ERROR_PORTLET = "UP_ERROR_CHAN";
 
   /*
     A String which, when concatentated with a portlet id, represents a portal
@@ -137,6 +169,11 @@ public interface IPermission {
   public static final String ALL_PERMISSIONS_ACTIVITY = "ALL_PERMISSIONS";
 
   public static final String ALL_TARGET = "ALL";
+
+  /**
+   * Non-owner-specific details target string (used by ERROR_PORTLET)
+   */
+  public static final String DETAILS_TARGET = "DETAILS";
 
   /**
    * Gets the activity associated with this <code>IPermission</code>.

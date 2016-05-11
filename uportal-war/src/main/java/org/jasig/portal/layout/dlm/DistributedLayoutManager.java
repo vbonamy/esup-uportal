@@ -45,7 +45,6 @@ import org.jasig.portal.IUserIdentityStore;
 import org.jasig.portal.IUserProfile;
 import org.jasig.portal.PortalException;
 import org.jasig.portal.events.IPortalLayoutEventFactory;
-import org.jasig.portal.layout.IFolderLocalNameResolver;
 import org.jasig.portal.layout.IUserLayout;
 import org.jasig.portal.layout.IUserLayoutManager;
 import org.jasig.portal.layout.IUserLayoutStore;
@@ -64,7 +63,6 @@ import org.jasig.portal.security.IAuthorizationPrincipal;
 import org.jasig.portal.security.IAuthorizationService;
 import org.jasig.portal.security.IPerson;
 import org.jasig.portal.security.PersonFactory;
-import org.jasig.portal.security.provider.AuthorizationImpl;
 import org.jasig.portal.spring.locator.PortletDefinitionRegistryLocator;
 import org.jasig.portal.spring.locator.UserIdentityStoreLocator;
 import org.jasig.portal.xml.XmlUtilities;
@@ -83,8 +81,8 @@ import org.w3c.dom.NodeList;
  * @author Mark Boyd
  * @since uPortal 2.5
  */
-public class DistributedLayoutManager implements IUserLayoutManager, IFolderLocalNameResolver, InitializingBean {
-    public static final String RCS_ID = "@(#) $Header$";
+public class DistributedLayoutManager implements IUserLayoutManager, InitializingBean {
+
     private static final Log LOG = LogFactory.getLog(DistributedLayoutManager.class);
 
     private XmlUtilities xmlUtilities;
@@ -124,8 +122,7 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
                             + "non-null profile must to be specified.");
         }
 
-        // cache the relatively lightwieght userprofile for use in 
-        // in layout PLF loading
+        // cache the relatively lightweight userprofile for use in layout PLF loading
         owner.setAttribute(IUserProfile.USER_PROFILE, profile);
 
         this.owner = owner;
@@ -167,7 +164,7 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        // Ensure a new layout gets loaded whenever a user logs in exceot for guest users
+        // Ensure a new layout gets loaded whenever a user logs in except for guest users
         if (!owner.isGuest()) {
             this.layoutCachingService.removeCachedLayout(owner, profile);
         }
@@ -941,26 +938,20 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
         	IPortletDefinitionRegistry registry = PortletDefinitionRegistryLocator.getPortletDefinitionRegistry();
             IPortletDefinition def = registry.getPortletDefinition(channelPublishId);
             return def.getParametersAsUnmodifiableMap();
-        } catch (Exception e)
-        {
-            throw new PortalException("Unable to acquire channel definition.",
-                    e);
+        } catch (Exception e) {
+            throw new PortalException("Unable to acquire channel definition.", e);
         }
     }
 
     public boolean canAddNode( IUserLayoutNodeDescription node,
                                String parentId,
-                               String nextSiblingId )
-        throws PortalException
-    {
+                               String nextSiblingId ) throws PortalException {
         return this.canAddNode(node,this.getNode(parentId),nextSiblingId);
     }
 
     protected boolean canAddNode( IUserLayoutNodeDescription node,
                                   IUserLayoutNodeDescription parent,
-                                  String nextSiblingId )
-        throws PortalException
-    {
+                                  String nextSiblingId ) throws PortalException {
         // make sure sibling exists and is a child of nodeId
         if(nextSiblingId!=null && ! nextSiblingId.equals("")) {
             IUserLayoutNodeDescription sibling=getNode(nextSiblingId);
@@ -979,12 +970,15 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
             }
         }
 
-        if ( parent == null ||
-             ! node.isMoveAllowed() )
+        // todo if isFragmentOwner should probably verify both node and parent are part of the
+        // same layout fragment as the fragment owner to insure a misbehaving front-end doesn't
+        // do an improper operation.
+
+        if ( parent == null || !( node.isMoveAllowed() || isFragmentOwner) )
             return false;
 
         if ( parent instanceof IUserLayoutFolderDescription &&
-             ! ( (IUserLayoutFolderDescription) parent).isAddChildAllowed() )
+             ! (( (IUserLayoutFolderDescription) parent).isAddChildAllowed()) && !isFragmentOwner)
             return false;
 
         if ( nextSiblingId == null || nextSiblingId.equals("")) // end of list targeted
@@ -1001,13 +995,11 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
 
         // reverse scan so that as changes are made the order of the, as yet,
         // unprocessed nodes is not altered.
-        for( int idx = sibs.size() - 1;
-             idx >= 0;
-             idx-- )
+        for( int idx = sibs.size() - 1; idx >= 0; idx-- )
         {
             IUserLayoutNodeDescription prev = getNode((String) sibs.get(idx));
 
-            if ( ! MovementRules.canHopLeft( node, prev ) )
+            if ( !isFragmentOwner && ! MovementRules.canHopLeft( node, prev ) )
                 return false;
             if ( prev.getId().equals( nextSiblingId ) )
                 return true;
@@ -1030,9 +1022,13 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
                                    String nextSiblingId )
         throws PortalException
     {
+        // todo if isFragmentOwner should probably verify both node and parent are part of the
+        // same layout fragment as the fragment owner to insure a misbehaving front-end doesn't
+        // do an improper operation.
+
         // are we moving to a new parent?
         if ( ! getParentId( node.getId() ).equals( parent.getId() ) )
-            return node.isMoveAllowed() &&
+            return (isFragmentOwner || node.isMoveAllowed()) &&
                 canAddNode( node, parent, nextSiblingId );
 
         // same parent. which direction are we moving?
@@ -1081,7 +1077,7 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
             if ( nextSibId != null &&
                  next.getId().equals( targetNextSibId ) )
                 return true;
-            else if ( ! MovementRules.canHopRight( node, next ) )
+            else if ( !isFragmentOwner && ! MovementRules.canHopRight( node, next ) )
                 return false;
         }
 
@@ -1097,14 +1093,12 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
         Enumeration sibIds = getVisibleChildIds( getParentId( nodeId ) );
         List sibs = Collections.list(sibIds);
 
-        for ( int idx = sibs.indexOf( nodeId ) - 1;
-              idx >= 0;
-              idx-- )
+        for ( int idx = sibs.indexOf( nodeId ) - 1; idx >= 0; idx-- )
         {
             String prevSibId = (String) sibs.get( idx );
             IUserLayoutNodeDescription prev = getNode( prevSibId );
 
-            if ( ! MovementRules.canHopLeft( node, prev ) )
+            if ( !isFragmentOwner && ! MovementRules.canHopLeft( node, prev ) )
                 return false;
             if ( targetNextSibId != null &&
                  prev.getId().equals( targetNextSibId ) )
@@ -1122,13 +1116,15 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
        DOM model and it does not contain a 'deleteAllowed' attribute with a
        value of 'false'.
      */
-    protected boolean canDeleteNode( IUserLayoutNodeDescription node )
-        throws PortalException
-    {
+    protected boolean canDeleteNode( IUserLayoutNodeDescription node ) throws PortalException {
         if ( node == null )
             return false;
 
-        return node.isDeleteAllowed();
+        // todo if isFragmentOwner should probably verify node is part of the
+        // same layout fragment as the fragment owner to insure a misbehaving front-end doesn't
+        // do an improper operation.
+
+        return isFragmentOwner || node.isDeleteAllowed();
     }
 
     public boolean canUpdateNode( String nodeId )
@@ -1544,7 +1540,7 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
         }
         return map;
     }
-    
+
     /**
      * Returns the IPerson that is the owner of this layout manager instance.
      * @return IPerson object
@@ -1553,48 +1549,5 @@ public class DistributedLayoutManager implements IUserLayoutManager, IFolderLoca
     {
         return owner;
     }
- 
-    /**
-     * Returns a resolver for local names. This layout manager supports this
-     * feature itself and hence returns itself as the interface.
-     * 
-     * @return
-     */
-    public IFolderLocalNameResolver getFolderNameResolver()
-    {
-       return this; 
-    }
-    
-    /**
-     * Returns the localized name of a folder node or null if none is available.
-     * This method also implements enforcement of user label overrides to 
-     * fragment folders purging those overrides if they are no longer allowed
-     * or needed. 
-     */
-    public String getFolderLabel(String nodeId)
-    {
-        IUserLayoutNodeDescription ndesc = getNode(nodeId);
-        if (!(ndesc instanceof IUserLayoutFolderDescription))
-            return null;
-        
-        IUserLayoutFolderDescription desc 
-            = (IUserLayoutFolderDescription) ndesc; 
-        boolean editAllowed = desc.isEditAllowed();
-        String label = desc.getName();
-        // assume user owned to begin with which means plfId equals nodeId
-        String plfId = nodeId; 
 
-        if (nodeId.startsWith(
-                org.jasig.portal.layout.dlm.Constants.FRAGMENT_ID_USER_PREFIX))
-        {
-            Document plf = RDBMDistributedLayoutStore.getPLF( owner );
-            Element plfNode = plf.getElementById( nodeId );
-            if (plfNode != null)
-                plfId = plfNode.getAttribute(Constants.ATT_PLF_ID);
-            else
-                plfId = null; // no user mods exist for this node
-        }
-    
-        return label;
-    }
 }

@@ -99,7 +99,7 @@ public class PersonAttributesGroupStore implements IEntityGroupStore, IEntitySto
        
        for ( i=groupDefs.iterator(); i.hasNext(); )
        {
-           GroupDefinition groupDef = (GroupDefinition) i.next();
+           PagsGroup groupDef = (PagsGroup) i.next();
            IEntityGroup group = new EntityTestingGroupImpl(groupDef.getKey(), IPERSON_CLASS);
            group.setName(groupDef.getName());
            group.setDescription(groupDef.getDescription());
@@ -118,7 +118,7 @@ public class PersonAttributesGroupStore implements IEntityGroupStore, IEntitySto
    public boolean contains(IEntityGroup group, IGroupMember member) 
    throws GroupsException 
    {
-      GroupDefinition groupDef = (GroupDefinition)groupDefinitions.get(group.getLocalKey());
+      PagsGroup groupDef = (PagsGroup)groupDefinitions.get(group.getLocalKey());
       if (member.isGroup()) 
       {
          String key = ((IEntityGroup)member).getLocalKey();
@@ -163,7 +163,7 @@ public class PersonAttributesGroupStore implements IEntityGroupStore, IEntitySto
        List<IEntityGroup> parentGroupsList = new ArrayList<IEntityGroup>();
        for (i=groupDefinitions.values().iterator(); i.hasNext();)
        {
-           GroupDefinition groupDef = (GroupDefinition) i.next();
+           PagsGroup groupDef = (PagsGroup) i.next();
            if (! groupDef.getMembers().isEmpty())
                { parentGroupsList.add(cacheGet(groupDef.getKey())); }
        }
@@ -183,7 +183,7 @@ public class PersonAttributesGroupStore implements IEntityGroupStore, IEntitySto
        }
    }
 
-   private boolean testRecursively(GroupDefinition groupDef, IPerson person,
+   private boolean testRecursively(PagsGroup groupDef, IPerson person,
        IGroupMember member)
    throws GroupsException {
        if ( ! groupDef.contains(person) )
@@ -197,8 +197,8 @@ public class PersonAttributesGroupStore implements IEntityGroupStore, IEntitySto
            for (Iterator<IEntityGroup> i=allParents.iterator(); i.hasNext() && testPassed;)
            {
                parentGroup = i.next();
-               GroupDefinition parentGroupDef = 
-                 (GroupDefinition) groupDefinitions.get(parentGroup.getLocalKey());
+               PagsGroup parentGroupDef = 
+                 (PagsGroup) groupDefinitions.get(parentGroup.getLocalKey());
                testPassed = parentGroupDef.test(person);               
            }
            
@@ -220,7 +220,7 @@ public class PersonAttributesGroupStore implements IEntityGroupStore, IEntitySto
    private java.util.Set<IEntityGroup> primGetAllContainingGroups(IEntityGroup group, Set<IEntityGroup> s)
    throws GroupsException
    {
-       Iterator i = findContainingGroups(group);
+       Iterator i = findParentGroups(group);
        while ( i.hasNext() )
        {
            IEntityGroup parentGroup = (IEntityGroup) i.next();
@@ -230,7 +230,7 @@ public class PersonAttributesGroupStore implements IEntityGroupStore, IEntitySto
        return s;
    }
 
-   public Iterator findContainingGroups(IGroupMember member) 
+   public Iterator findParentGroups(IGroupMember member) 
    throws GroupsException 
    {
       return (member.isEntity()) 
@@ -266,7 +266,7 @@ public class PersonAttributesGroupStore implements IEntityGroupStore, IEntitySto
 
    public String[] findMemberGroupKeys(IEntityGroup group) throws GroupsException {
       List<String> keys = new ArrayList<String>();
-      GroupDefinition groupDef = (GroupDefinition) groupDefinitions.get(group.getLocalKey());
+      PagsGroup groupDef = (PagsGroup) groupDefinitions.get(group.getLocalKey());
       if (groupDef != null)
       {
           for (Iterator<String> i = groupDef.getMembers().iterator(); i.hasNext(); ) 
@@ -346,10 +346,6 @@ public class PersonAttributesGroupStore implements IEntityGroupStore, IEntitySto
          throw new GroupsException("Invalid entity type: "+type.getName());
       }
       return new EntityImpl(key, type);
-   }
-
-   public IEntity newInstance(String key) throws GroupsException {
-      return new EntityImpl(key, null);
    }
 
    public EntityIdentifier[] searchForEntities(String query, int method, Class type) throws GroupsException {

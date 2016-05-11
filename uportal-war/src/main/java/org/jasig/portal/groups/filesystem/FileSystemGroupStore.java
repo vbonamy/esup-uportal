@@ -123,7 +123,6 @@ import org.jasig.portal.services.GroupService;
  * <p>
  *
  * @author Dan Ellentuck
- * @version $Revision$
  */
 public class FileSystemGroupStore implements IEntityGroupStore, IEntityStore,
 IEntitySearcher
@@ -286,11 +285,11 @@ public IEntityGroup find(String key) throws GroupsException
  * @return java.util.Iterator
  * @param ent org.jasig.portal.groups.IEntityGroup
  */
-protected Iterator findContainingGroups(IEntity ent) throws GroupsException
+protected Iterator findParentGroups(IEntity ent) throws GroupsException
 {
     if (log.isDebugEnabled())
         log.debug(
-                DEBUG_CLASS_NAME + ".findContainingGroups(): for " + ent);
+                DEBUG_CLASS_NAME + ".findParentGroups(): for " + ent);
 
     List groups = new ArrayList();
     File root = getFileRoot(ent.getType());
@@ -319,11 +318,11 @@ protected Iterator findContainingGroups(IEntity ent) throws GroupsException
  * @return java.util.Iterator
  * @param group org.jasig.portal.groups.IEntityGroup
  */
-protected Iterator findContainingGroups(IEntityGroup group) throws GroupsException
+protected Iterator findParentGroups(IEntityGroup group) throws GroupsException
 {
     if (log.isDebugEnabled())
         log.debug(
-                DEBUG_CLASS_NAME + ".findContainingGroups(): for " + group);
+                DEBUG_CLASS_NAME + ".findParentGroups(): for " + group);
 
     List groups = new ArrayList();
     {
@@ -354,17 +353,17 @@ protected Iterator findContainingGroups(IEntityGroup group) throws GroupsExcepti
  * @return java.util.Iterator
  * @param gm org.jasig.portal.groups.IEntityGroup
  */
-public Iterator findContainingGroups(IGroupMember gm) throws GroupsException
+public Iterator findParentGroups(IGroupMember gm) throws GroupsException
 {
     if ( gm.isGroup() )
     {
         IEntityGroup group = (IEntityGroup) gm;
-        return findContainingGroups(group);
+        return findParentGroups(group);
     }
     else
     {
         IEntity ent = (IEntity) gm;
-        return findContainingGroups(ent);
+        return findParentGroups(ent);
     }
 }
 /**
@@ -733,10 +732,7 @@ public IEntityGroup newInstance(Class entityType) throws GroupsException
     throw new UnsupportedOperationException(DEBUG_CLASS_NAME +
       ".newInstance(Class cl) not supported");
 }
-public IEntity newInstance(String key) throws GroupsException
-{
-    return newInstance(key, getDefaultEntityType());
-}
+
 public IEntity newInstance(String key, Class type) throws GroupsException
 {
     if ( org.jasig.portal.EntityTypes.getEntityTypeID(type) == null )
@@ -949,25 +945,6 @@ private boolean directoryContains(File directory, IGroupMember member)
         File[] files = directory.listFiles();
         for (int i=0; i<files.length & ! found; i++)
             { found = files[i].equals(memberFile); }
-    }
-    return found;
-}
-/**
- * Answers if <code>group</code> contains a member group named 
- * <code>name</code>.
- * @return boolean
- * @param group org.jasig.portal.groups.IEntityGroup
- * @param name java.lang.String
- */
-public boolean containsGroupNamed(IEntityGroup group, String name) 
-throws GroupsException 
-{
-    boolean found = false;
-    Iterator itr = findMemberGroups(group);
-    while ( itr.hasNext() && ! found )
-    {
-        String otherName = ((IEntityGroup)itr.next()).getName();
-        found = otherName != null && otherName.equals(name);
     }
     return found;
 }

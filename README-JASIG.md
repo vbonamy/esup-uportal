@@ -10,9 +10,8 @@ uPortal uses Travis-CI for lightweight continuous integration.  You can see buil
 [![Master Branch Build Status](https://travis-ci.org/Jasig/uPortal.png?branch=master)](https://travis-ci.org/Jasig/uPortal)
 
 ## Requirements
-* JDK 1.7 or later - The JRE alone is NOT sufficient, a full JDK is required
-* Servlet 3.0 Container - Tomcat 7.0 or later is required.  (NOTE:  Tomcat 8 is not yet supported.)  There some configuration changes that
-must be made for Tomcat which are documented in the [uPortal manual](https://wiki.jasig.org/display/UPM42/Installing+Tomcat).
+* JDK 1.8 - The JRE alone is NOT sufficient, a full JDK is required
+* Servlet 3.1 Container - Tomcat 8.0 is required.  (NOTE:  Tomcat 7 may continue to workin the early 4.3 period.  We reserve the right to use leverage Servlet 3.1, JSP 2.3, EL 3.0 and Web Socket 1.1)  There some configuration changes that must be made for Tomcat which are documented in the [uPortal manual](https://wiki.jasig.org/display/UPM42/Installing+Tomcat).
 * Maven 3.2.2 or later
 * Ant 1.8.2 or 1.9.3 or later.
 
@@ -27,23 +26,24 @@ Ant tasks. Ant 1.8.2 or 1.9.3 or later is required
 * **hsql** - Starts a HSQL database instance. The default uPortal configuration points
 to this database and it can be used for portal development.
 * **initportal** - Runs the 'deploy-ear' and 'init-db' ant targets, should be the first
-and only task run when setting up a new uPortal instance *WARNING*: This runs 'init-db' which **DROPS** and re-creates the uPortal database
+and only task run when setting up a new uPortal instance *WARNING*: This runs 'init-db'
+which **DROPS** and re-creates the uPortal database
 * **deploy-ear** - Ensures the latest changes have been compiled and packaged then
 deploys uPortal, shared libraries and all packaged portlets to the container
-* **initdb** - Sets up the uPortal database. **DROPS ALL EXISTING** uPortal tables 
-re-creates them and populates them with the default uPortal data **WARNING**: This DROPS 
+* **initdb** - Sets up the uPortal database. **DROPS ALL EXISTING** uPortal tables
+re-creates them and populates them with the default uPortal data **WARNING**: This DROPS
 and re-creates the uPortal database
-* **deploy-war** - Ensures the latest uPortal changes have been compiled and packaged 
+* **deploy-war** - Ensures the latest uPortal changes have been compiled and packaged
 then deploys the uPortal WAR to the container.
-* **deployPortletApp** - Deploys the specified portlet application to the container. 
+* **deployPortletApp** - Deploys the specified portlet application to the container.
 This is the required process to deploy any portlet to a uPortal instance.
         ex: ant deployPortletApp -DportletApp=/path/to/portlet.war
 
 
 ## Help and Support
 The [uportal-user@apereo.org](https://wiki.jasig.org/display/JSG/uportal-user)
-email address is the best place to go with questions related to configuring or 
-deploying uPortal.    
+email address is the best place to go with questions related to configuring or
+deploying uPortal.
 
 The uPortal manual is a collaborative document on the wiki which has more
 detailed documentation: https://wiki.jasig.org/display/UPM42
@@ -79,4 +79,5 @@ the logging level, where the file should be, or even choose a different logging
 approach.
 
 #### Database configuration
-Database configuration is configured in /uportal-war/src/main/resources/properties/rdbm.properties
+Database connection information is read from /uportal-war/src/main/resources/properties/rdbm.properties,
+but is normally configured in filters/{environment.name}.properties.

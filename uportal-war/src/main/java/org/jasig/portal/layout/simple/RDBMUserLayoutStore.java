@@ -51,12 +51,10 @@ import org.jasig.portal.rdbm.DatabaseMetaDataImpl;
 import org.jasig.portal.rdbm.IDatabaseMetadata;
 import org.jasig.portal.rdbm.IJoinQueryString;
 import org.jasig.portal.security.IPerson;
-import org.jasig.portal.security.IPersonManager;
 import org.jasig.portal.security.ISecurityContext;
 import org.jasig.portal.security.provider.PersonImpl;
 import org.jasig.portal.spring.locator.CounterStoreLocator;
 import org.jasig.portal.utils.DocumentFactory;
-import org.jasig.portal.utils.ICounterStore;
 import org.jasig.portal.utils.Tuple;
 import org.jasig.portal.utils.threading.SingletonDoubleCheckedCreator;
 import org.slf4j.Logger;
@@ -68,8 +66,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
-import org.springframework.jdbc.support.SQLExceptionTranslator;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -92,14 +88,12 @@ import com.google.common.cache.Cache;
  * Simple Layout Manager implementation.
  *
  * @author George Lindholm
- * @version $Revision$ $Date$
  */
 public abstract class RDBMUserLayoutStore implements IUserLayoutStore, InitializingBean {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     private static String PROFILE_TABLE = "UP_USER_PROFILE";
 
-    protected static final String DEFAULT_LAYOUT_FNAME = "default";
     private static final String UNSUPPORTED_MULTIPLE_LAYOUTS_FOUND = "User ID {}'s profiles contain more than one non-zero layout id.  This is currently not supported.";
 
     //This class is instantiated ONCE so NO class variables can be used to keep state between calls
@@ -112,11 +106,8 @@ public abstract class RDBMUserLayoutStore implements IUserLayoutStore, Initializ
 
     private ILocaleStore localeStore;
     protected IDatabaseMetadata databaseMetadata;
-    protected IPersonManager personManager;
-    protected ICounterStore counterStore;
     protected IPortletDefinitionRegistry portletDefinitionRegistry;
     protected IStylesheetDescriptorDao stylesheetDescriptorDao;
-    protected SQLExceptionTranslator exceptionTranslator;
 
     // I18n property
     protected static final boolean localeAware = LocaleManager.isLocaleAware();
@@ -143,22 +134,11 @@ public abstract class RDBMUserLayoutStore implements IUserLayoutStore, Initializ
     @Resource(name=BasePortalJpaDao.PERSISTENCE_UNIT_NAME)
     public void setDataSource(DataSource dataSource) {
         this.jdbcOperations = new JdbcTemplate(dataSource);
-        this.exceptionTranslator = new SQLErrorCodeSQLExceptionTranslator(dataSource);
     }
 
     @Autowired
     public void setDatabaseMetadata(IDatabaseMetadata databaseMetadata) {
         this.databaseMetadata = databaseMetadata;
-    }
-
-    @Autowired
-    public void setPersonManager(IPersonManager personManager) {
-        this.personManager = personManager;
-    }
-
-    @Autowired
-    public void setCounterStore(ICounterStore counterStore) {
-        this.counterStore = counterStore;
     }
 
     @Autowired
@@ -395,38 +375,6 @@ public abstract class RDBMUserLayoutStore implements IUserLayoutStore, Initializ
     }
 
     /**
-     * Dump a document tree structure on stdout
-     * @param node
-     * @param indent
-     */
-    public static final void dumpDoc (Node node, String indent) {
-        if (node == null) {
-            return;
-        }
-        if (node instanceof Element) {
-            System.err.print(indent + "element: tag=" + ((Element)node).getTagName() + " ");
-        }
-        else if (node instanceof Document) {
-            System.err.print("document:");
-        }
-        else {
-            System.err.print(indent + "node:");
-        }
-        System.err.println("name=" + node.getNodeName() + " value=" + node.getNodeValue());
-        NamedNodeMap nm = node.getAttributes();
-        if (nm != null) {
-            for (int i = 0; i < nm.getLength(); i++) {
-                System.err.println(indent + " " + nm.item(i).getNodeName() + ": '" + nm.item(i).getNodeValue() + "'");
-            }
-            System.err.println(indent + "--");
-        }
-        if (node.hasChildNodes()) {
-            dumpDoc(node.getFirstChild(), indent + "   ");
-        }
-        dumpDoc(node.getNextSibling(), indent);
-    }
-
-    /**
      * Return the next available channel structure id for a user
      * @param person
      * @return the next available channel structure id
@@ -492,20 +440,6 @@ public abstract class RDBMUserLayoutStore implements IUserLayoutStore, Initializ
                 });
             }
         });
-    }
-
-    /**
-     * Return the Structure ID tag
-     * @param  structId
-     * @param  chanId
-     * @return ID tag
-     */
-    protected String getStructId(int structId, int chanId) {
-        if (chanId == 0) {
-            return folderPrefix + structId;
-        } else {
-            return channelPrefix + structId;
-        }
     }
 
     // private helper modules that retreive information from the DOM structure of the description files
@@ -1528,22 +1462,6 @@ public abstract class RDBMUserLayoutStore implements IUserLayoutStore, Initializ
 
     private String getSystemBrowserMapping (String userAgent) {
         return  getUserBrowserMapping(this.getSystemUser(), userAgent);
-    }
-
-    public IUserProfile getUserProfile (IPerson person, String userAgent) {
-        String profileFname = getUserBrowserMapping(person, userAgent);
-        if (profileFname == null)
-            return  null;
-        return  this.getUserProfileByFname(person, profileFname);
-    }
-
-    public IUserProfile getSystemProfile (String userAgent) {
-        String profileFname = getSystemBrowserMapping(userAgent);
-        if (profileFname == null)
-            return  null;
-        IUserProfile up = this.getUserProfileByFname(this.getSystemUser(), profileFname);
-        up.setSystemProfile(true);
-        return  up;
     }
 
     public IUserProfile getSystemProfileById (int profileId) {

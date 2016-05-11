@@ -118,7 +118,6 @@ import org.springframework.webflow.context.ExternalContext;
  * Helper methods for the portlet administration workflow.
  *
  * @author Jen Bourey, jbourey@unicon.net
- * @revision $Revision$
  */
 @Service
 public final class PortletAdministrationHelper implements ServletContextAware {
@@ -288,7 +287,7 @@ public final class PortletAdministrationHelper implements ServletContextAware {
 
         // User must have the selected lifecycle permission over AT LEAST ONE
         // category in which this portlet resides.  (This is the same check that
-        // is made when the user enteres the lifecycle-selection step in the wizard.)
+        // is made when the user enters the lifecycle-selection step in the wizard.)
         if (!hasLifecyclePermission(publisher, form.getLifecycleState(), form.getCategories())) {
             logger.warn("User '" + publisher.getUserName() +
                     "' attempted to save the following portlet without the selected MANAGE permission:  " + form);
@@ -469,7 +468,11 @@ public final class PortletAdministrationHelper implements ServletContextAware {
         }
 
         IPortletDefinition def = portletDefinitionRegistry.getPortletDefinition(form.getId());
-        portletDefinitionRegistry.deletePortletDefinition(def);
+        /*
+         * It's very important to remove portlets via the portletPublishingService
+         * because that API cleans up details like category memberships and permissions.
+         */
+        portletPublishingService.removePortletDefinition(def, person);
 
     }
 
@@ -896,7 +899,7 @@ public final class PortletAdministrationHelper implements ServletContextAware {
                 throw new IllegalArgumentException("");
             }
         }
-        if (ap.hasPermission("UP_FRAMEWORK", activity, IPermission.ALL_PORTLETS_TARGET)) {
+        if (ap.hasPermission(IPermission.PORTAL_PUBLISH, activity, IPermission.ALL_PORTLETS_TARGET)) {
             logger.debug("Found permission for category ALL_PORTLETS and lifecycle state " + state.toString());
             return true;
         }
@@ -1065,8 +1068,8 @@ public final class PortletAdministrationHelper implements ServletContextAware {
          * PUBLISHED
          */
         if (selectedLifecycleState.isEqualToOrAfter(PortletLifecycleState.PUBLISHED)) {
-            // We are the 'publisher' if it isn't previously published...
-            if (portletDef.getPublishDate() == null) {
+            // We are the 'publisher' if it isn't previously published or the publish time hasn't hit yet...
+            if (portletDef.getPublishDate() == null || portletDef.getPublishDate().after(now)) {
                 portletDef.setPublisherId(publisher.getID());
                 portletDef.setPublishDate(now);
             }
@@ -1078,7 +1081,8 @@ public final class PortletAdministrationHelper implements ServletContextAware {
                 portletDef.setExpirationDate(form.getExpirationDateTime());
                 portletDef.setExpirerId(publisher.getID());
             }
-        } else {
+        } else if (!selectedLifecycleState.equals(PortletLifecycleState.APPROVED)
+                || form.getPublishDate() == null){
             // Clear previous publishing fields, if present...
             portletDef.setPublishDate(null);
             portletDef.setPublisherId(-1);
@@ -1092,7 +1096,8 @@ public final class PortletAdministrationHelper implements ServletContextAware {
             // (MAINTENANCE mode is not considered expired)
             portletDef.setExpirerId(publisher.getID());
             portletDef.setExpirationDate(now);
-        } else {
+        } else if (!selectedLifecycleState.equals(PortletLifecycleState.PUBLISHED)
+                || form.getExpirationDate() == null) {
             // Clear previous expiration fields, if present...
             portletDef.setExpirationDate(null);
             portletDef.setExpirerId(-1);

@@ -18,13 +18,14 @@
  */
 package org.jasig.portal.groups;
 
+import java.util.Collections;
+
 import org.jasig.portal.concurrency.IEntityLock;
 
     /**
  * Extends <code>EntityGroupImpl</code> to make it lockable for writing.
  * <p>
  * @author Dan Ellentuck
- * @version $Revision$
  */
 
 public class LockableEntityGroupImpl extends EntityGroupImpl implements ILockableEntityGroup
@@ -73,7 +74,7 @@ private void primUpdate(boolean renewLock) throws GroupsException
 {
     getLockableGroupService().updateGroup(this, renewLock);
     clearPendingUpdates();
-    setGroupKeysInitialized(false);
+    this.invalidateInParentGroupsCache(Collections.singleton((IGroupMember) this));
 }
 
 /**
@@ -86,7 +87,7 @@ private void primUpdateMembers(boolean renewLock) throws GroupsException
 {
     getLockableGroupService().updateGroupMembers(this, renewLock);
     clearPendingUpdates();
-    setGroupKeysInitialized(false);
+    this.invalidateInParentGroupsCache(Collections.singleton((IGroupMember) this));
 }
 
 /**
@@ -126,14 +127,6 @@ public void updateAndRenewLock() throws GroupsException
 public void updateMembers() throws GroupsException
 {
     primUpdateMembers(false);
-}
-
-/**
- *
- */
-public void updateMembersAndRenewLock() throws GroupsException
-{
-    primUpdateMembers(true);
 }
 
 }
