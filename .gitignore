@@ -18,3 +18,8 @@ uportal-platform-api/target/
 **/node_modules/
 npm-debug.log
 **/.DS_Store
+**/.project
+**/.settings/
+**/.classpath
+
+					
