@@ -262,7 +262,7 @@ public class PortalGroups {
     			IGroupMember gm = GroupService.getGroupMember(ei);						
     		
     			// on recupere tous les groupes auxquels appartient l'utilisateur
-    			Iterator iter = gm.getContainingGroups();    			
+    			Iterator iter = gm.getParentGroups();  			
 
     	    	// le vecteur qui va contenir tous les groupes
     	    	Vector groups = new Vector();
@@ -321,7 +321,7 @@ public class PortalGroups {
     private void getRecurContainingGroups(IGroupMember igm, Vector allGroups, Vector v) throws GroupsException {				
 
     	// recupere les groupes contenant le groupe passe en parametre
-		Iterator iter = igm.getContainingGroups();
+		Iterator iter = igm.getParentGroups();
 		
 		// pour savoir combien on a d'elements, on recopie cette iteration dans un vecteur
 		Vector containingGroups = new Vector();
