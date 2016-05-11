@@ -487,7 +487,7 @@ public class UportalService {
 		List<IEntityGroup> containingGroups = new ArrayList<IEntityGroup>();
 		Iterator<IEntityGroup> containingGroupsIter;
 		try {
-			containingGroupsIter = group.getContainingGroups();
+			containingGroupsIter = group.getParentGroups();
 		} catch (GroupsException e) {
 			throw UportalServiceErrorException.error(e);
 		}
@@ -632,7 +632,7 @@ public class UportalService {
 	throws UportalServiceErrorException, UportalServiceUserNotFoundException {
 		Iterator<IGroupMember> groupIter;
 		try {
-			groupIter = getUportalUser(userId).getAllContainingGroups();
+			groupIter = getUportalUser(userId).getAncestorGroups();
 		} catch (GroupsException e) {
 			throw UportalServiceErrorException.error(e);
 		}
