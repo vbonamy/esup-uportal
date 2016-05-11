@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.jasig.portal.rest;
 
 import java.io.IOException;
@@ -38,12 +39,16 @@ import org.jasig.portal.EntityIdentifier;
 import org.jasig.portal.io.xml.IPortalDataHandlerService;
 import org.jasig.portal.io.xml.PortalDataKey;
 import org.jasig.portal.security.IAuthorizationPrincipal;
+import org.jasig.portal.security.IPermission;
 import org.jasig.portal.security.IPerson;
 import org.jasig.portal.security.IPersonManager;
 import org.jasig.portal.services.AuthorizationService;
 import org.jasig.portal.xml.StaxUtils;
 import org.jasig.portal.xml.XmlUtilities;
 import org.jasig.portal.xml.stream.BufferedXMLEventReader;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.XML;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,12 +65,8 @@ import org.springframework.web.multipart.MultipartFile;
 @Controller
 public class ImportExportController {
 
-	private static final String OWNER = "UP_SYSTEM";
-	private static final String EXPORT_PERMISSION = "EXPORT_ENTITY";
-	private static final String DELETE_PERMISSION = "DELETE_ENTITY";
-
     final Log log = LogFactory.getLog(getClass());
-    
+
     private IPersonManager personManager;
     private IPortalDataHandlerService portalDataHandlerService;
     private XmlUtilities xmlUtilities;
@@ -146,7 +147,7 @@ public class ImportExportController {
 		final EntityIdentifier ei = person.getEntityIdentifier();
 	    final IAuthorizationPrincipal ap = AuthorizationService.instance().newPrincipal(ei.getKey(), ei.getType());
 
-	    if (!ap.hasPermission(OWNER, DELETE_PERMISSION, entityType)) {
+	    if (!ap.hasPermission(IPermission.PORTAL_SYSTEM, IPermission.DELETE_ACTIVITY, entityType)) {
 	    	response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 	    	return;
 	    }
@@ -161,8 +162,9 @@ public class ImportExportController {
     public void exportEntity(@PathVariable("entityId") String entityId,
     		@PathVariable("entityType") String entityType,
     		@RequestParam(value="download", required=false) boolean download,
+    		@RequestParam(value="format", defaultValue="XML", required=false) String formatType,
             HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws IOException, JSONException {
     	
 		final IPerson person = personManager.getPerson(request);
 		final EntityIdentifier ei = person.getEntityIdentifier();
@@ -170,7 +172,7 @@ public class ImportExportController {
 
 	    // if the current user does not have permission to delete this database
 	    // object type, return a 401 error code
-	    if (!ap.hasPermission(OWNER, EXPORT_PERMISSION, entityType)) {
+	    if (!ap.hasPermission(IPermission.PORTAL_SYSTEM, IPermission.EXPORT_ACTIVITY, entityType)) {
 	    	response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 	    	return;
 	    }
@@ -178,12 +180,20 @@ public class ImportExportController {
 	    //Export the data into a string buffer
 	    final StringWriter exportBuffer = new StringWriter();
 	    final String fileName = portalDataHandlerService.exportData(entityType, entityId, new StreamResult(exportBuffer));
-        
-	    if (download) {
-	    	response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "." + entityType + ".xml\"");
-	    }
-	    
 	    final PrintWriter responseWriter = response.getWriter();
-	    responseWriter.print(exportBuffer.getBuffer());
+	    
+	    if (download) {
+          response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "." + entityType + "."+formatType.toLowerCase()+"\"");
+        }
+	    
+	    if("XML".equalsIgnoreCase(formatType)) {
+          responseWriter.print(exportBuffer.getBuffer());
+	    } else if("JSON".equalsIgnoreCase(formatType)) {
+          JSONObject json = XML.toJSONObject(exportBuffer.getBuffer().toString());
+          responseWriter.print(json);
+	    } else {
+	      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	      return;
+	    }
     }
 }

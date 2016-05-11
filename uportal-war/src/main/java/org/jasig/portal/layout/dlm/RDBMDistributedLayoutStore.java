@@ -111,11 +111,9 @@ import com.google.common.cache.Cache;
  * incorporated from layout fragments. Only a user's personal layout fragment
  * is
  *
- * @version $Revision$ $Date$
  * @since uPortal 2.5
  */
 public class RDBMDistributedLayoutStore extends RDBMUserLayoutStore {
-    public static final String RCS_ID = "@(#) $Header$";
 
     private static final Pattern VALID_PATHREF_PATTERN = Pattern.compile(".+\\:/.+");
     private static final String BAD_PATHREF_MESSAGE = "## DLM: ORPHANED DATA ##";
@@ -1329,7 +1327,7 @@ public class RDBMDistributedLayoutStore extends RDBMUserLayoutStore {
 
                 if (fragmentDefinition.isApplicable(person)) {
                     final UserView userView = activator.getUserView(fragmentDefinition, locale);
-                    if (userView != null) {
+                    if (userView != null && userView.layout != null) {
                         applicables.add(userView.layout);
                     }
                     fragmentNames.add(fragmentDefinition.getName());
@@ -1355,7 +1353,7 @@ public class RDBMDistributedLayoutStore extends RDBMUserLayoutStore {
             logger.debug("ILF for {} after MERGING\n{}", person.getAttribute(IPerson.USERNAME), XmlUtilitiesImpl.toString(ILF));
         }
         // push optimizations made during merge back into db.
-        if (result.changedPLF) {
+        if (result.isChangedPLF()) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Saving PLF for {} due to changes during merge.", person.getAttribute(IPerson.USERNAME));
             }

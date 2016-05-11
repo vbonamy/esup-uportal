@@ -31,8 +31,9 @@ maven.test.skip=true
 
 #==================== File and Directory Names ========================
 
-##### Replace server.home with the location of Tomcat 6 on your machine #####
-# path to tomcat binaries
+##### Replace server.home with the location of Tomcat 8 on your machine #####
+# path to root of tomcat installation; e.g. server.home=${env.CATALINA_HOME}
+server.home=@server.home@
 server.home=/opt/tomcat-esup-42
 
 # path to tomcat servlet container (defaults to same directory as the tomcat binaries)

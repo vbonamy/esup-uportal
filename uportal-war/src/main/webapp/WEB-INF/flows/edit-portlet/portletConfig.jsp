@@ -70,9 +70,9 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
 
             <!-- Portlet Messages -->
             <spring:hasBindErrors name="portlet">
-                <!--div class="portlet-msg-error portlet-msg error text-danger" role="alert">
+                <!-- div class="portlet-msg-error portlet-msg error text-danger" role="alert">
                 <form:errors path="*" element="div"/>
-                </div--> <!-- end: portlet-msg -->
+                </div --> <!-- end: portlet-msg -->
 
                 <div class="alert alert-danger" role="alert">
                     <form:errors path="*" element="div"/>
@@ -94,7 +94,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                         data-placement="top"></span>
                             </span>
                             <div class="col-sm-8">
-                                <form:input path="title" type="text" class="form-control" id="portletTitle"/>
+                                <form:input path="title" type="text" class="form-control" id="portletTitle" autocomplete="off" autocorrect="off"/>
                             </div>
                         </div>
                         <div class="form-group">
@@ -105,7 +105,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                             data-placement="top"></span>
                             </span>
                             <div class="col-sm-8">
-                                <form:input path="name" type="text" class="form-control" id="portletName"/>
+                                <form:input path="name" type="text" class="form-control" id="portletName" autcomplete="off" autocorrect="off"/>
                             </div>
                         </div>
                         <div class="form-group name-title-mismatch-warn" style="display: none">
@@ -123,7 +123,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                 data-placement="top"></span>
                             </span>
                             <div class="col-sm-8">
-                                <form:input path="fname" type="text" class="form-control" id="portletFname"/>
+                                <form:input path="fname" type="text" class="form-control" id="portletFname" autcomplete="off" autocorrect="off"/>
                             </div>
                         </div>
                         <div class="form-group">
@@ -134,7 +134,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                 data-placement="top"></span>
                             </span>
                             <div class="col-sm-8">
-                                <form:input path="description" type="text" class="form-control" id="portletDescription"/>
+                                <form:input path="description" type="text" class="form-control" id="portletDescription" autcomplete="off" autocorrect="off"/>
                             </div>
                         </div>
                     </div>
@@ -185,7 +185,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
         <!-- Portlet Content -->
         <div class="fl-widget-content content portlet-content" role="main">
 
-            <!-- Add a note to the page if the portle supports config mode  -->
+            <!-- Add a note to the page if the portlet supports config mode  -->
             <c:if test="${supportsConfig}">
                 <div class="portlet-msg-info portlet-msg info" role="alert">
                     <p class="text-info">
@@ -274,7 +274,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                         <!-- Portlet Display Settings -->
                                         <c:if test="${ fn:length(step.parameters) > 0 }">
                                             <div class="portlet-table">
-                                                <table class=" table table-hover" summary="<spring:message code="this.table.lists.portlet.parameters"/>">
+                                                <table class=" table table-hover" summary="<spring:message code='this.table.lists.portlet.parameters'/>">
                                                     <thead>
                                                         <tr>
                                                             <th width="30%"><spring:message code="parameter"/></th>
@@ -290,7 +290,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                                                 </c:when>
                                                                 <c:otherwise>
                                                                     <tr>
-                                                                        <td class="text-right"><span class="uportal-label">
+                                                                        <td class="text-right">
                                                                             <div class="control-label">
                                                                                 <spring:message code="${parameter.label}"/>
                                                                                 <c:if test="${not empty parameter.description}">
@@ -315,7 +315,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                         <c:if test="${ portlet.portlet }">
                                             <c:if test="${ fn:length(step.preferences) > 0 }">
                                                 <div class="preference-options-section">
-                                                    <table class="portlet-table table table-hover" summary="<spring:message code="this.table.lists.portlet.parameters"/>">
+                                                    <table class="portlet-table table table-hover" summary="<spring:message code='this.table.lists.portlet.parameters'/>">
                                                         <thead>
                                                             <tr>
                                                                 <th width="40%"><spring:message code="parameter"/></th>
@@ -418,47 +418,97 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
         </div> <!-- end: portlet-content -->
     </div> <!-- end: portlet -->
 
-    <!-- Portlet config groups and categories -->
-    <div id="${n}PortletGroupsCategories" class="fl-widget portlet ptl-mgr view-groups-cats" role="section">
+    <!-- Portlet config Permissions and categories -->
+    <div id="${n}PortletPrincipalsCategories" class="fl-widget portlet ptl-mgr view-principals-cats" role="section">
         <!-- Portlet Content -->
         <div class="fl-widget-content content portlet-content" role="main">
             <!-- Portlet Section -->
             <div class="portlet-section" role="region">
                 <div class="titlebar">
                     <h3 class="title" role="heading">
-                        <spring:message code="groups.and.categories" text="Groups and Categories"/>
+                        <spring:message code="principals.and.categories" text="Principals and Categories"/>
                     </h3>
                 </div>
                 <div class="content row">
 
-                    <!-- Portlet groups -->
+                    <!-- Portlet principals -->
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label h3"><spring:message code="groups"/></label>
-                            <div class="col-sm-offset-4">
-                                <button type="submit" class="button btn btn-primary" name="_eventId_chooseGroup"><spring:message code="edit.groups"/>&nbsp;&nbsp;<i class="fa fa-users"></i></button>
-                            </div>
-                            <div class="col-sm-offset-4">
-                                <ul class="config-list">
-                                    <c:forEach items="${ portlet.groups }" var="group">
-                                        <li><a href="${ chooseGroupUrl }">${ fn:escapeXml(group.name )}</a></li>
-                                    </c:forEach>
-                                </ul>
+                            <label class="col-sm-3 control-label h4"><spring:message code="principals"/></label>
+                            <div class="col-sm-9">
+                                <button type="submit" class="button btn btn-primary" name="_eventId_choosePrincipal"><spring:message code="edit.principals"/>&nbsp;&nbsp;<i class="fa fa-users"></i></button>
+                                <c:if test="${empty portlet.principals}">
+                                    <p class="text-warning">You should specify a principal or no one will be able to view the portlet</p>
+                                </c:if>
+                                    <table class="table table-condensed permissions-options-table">
+                                        <thead>
+                                            <tr>
+                                                <td class="col-sm-6"></td>
+                                                <td class="col-sm-3 text-nowrap">
+                                                    <spring:message code="edit.browse"/>
+                                                    <a href="javascript:;" data-toggle="tooltip" data-placement="top" title="<spring:message code='edit.browse.tooltip'/>">
+                                                        <i class="fa fa-info-circle"></i>
+                                                    </a>
+                                                </td>
+                                                <td class="col-sm-3 text-nowrap">
+                                                    <spring:message code="edit.subscribe"/>
+                                                    <a href="javascript:;" data-toggle="tooltip" data-placement="top" title="<spring:message code='edit.subscribe.tooltip'/>">
+                                                        <i class="fa fa-info-circle"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach items="${ portlet.principals }" var="principal">
+                                                <c:set var="principal_name" value="${fn:escapeXml(principal.name)}" />
+                                                <c:set var="principal_browse_perm" value="${principal.typeAndIdHash}_BROWSE" />
+                                                <c:set var="principal_subscribe_perm" value="${principal.typeAndIdHash}_SUBSCRIBE" />
+                                                <tr>
+                                                    <td><i class="fa fa-users"></i> ${principal_name}</td>
+                                                    <c:choose>
+                                                      <c:when test="${portlet.permissions.contains(principal_browse_perm) || !portlet.permissions.contains(principal_subscribe_perm)}">
+                                                        <td class=text-center><input type="checkbox" name="${principal_browse_perm}" checked></td>
+                                                      </c:when>
+                                                      <c:otherwise>
+                                                        <td class=text-center><input type="checkbox" name="${principal_browse_perm}"></td>
+                                                      </c:otherwise>
+                                                    </c:choose>
+                                                    <c:choose>
+                                                      <c:when test="${portlet.permissions.contains(principal_subscribe_perm) || !portlet.permissions.contains(principal_browse_perm)}">
+                                                        <td class=text-center><input type="checkbox" name="${principal_subscribe_perm}" checked></td>
+                                                      </c:when>
+                                                      <c:otherwise>
+                                                        <td class=text-center><input type="checkbox" name="${principal_subscribe_perm}"></td>
+                                                      </c:otherwise>
+                                                    </c:choose>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
                             </div>
                         </div>
-                    </div> <!-- end: portlet groups -->
+                    </div> <!-- end: portlet principals -->
 
                     <!-- Portlet categories -->
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label h3"><spring:message code="categories"/></label>
-                            <div class="col-sm-offset-4">
+                            <label class="col-sm-3 control-label h4"><spring:message code="categories"/></label>
+                            <div class="col-sm-9">
                                 <button type="submit" class="button btn btn-primary" name="_eventId_chooseCategory"><spring:message code="edit.categories"/>&nbsp;&nbsp;<i class="fa fa-folder-open"></i></button>
-                            </div>
-                            <div class="col-sm-offset-4">
+                                <%-- If there are no categories selected and there are no lifecycle states, the
+                                     user does not have the Manage ALL_CATEGORIES permission so they must specify a
+                                     category to get a set of lifecycle states.  Give them a friendly message to
+                                     help them understand this. For a tenant admin, this also helps insure they can
+                                     access this portlet later because it must be in one of the tenant categories
+                                     since they don't have the ALL_PORTLETS permission. --%>
+                                <c:if test="${empty portlet.categories && empty lifecycleStates}">
+                                    <p class="text-warning">You must specify a category to be able to save</p>
+                                </c:if>
                                 <ul class="config-list">
                                     <c:forEach items="${ portlet.categories }" var="category">
-                                        <li><a href="${ chooseCategoryUrl }">${ fn:escapeXml(category.name )}</a></li>
+                                        <li>
+                                            <i class="fa fa-folder-open"></i> ${fn:escapeXml(category.name )}
+                                        </li>
                                     </c:forEach>
                                 </ul>
                             </div>
@@ -466,7 +516,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                     </div> <!-- end: portlet categories -->
                 </div>
             </div>
-        </div> <!-- end: portlet config groups and categories -->
+        </div> <!-- end: portlet config principals and categories -->
     </div>
 
     <!-- Portlet Lifecycle -->
@@ -515,7 +565,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                 <div class="content">
 
                     <table class="portlet-table table table-hover"
-                           summary="<spring:message code="publish.and.expiration.dates"/>">
+                           summary="<spring:message code='publish.and.expiration.dates'/>">
                         <thead>
                         <tr>
                             <th><spring:message code="option"/></th>
@@ -539,8 +589,8 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                        </c:forEach>
                                     </form:select>
                                      <form:select path="publishAmPm">
-                                         <form:option value="0" label="${am}"/>
-                                         <form:option value="1" label="${pm}"/>
+                                         <form:option value="0" label="${ amLabel }"/>
+                                         <form:option value="1" label="${ pmLabel }"/>
                                      </form:select>
                              (<a class="clear-date" href="javascript:;"><spring:message code="reset"/></a>)
                          </span>
@@ -561,7 +611,7 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                 <div class="content">
 
                     <table class="portlet-table table table-hover"
-                           summary="<spring:message code="publish.and.expiration.dates"/>">
+                           summary="<spring:message code='publish.and.expiration.dates'/>">
                         <thead>
                             <tr>
                                 <th><spring:message code="option"/></th>
@@ -586,8 +636,8 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                                             </c:forEach>
                                         </form:select>
                                         <form:select path="expirationAmPm">
-                                            <form:option value="0" label="${am}"/>
-                                            <form:option value="1" label="${pm}"/>
+                                            <form:option value="0" label="${ amLabel }"/>
+                                            <form:option value="1" label="${ pmLabel }"/>
                                         </form:select>
                                         (<a class="clear-date" href="javascript:;"><spring:message code="reset"/></a>)
                                     </span>
@@ -601,15 +651,15 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
             <!-- Buttons -->
             <div class="buttons">
                 <c:if test="${supportsConfig}">
-                    <input class="button btn btn-primary" type="submit" value="<spring:message code="save.and.configure"/>" name="_eventId_saveAndConfig"/>
+                    <input class="button btn btn-primary" type="submit" value="<spring:message code='save.and.configure'/>" name="_eventId_saveAndConfig"/>
                 </c:if>
-                <input class="button btn btn-primary" type="submit" value="<spring:message code="save"/>"name="_eventId_save">
+                <input class="button btn btn-primary" type="submit" value="<spring:message code='save'/>" name="_eventId_save"/>
                 <c:choose>
                     <c:when test="${completed}">
-                        <input class="button btn btn-link" type="submit" value="<spring:message code="cancel"/>" name="_eventId_cancel"/>
+                        <input class="button btn btn-link" type="submit" value="<spring:message code='cancel'/>" name="_eventId_cancel"/>
                     </c:when>
                     <c:otherwise>
-                        <input class="button btn" type="submit" value="<spring:message code="back"/>" name="_eventId_back"/>
+                        <input class="button btn" type="submit" value="<spring:message code='back'/>" name="_eventId_back"/>
                     </c:otherwise>
                 </c:choose>
             </div><!-- end: Portlet Buttons -->
@@ -620,13 +670,13 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
 
 <div style="display:none">
     <div id="${n}addParameterDialog" class="parameter-adding-dialog jqueryui"
-         title="<spring:message code="add.preference"/>">
+         title="<spring:message code='add.preference'/>">
         <div>
             <form id="${n}addParameterForm" action="javascript:;">
                 <p><spring:message code="preference.name"/>:
                     <input name="name"/>
                 </p>
-                <input type="submit" value="<spring:message code="add"/>"/>
+                <input type="submit" value="<spring:message code='add'/>"/>
             </form>
         </div>
     </div>
@@ -864,6 +914,13 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                     }
                 });
             });
+
+            <c:if test="${empty lifecycleStates}">
+                // If there are no lifecycle states showing, which can happen for a tenant administrator
+                // before they select a category, disable the Save and Configure and Save buttons.
+                $('#${n} input[name="_eventId_saveAndConfig"]').prop('disabled',true);
+                $('#${n} input[name="_eventId_save"]').prop('disabled',true);
+            </c:if>
         });
     });
 
@@ -887,6 +944,8 @@ PORTLET DEVELOPMENT STANDARDS AND GUIDELINES
                 updateOptionalInputs();
             });
             updateOptionalInputs();
+
+            $('[data-toggle="tooltip"]').tooltip();
         });
 
         function toggleChevron(e) {

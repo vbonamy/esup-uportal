@@ -83,12 +83,12 @@
     </parameter>
     <parameter>
         <name>mobileIconUrl</name>
-        <value>/uPortal/media/skins/icons/mobile/directory.png</value>
+        <value>/uPortal/media/skins/icons/mobile/email.png</value>
     </parameter>
     <portlet-preference>
         <name>protocol</name>
         <readOnly>true</readOnly>
-        <value>IMAPS</value>
+        <value>imaps</value>
     </portlet-preference>
     <portlet-preference>
         <name>host</name>

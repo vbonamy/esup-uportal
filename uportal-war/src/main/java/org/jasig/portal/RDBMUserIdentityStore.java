@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
@@ -78,6 +79,9 @@ public class RDBMUserIdentityStore  implements IUserIdentityStore {
 
     private static final Log log = LogFactory.getLog(RDBMUserIdentityStore.class);
     private static final String PROFILE_TABLE = "UP_USER_PROFILE";
+
+    public static final String USERNAME_VALIDATOR_REGEX = "^[^\\s]{1,100}$";
+    private static final Pattern USERNAME_VALIDATOR_PATTERN = Pattern.compile(USERNAME_VALIDATOR_REGEX);
 
     //*********************************************************************
     // Constants
@@ -288,6 +292,17 @@ public class RDBMUserIdentityStore  implements IUserIdentityStore {
         return DataAccessUtils.singleResult(results);
     }
 
+    @Override
+    public boolean validateUsername(final String username) {
+        /*
+         * The rules, so far...
+         *   - Must not be blank
+         *   - Must not contain spaces
+         *   - Must not exceed 100 characters (current DB column size)
+         */
+        return USERNAME_VALIDATOR_PATTERN.matcher(username).matches();
+    }
+
     private static final String IS_DEFAULT_USER_QUERY =
             "SELECT count(*)\n" +
                     "FROM up_user upuA\n" +
@@ -348,6 +363,8 @@ public class RDBMUserIdentityStore  implements IUserIdentityStore {
                 //If this is a new user and we can't create them
                 throw new AuthorizationException("No portal information exists for user " + userName);
             }
+        } catch (AuthorizationException e) {
+            throw e;
 
         } catch (Exception e) {
             final String msg = "Failed to obtain a portal user Id for the specified person:  " + person;
@@ -581,7 +598,7 @@ public class RDBMUserIdentityStore  implements IUserIdentityStore {
     protected void updateUser(final int userId, final IPerson person, final TemplateUser templateUser) throws Exception {
         // Remove my existing group memberships
         IGroupMember me = GroupService.getGroupMember(person.getEntityIdentifier());
-        Iterator myExistingGroups = me.getContainingGroups();
+        Iterator myExistingGroups = me.getParentGroups();
         while (myExistingGroups.hasNext()) {
             IEntityGroup eg = (IEntityGroup)myExistingGroups.next();
             ILockableEntityGroup leg = getSafeLockableGroup(eg, me);
@@ -592,7 +609,7 @@ public class RDBMUserIdentityStore  implements IUserIdentityStore {
 
         // Copy template user's groups memberships
         IGroupMember template = GroupService.getEntity(templateUser.getUserName(), org.jasig.portal.security.IPerson.class);
-        Iterator templateGroups = template.getContainingGroups();
+        Iterator templateGroups = template.getParentGroups();
         while (templateGroups.hasNext()) {
             IEntityGroup eg = (IEntityGroup)templateGroups.next();
             ILockableEntityGroup leg = getSafeLockableGroup(eg, me);
@@ -713,7 +730,7 @@ public class RDBMUserIdentityStore  implements IUserIdentityStore {
         // Copy template user's groups memberships
         IGroupMember me = GroupService.getGroupMember(person.getEntityIdentifier());
         IGroupMember template = GroupService.getEntity(templateUser.getUserName(), Class.forName("org.jasig.portal.security.IPerson"));
-        Iterator templateGroups = template.getContainingGroups();
+        Iterator templateGroups = template.getParentGroups();
         while (templateGroups.hasNext()) {
             IEntityGroup eg = (IEntityGroup)templateGroups.next();
             ILockableEntityGroup leg = getSafeLockableGroup(eg, me);

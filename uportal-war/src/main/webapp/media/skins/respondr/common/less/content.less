@@ -19,9 +19,25 @@
 
 @portletWrapperBorderRadius: 5px;
 
+body {
+    overflow-x: hidden; /* Prevent scroll on narrow devices */
+    background-color: @offcanvas-background-color;
+    background-image:none !important;
+}
+
 #portalPageBody {
     background-color: @content-background-color;
     min-height: 300px;
+
+    .portal-page-column {
+        .portal-page-column-inner {
+            min-height: 100px;
+
+            section {
+                margin-bottom: 20px;
+            }
+        }
+    }
 }
 
 /** Page Message for returned action messages */
@@ -57,26 +73,8 @@
     padding: 10px;
 }
 
-/*
-.portlet .view-multi-select .portlet-search {
-    top: 15px;
-}
-
-.portlet .view-multi-select .portlet-selection {
-    margin-top: 0;
-}
-*/
-
-.portlet-header {
-
-}
-
 .portlet-title {
     .border-radiuses-top(5px);
-
-    .btn-group {
-
-    }
 }
 
 .portlet-content {
@@ -119,7 +117,7 @@ section h4 {
     margin: 10px 0;
 }
 
-.up-portlet-titlebar {
+.up-portlet-titlebar.up-standard-chrome {
     background-color: @portlet-titlebar-background-color; /* Old browsers */
     background-color: @portlet-titlebar-background-color;
     #gradient > .vertical(lighten(@portlet-titlebar-background-color, 5%), darken(@portlet-titlebar-background-color, 10%), 0%, 100%);
@@ -142,15 +140,14 @@ section h4 {
         }
     }
 
-    .btn-group {
+    .portlet-controls {
         position: absolute;
-        top: 2px;
+        top: 0;
         right: 0;
         margin: 0;
 
-        > a {
+        .portlet-options-menu > a {
             color: @portlet-options-link-color;
-            font-size: 11px;
             font-weight: normal;
             .caret {
                 border-top-color: @portlet-options-link-color;
@@ -162,6 +159,14 @@ section h4 {
                     border-top-color: @portlet-options-link-hover-color;
                 }
             }
+        }
+
+        .grab-handle {
+            display: inline-block;
+            position: relative;
+            top: 3px;
+            font-size: 18px;
+            margin-left: 3px;
         }
     }
 }
@@ -232,6 +237,7 @@ section.emergency-alert {
 }
 
     #config-lightbox .modal-dialog {
+        position: initial;
         width: auto;
         max-width: 1000px;
         min-width: 600px;
@@ -274,7 +280,7 @@ section.emergency-alert {
     }
 }
 
-// large screens show all 6 columns.
+/* large screens show all 6 columns. */
 @media only screen and (min-width: 769px) {
     .portal-page-column.col-md-2 {
         width: 16.6666667%;
@@ -284,7 +290,7 @@ section.emergency-alert {
 
 
 @media only screen and (max-width: 769px) {
-    // collapse from 6 to 3 columns
+    /* collapse from 6 to 3 columns */
     .portal-page-column.col-md-2 {
         width: 33.3%;
         float: left;
@@ -292,7 +298,7 @@ section.emergency-alert {
 }
 
 @media only screen and (max-width: 600px) {
-    // collapse from 6 to 2 columns
+    /* collapse from 6 to 2 columns */
     .portal-page-column.col-md-2 {
         width: 50%;
         float: left;
@@ -300,9 +306,8 @@ section.emergency-alert {
 }
 
 @media only screen and (max-width: 240px) {
-    // on really small screen collapse to a single column
+    /* on really small screen collapse to a single column */
     .portal-page-column.col-md-2 {
         width: 100%;
     }
 }
-

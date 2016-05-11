@@ -23,13 +23,36 @@
 
     a {
         color: @header-link-color;
+        text-decoration: none;
     }
+
+    .menu-toggle {
+        margin: 2px 0 2px 12px;
+        padding: 0.25rem 1rem;
+        background: @menu-toggle-background-color;
+        border: 1px solid @menu-toggle-border-color;
+        color: @menu-toggle-text-color;
+        .border-radius;
+
+        &:hover, &:focus {
+            background: @menu-toggle-hover-background-color;
+            color: @menu-toggle-hover-text-color;
+            border: 1px solid @menu-toggle-hover-border-color;
+        }
+
+        i {
+            padding-right: 0.35em;
+        }
+    }
+
+    .portal-header-main {
+        /* Need a bit off padding because the eyebrow will float on top */
+        padding-top: 24px;
+    }
+
     .portal-nav {
         .container {
             padding: 0;
-        }
-        .menu-toggle {
-            top: 50px;
         }
     }
 }
@@ -68,7 +91,7 @@ h1.portal-logo a:hover {
 }
 
 #webSearchContainer {
-    margin: 12px 0 20px 0;
+    margin: 12px 0 8px 0;
 }
 
 #webSearchSubmit {
@@ -86,25 +109,28 @@ h1.portal-logo a:hover {
  */
 
 @media only screen and (min-width: 769px) {
-     .portal-header {
-         .container {
-             padding: 0;
+    .portal-header {
 
-             .portal-user {
+        .container {
+            padding: 0;
+
+            .portal-user {
                 a {
                     margin-left: 10px;
                 }
                 .notification-icon {
                     margin-right: 10px;
-                    a {
-                        text-decoration: none;
-                    }
                 }
-             }
-         }
+            }
+        }
 
         #webSearchContainer {
-            margin-top: 24px;
+            margin-top: 48px;
+        }
+
+        .portal-header-main {
+            /* Undo padding from above */
+            padding-top: 0;
         }
 
     }

@@ -39,7 +39,7 @@ import java.util.Map;
 public class SimpleStringTargetProviderImpl implements IPermissionTargetProvider, Serializable {
     private static final long serialVersionUID = 1L;
 
-    public Map<String, IPermissionTarget> targetMap = new HashMap<String, IPermissionTarget>();
+    private Map<String, IPermissionTarget> targetMap = new HashMap<String, IPermissionTarget>();
 
     /**
      * Add a permission target to this target provider.

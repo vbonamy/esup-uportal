@@ -118,7 +118,19 @@
   <logger name="org.jasig.portal.events.tincan.providers.LogEventTinCanAPIProvider" additivity="false" level="DEBUG">
     <appender-ref ref="TINCAN"/>
   </logger>
-  
+ 
+  <!-- Debug CAS Clearpass
+  <logger name="org.jasig.portal.security.provider.cas" additivity="false" level="TRACE">
+    <appender-ref ref="PORTAL"/>
+  </logger>
+  <logger name="org.jasig.cas.client" additivity="false" level="TRACE">
+    <appender-ref ref="PORTAL"/>
+  </logger>
+  <logger name="org.jasig.portal.portlet.container.services" additivity="false" level="DEBUG">
+    <appender-ref ref="PORTAL"/>
+  </logger>
+  -->
+
   <!-- Uncomment to monitor jGroups clustering
   <logger name="net.sf.ehcache.distribution" additivity="false" level="TRACE">
     <appender-ref ref="JG"/>
@@ -166,7 +178,11 @@
     <appender-ref ref="PORTAL"/>
   </logger>
   -->
-  
+
+  <!-- Hide some useful Hibernate performance statistics that clutter the logs in dev.  Enable this to review
+       DB connection, flush, and cache times, # of objects flushed, etc. -->
+  <logger name="org.hibernate.engine.internal.StatisticalLoggingSessionEventListener" additivity="false" level="WARN"/>
+
   <!-- Hide some bad Hibernate log messages -->
   <logger name="org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader" additivity="false" level="ERROR"/>
   <logger name="org.hibernate.ejb.metamodel.MetadataContext" additivity="false" level="FATAL"/>

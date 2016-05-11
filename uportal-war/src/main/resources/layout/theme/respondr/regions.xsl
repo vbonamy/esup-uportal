@@ -106,11 +106,30 @@
      | This template renders portlets in the top-right greeting area.
     -->
     <xsl:template name="region.pre-header">
-        <xsl:if test="//region[@name='pre-header']/channel">
+        <xsl:if test="//region[@name='page-top']/channel">
             <div id="region-pre-header" class="portal-user">
                 <xsl:for-each select="//region[@name='pre-header']/channel">
                     <xsl:call-template name="regions.portlet.decorator" />
                 </xsl:for-each>
+            </div>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ========== TEMPLATE: HEADER-TOP ========== -->
+    <!-- ============================================= -->
+    <!--
+     | This template renders portlets at the bottom of the header area.
+    -->
+    <xsl:template name="region.header-top">
+        <xsl:if test="//region[@name='header-top']/channel">
+            <div id="region-header-top" class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <xsl:for-each select="//region[@name='header-top']/channel">
+                            <xsl:call-template name="regions.portlet.decorator" />
+                        </xsl:for-each>
+                    </div>
+                </div>
             </div>
         </xsl:if>
     </xsl:template>
@@ -124,14 +143,14 @@
     <xsl:template name="region.header-left">
         <xsl:choose>
             <xsl:when test="//region[@name='header-left']/channel">
-                <div id="region-header-left" class="col-sm-8 text-left">
+                <div id="region-header-left" class="col-sm-6 col-md-8 text-left">
                     <xsl:for-each select="//region[@name='header-left']/channel">
                         <xsl:call-template name="regions.portlet.decorator" />
                     </xsl:for-each>
                 </div>
             </xsl:when>
             <xsl:otherwise>
-                <div id="empty-region-header-left" class="col-sm-8 text-left"></div>
+                <div id="empty-region-header-left" class="col-sm-6 col-md-8 text-left"></div>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
@@ -145,14 +164,14 @@
     <xsl:template name="region.header-right">
         <xsl:choose>
             <xsl:when test="//region[@name='header-right']/channel">
-                <div id="region-header-right" class="col-sm-4 text-right">
+                <div id="region-header-right" class="col-sm-6 col-md-4 text-right">
                     <xsl:for-each select="//region[@name='header-right']/channel">
                         <xsl:call-template name="regions.portlet.decorator" />
                     </xsl:for-each>
                 </div>
             </xsl:when>
             <xsl:otherwise>
-                <div id="empty-region-header-right" class="col-sm-4 text-right"></div>
+                <div id="empty-region-header-right" class="col-sm-6 col-md-4 text-right"></div>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>

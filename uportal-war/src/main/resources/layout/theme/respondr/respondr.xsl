@@ -185,8 +185,18 @@
 <xsl:param name="EXTERNAL_LOGIN_URL"></xsl:param>
 <xsl:variable name="IS_FRAGMENT_ADMIN_MODE">
   <xsl:choose>
+    <!-- This is a strange thing to test;  is there no signal sent from the structure transform? -->
     <xsl:when test="//channel[@fname = 'fragment-admin-exit']">true</xsl:when>
     <xsl:otherwise>false</xsl:otherwise>
+  </xsl:choose>
+</xsl:variable>
+<!-- In the case of DLM fragment owners, this CSS class will be applied to
+     columns and portlets;  it tells the UI to permit the fragment owner to
+     manage content, even when it it locked. -->
+<xsl:variable name="FRAGMENT_OWNER_CSS">
+  <xsl:choose>
+    <xsl:when test="$IS_FRAGMENT_ADMIN_MODE='true'">up-fragment-admin</xsl:when>
+    <xsl:otherwise></xsl:otherwise>
   </xsl:choose>
 </xsl:variable>
 <xsl:param name="USE_AJAX" select="'true'"/>
@@ -269,14 +279,23 @@
     };
     up.Backbone = Backbone.noConflict();
 
+    // fix console.log in IE8,9.  Though we don't commit to supporting these IE versions, this minor fix allows
+    // these browsers to work better.
+    if (!window.console) window.console = {};
+    if (!window.console.log) window.console.log = function() {};
+    if (!window.console.trace) window.console.trace = function() {};
+
     (function($) {
       $(function() {
         var navMenuToggle = function() {
-          var menu = $(".portal-nav .menu"), menuToggle = $(".portal-nav .menu-toggle");
+          var menu = $(".portal-nav .menu"), menuToggle = $("#up-sticky-nav .menu-toggle");
           // Toggle the menu visibility when the button is clicked.
           menuToggle.click(function() {
             //alert("Handler for .click() called.");
             menu.toggleClass("show");
+            $('html, body').animate({
+                    scrollTop: 0
+               });
             return false;
           });
           // Console for debugging.
@@ -285,7 +304,15 @@
 
         navMenuToggle();
       });
-
+      
+      up.jQuery(document).ready(function () {
+           var $ = up.jQuery;
+           // Toggle the off-canvas menu when the button is clicked.
+           $('[data-toggle="offcanvas"]').click(function () {
+                $('.row-offcanvas').toggleClass('active');
+           });
+      });
+      
       $(document).ready(function() {
           if (up.lightboxConfig) {
             up.lightboxConfig.init();
@@ -297,6 +324,19 @@
           // If portlet chrome is configured to not show (shows on hover) and the portlet is not movable, the portlet chrome
           // is hidden.  However if there are option items to display, allow the portlet chrome to show on hover.
           $('div.hover-toolbar').filter('.hidden').has('li').removeClass('hidden');
+
+          // Attach behavior to the Move Portlet options menu
+          $('.portlet-options-menu .up-portlet-control.move').click(function() {
+             // If Move Portlet, unhide the grab handle and change the menu text
+             if ($(this).text() === $(this).attr('data-move-text')) {
+                $(this).parents('.up-portlet-titlebar').find('.grab-handle').removeClass('hidden');
+                $(this).text($(this).attr('data-cancel-move-text'));
+             } else {
+                // Else cancel the move by hiding the grab handle and reverting the text
+                $(this).parents('.up-portlet-titlebar').find('.grab-handle').addClass('hidden');
+                $(this).text($(this).attr('data-move-text'));
+             }
+          })
       });
 
     })(up.jQuery);
@@ -539,6 +579,7 @@
                 messages: {
                     confirmRemoveTab: '<xsl:value-of select="upMsg:getMessage('are.you.sure.remove.tab', $USER_LANG)"/>',
                     confirmRemovePortlet: '<xsl:value-of select="upMsg:getMessage('are.you.sure.remove.portlet', $USER_LANG)"/>',
+                    movePortletError: '<xsl:value-of select="upMsg:getMessage('move.this.portlet.error', $USER_LANG)"/>',
                     addTabLabel: '<xsl:value-of select="upMsg:getMessage('my.tab', $USER_LANG)"/>',
                     column: '<xsl:value-of select="upMsg:getMessage('column', $USER_LANG)"/>',
                     columns: '<xsl:value-of select="upMsg:getMessage('columns', $USER_LANG)"/>',
@@ -567,11 +608,11 @@
 
 
 <!-- ================================================================================ -->
-<!-- ========== TEMPLATE: PAGE DIALOGS DASHBOARD ==================================== -->
+<!-- ========== TEMPLATE: PAGE DIALOGS FOCUSED   ==================================== -->
 <!-- ================================================================================ -->
 <!-- 
  | YELLOW
- | This template renders dialog windows for "dashboard" (non-focused) mode in the portal.
+ | This template renders dialog windows for focused mode on a portlet user has BROWSE to.
  -->
 <xsl:template name="page.dialogs.useit">
 
@@ -658,17 +699,29 @@
             </xsl:for-each>
             -->
             <chunk-point/> <!-- Performance Optimization, see ChunkPointPlaceholderEventSource -->
+            <!-- For IE 8 support per http://getbootstrap.com/getting-started/#support. The user will see a
+                 'flicker' on the interface because of the time delay from the start of this script to when all
+                 CSS files present get re-loaded after being processed by this script, but that's OK since we
+                 aren't committing to support IE8 and this minor change makes IE8 work better. -->
+            <script src="/uPortal/scripts/respond-1.4.2.min.js" type="text/javascript"></script>
         </head>
         <body class="up dashboard portal fl-theme-mist">
+          <div class="row-offcanvas row-offcanvas-left">
             <div id="up-notification"></div>
             <div id="wrapper">
                 <xsl:call-template name="region.hidden-top" />
                 <xsl:call-template name="region.page-top" />
                 <header class="portal-header" role="banner">
-                    <div class="container-fluid">
+                    <div id="up-sticky-nav" class="container-fluid">
                         <div class="portal-global row">
+                            <a href="javascript:;" class="menu-toggle pull-left visible-xs" data-toggle="offcanvas">
+                                <i class="fa fa-align-justify"></i> <xsl:value-of select="upMsg:getMessage('menu', $USER_LANG)"/>
+                            </a>
                             <xsl:call-template name="region.pre-header" />
                         </div>
+                    </div>
+                    <xsl:call-template name="region.header-top" />
+                    <div class="container-fluid portal-header-main">
                         <chunk-point/> <!-- Performance Optimization, see ChunkPointPlaceholderEventSource -->
                         <div class="row">
                             <xsl:call-template name="region.header-left" />
@@ -757,6 +810,7 @@
                 up.analytics.portletData = <portlet-analytics-data/>;
                 up.analytics.pageData = <page-analytics-data/>;
             </script>
+          </div>
         </body>
     </html>
 </xsl:template>
@@ -785,6 +839,11 @@
         <xsl:for-each select="//header/descendant::channel-header">
             <xsl:copy-of select="."/>
         </xsl:for-each>
+        <!-- For IE 8 support per http://getbootstrap.com/getting-started/#support. The user will see a
+             'flicker' on the interface because of the time delay from the start of this script to when all
+             CSS files present get re-loaded after being processed by this script, but that's OK since we
+             aren't committing to support IE8 and this minor change makes IE8 work better. -->
+        <script src="/uPortal/scripts/respond-1.4.2.min.js" type="text/javascript"></script>
     </head>
     <body class="up dashboard portal fl-theme-mist detachedHeader">
         <div id="wrapper">
@@ -797,7 +856,7 @@
                                     <div class="container-fluid">
                                         <div class="portal-user">
                                             <div class="navbar-header">
-                                                <a href="/uPortal" title="{upMsg:getMessage('return.to.dashboard.view', $USER_LANG)}" class="up-portlet-control hide-content pull-left fa fa-home portal-return-to-dashboard"></a>
+                                                <a href="javascript:window.location = document.referrer || '/uPortal';" title="{upMsg:getMessage('return.to.dashboard.view', $USER_LANG)}" class="up-portlet-control hide-content pull-left fa fa-home portal-return-to-dashboard"></a>
                                             </div>
                                             <div class="navbar-collapse collapse">
                                                 <xsl:choose>
@@ -829,7 +888,6 @@
                             <div class="row">
                                 <div id="portalPageBodyMessage" class="col-md-12"></div>
                             </div>
-                            
                         </div>
                         <chunk-point/> <!-- Performance Optimization, see ChunkPointPlaceholderEventSource -->
                         <xsl:copy-of select="/layout_fragment/content"/>

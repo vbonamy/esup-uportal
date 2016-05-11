@@ -20,6 +20,7 @@ package org.jasig.portal.groups;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -41,7 +42,6 @@ import org.slf4j.LoggerFactory;
  * Reference individual, or leaf, group service.
  *
  * @author Dan Ellentuck
- * @version $Revision$
  */
 public class ReferenceIndividualGroupService extends ReferenceCompositeGroupService
 implements IIndividualGroupService, ILockableGroupService
@@ -106,7 +106,7 @@ public void deleteGroup(IEntityGroup group) throws GroupsException
  * fail anyway.
  * @param group ILockableEntityGroup
  */
-private void removeDeletedGroupFromContainingGroups(ILockableEntityGroup group)
+private void removeDeletedGroupFromParentGroups(ILockableEntityGroup group)
 throws GroupsException
 {
     Iterator itr;
@@ -117,7 +117,7 @@ throws GroupsException
     try
     {
         String lockOwner = group.getLock().getLockOwner();
-        for ( itr=group.getContainingGroups(); itr.hasNext(); )
+        for ( itr=group.getParentGroups(); itr.hasNext(); )
         {
             containingGroup = (IEntityGroup) itr.next();
             lockableGroup=
@@ -148,7 +148,7 @@ throws GroupsException
             catch (LockingException le)
             {
                 log.error(
-                    "ReferenceIndividualGroupService.removeDeletedGroupFromContainingGroups(): " +
+                    "ReferenceIndividualGroupService.removeDeletedGroupFromParentGroups(): " +
                     "Problem unlocking parent group", le);
             }
         }
@@ -167,7 +167,7 @@ public void deleteGroup(ILockableEntityGroup group) throws GroupsException
     {
         if ( group.getLock().isValid() )
         {
-            removeDeletedGroupFromContainingGroups(group);
+            removeDeletedGroupFromParentGroups(group);
             deleteGroup( (IEntityGroup)group );
         }
         else
@@ -194,17 +194,18 @@ public void deleteGroup(ILockableEntityGroup group) throws GroupsException
     }
     return (EntityIdentifier[]) ar.toArray(new EntityIdentifier[0]);
   }
-  
+
 /**
  * Returns and caches the containing groups for the <code>IGroupMember</code>
  * @param gm IGroupMember
  */
-public Iterator findContainingGroups(IGroupMember gm) throws GroupsException
+@Override
+public Iterator findParentGroups(IGroupMember gm) throws GroupsException
 {
     log.debug("Finding containing groups for member {}", gm.getKey());
     Collection groups = new ArrayList(10);
     IEntityGroup group = null;
-    for ( Iterator it = getGroupStore().findContainingGroups(gm); it.hasNext(); )
+    for ( Iterator it = getGroupStore().findParentGroups(gm); it.hasNext(); )
     {
         group = (IEntityGroup) it.next();
         group.setLocalGroupService(this);
@@ -241,15 +242,6 @@ public IEntityGroup findGroup(CompositeEntityIdentifier ent) throws GroupsExcept
     return ( cacheInUse() )
       ? findGroupWithCache(ent)
       : primFindGroup(ent.getLocalKey());
-}
-
-/**
- * Returns a pre-existing <code>IEntityGroup</code> or null if it
- * does not exist.
- */
-protected IEntityGroup findGroupWithCache(String key) throws GroupsException
-{
-    return findGroupWithCache(newCompositeEntityIdentifier(key));
 }
 
 /**
@@ -811,7 +803,7 @@ throws GroupsException
     for (Iterator it=group.getMembers(); it.hasNext();)
     {
         gmi = (GroupMemberImpl) it.next();
-        gmi.removeGroup(group);
+        gmi.invalidateInParentGroupsCache(Collections.singleton((IGroupMember) gmi));
         if ( cacheInUse() )
            { cacheUpdate(gmi); }
     }
@@ -832,7 +824,7 @@ throws GroupsException
     for (Iterator it=egi.getAddedMembers().values().iterator(); it.hasNext();)
     {
         gmi = (GroupMemberImpl) it.next();
-        gmi.addGroup(egi);
+        gmi.invalidateInParentGroupsCache(Collections.singleton((IGroupMember) gmi));
         if ( cacheInUse() )
            { cacheUpdate(gmi); }
     }
@@ -840,34 +832,18 @@ throws GroupsException
     for (Iterator it=egi.getRemovedMembers().values().iterator(); it.hasNext();)
     {
         gmi = (GroupMemberImpl) it.next();
-        gmi.removeGroup(egi);
+        gmi.invalidateInParentGroupsCache(Collections.singleton((IGroupMember) gmi));
         if ( cacheInUse() )
            { cacheUpdate(gmi); }
     }
 }
 
 /**
- * Answers if <code>group</code> contains <code>member</code>.  
- * If the group belongs to another service and the present service is 
- * not editable, simply return false.
- * @return boolean
- * @param group org.jasig.portal.groups.IEntityGroup
- * @param member org.jasig.portal.groups.IGroupMember
- */
-public boolean contains(IEntityGroup group, IGroupMember member) 
-throws GroupsException 
-{
-    return ( isForeign(member) && ! isEditable() )
-      ? false
-      : getGroupStore().contains(group, member);
-}
-/**
  * A foreign member is a group from a different service.
  * @param member IGroupMember
  * @return boolean
  */
-protected boolean isForeign(IGroupMember member)
-{
+private boolean isForeignGroup(IGroupMember member) {
     if (member.isEntity())
         { return false; }
     else

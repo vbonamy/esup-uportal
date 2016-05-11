@@ -53,14 +53,12 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 /**
- * @version $Revision$ $Date$
  * @since uPortal 2.5
  */
 @Service
 public class FragmentActivator
 {
     private static final String NEWLY_CREATED_ATTR = "newlyCreated";
-    public static final String RCS_ID = "@(#) $Header$";
     private static final Log LOG = LogFactory.getLog(FragmentActivator.class);
 
     private final LoadingCache<String, List<Locale>> fragmentOwnerLocales = CacheBuilder.newBuilder()
@@ -397,7 +395,7 @@ public class FragmentActivator
         }
         catch( Exception e )
         {
-            throw new RuntimeException(
+            LOG.error(
                   "Anomaly occurred while loading layout for fragment '" +
                   fragment.getName() +
                   "'. The fragment will not be " +

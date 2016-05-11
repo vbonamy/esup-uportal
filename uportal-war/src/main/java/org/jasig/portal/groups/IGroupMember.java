@@ -44,7 +44,6 @@ import org.jasig.portal.IBasicEntity;
  * that duplicates returned from "deep" methods can  be recognized.
  *
  * @author Dan Ellentuck
- * @version $Revision$
  */
 public interface IGroupMember extends IBasicEntity {
 /**
@@ -72,7 +71,7 @@ public boolean equals(Object o);
  *
  * @return java.util.Iterator
  */
-public Iterator getAllContainingGroups() throws GroupsException;
+public Iterator getAncestorGroups() throws GroupsException;
 /**
  * Returns an <code>Iterator</code> over the <code>Set</code> of this
  * <code>IGroupMember's</code> recursively-retrieved members that are
@@ -90,7 +89,7 @@ public Iterator getAllMembers() throws GroupsException;
  * Returns an <code>Iterator</code> over this <code>IGroupMember's</code> parent groups.
  * @return java.util.Iterator
  */
-public Iterator getContainingGroups() throws GroupsException;
+public Iterator getParentGroups() throws GroupsException;
 /**
  * Returns an <code>Iterator</code> over this <code>IGroupMember's</code>
  * members that are <code>IEntities</code>.
@@ -119,12 +118,7 @@ public String getKey();
  * @see #getEntityType()
  */
   public Class getLeafType();
-/**
- * Returns the named <code>IEntityGroup</code> from our members <code>Collection</code>.
- * @return org.jasig.portal.groups.IEntityGroup
- * @param name java.lang.String
- */
-public IEntityGroup getMemberGroupNamed(String name) throws GroupsException;
+
 /**
  * Returns an <code>Iterator</code> over the <code>IGroupMembers</code> in our
  * member <code>Collection</code>.
