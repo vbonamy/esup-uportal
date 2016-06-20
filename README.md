@@ -7,6 +7,8 @@ https://wiki.jasig.org/display/UPM42/Installing+uPortal
 
 Notes d'installation :
 
+* prérequis - cf README-JASIG.md
+
 * installation tomcat
   * tar xzf apache-tomcat-7.0.65.tar.gz -C /opt
   * ln -s /opt/apache-tomcat-7.0.65 /opt/tomcat-esup
