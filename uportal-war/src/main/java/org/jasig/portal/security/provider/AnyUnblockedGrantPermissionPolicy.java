@@ -20,7 +20,6 @@ package org.jasig.portal.security.provider;
 
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import net.sf.ehcache.Cache;
@@ -28,6 +27,7 @@ import net.sf.ehcache.Element;
 
 import org.jasig.portal.AuthorizationException;
 import org.jasig.portal.groups.GroupsException;
+import org.jasig.portal.groups.IEntityGroup;
 import org.jasig.portal.groups.IGroupMember;
 import org.jasig.portal.permission.IPermissionActivity;
 import org.jasig.portal.permission.IPermissionOwner;
@@ -135,7 +135,7 @@ public class AnyUnblockedGrantPermissionPolicy implements IPermissionPolicy {
                 collectiveTarget = targetProviderRegistry.getTargetProvider(activity.getTargetProviderKey()).getTarget(IPermission.ALL_GROUPS_TARGET);
                 break;
             default:
-            // This sort of handling does not apply;  just pass through
+                // This sort of handling does not apply;  just pass through
         }
         /*
          * NOTE:  Cannot generalize to a collective target if we are already on
@@ -286,10 +286,8 @@ public class AnyUnblockedGrantPermissionPolicy implements IPermissionPolicy {
             return false;
         }
         seenGroups.add(principalAsGroupMember);
-        @SuppressWarnings("unchecked")
-        Iterator<IGroupMember> immediatelyContainingGroups = principalAsGroupMember.getParentGroups();
-        while (immediatelyContainingGroups.hasNext()) {
-            IGroupMember parentGroup = immediatelyContainingGroups.next();
+        Set<IEntityGroup> immediatelyContainingGroups = principalAsGroupMember.getParentGroups();
+        for (IGroupMember parentGroup : immediatelyContainingGroups) {
             try {
                 if (parentGroup != null) {
                     IAuthorizationPrincipal parentPrincipal = service.newPrincipal( parentGroup );

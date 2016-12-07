@@ -145,37 +145,18 @@ public class GroupListHelperImpl implements IGroupListHelper {
                     canonicalRootGroup);
         }
 
-        // First check the appropriate canonical super-target for the specified type
-        String canonicalSuperTarget = null;
-        switch (groupType) {
-            case JsonEntityBean.ENTITY_GROUP:
-                canonicalSuperTarget = IPermission.ALL_GROUPS_TARGET;
-                break;
-            case JsonEntityBean.ENTITY_CATEGORY:
-                canonicalSuperTarget = IPermission.ALL_CATEGORIES_TARGET;
-                break;
-            default:
-                throw new RuntimeException("Unrecognized groupType:  " + groupType);
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("Identified for groupType='" + groupType + 
-                    "' the following canonicalSuperTarget:  " + 
-                    canonicalSuperTarget);
-        }
-        for (String activity : permissionActivities) {
-            if (principal.hasPermission(permissionOwner, activity, canonicalSuperTarget)) {
-                return canonicalRootGroup;
-            }
-        }
-
-        // Next check the canonical root group itself
+        /*
+         *  First check the canonical root group for the applicable activities
+         *  (NOTE: the uPortal permissions infrastructure handles checking of
+         *  special, collective targets like "ALL_GROUPS" and "All_categories").
+         */
         for (String activity : permissionActivities) {
             if (principal.hasPermission(permissionOwner, activity, canonicalRootGroup.getId())) {
                 return canonicalRootGroup;
             }
         }
 
-        // So much for the easy paths -- see if the user has any records at all for this specific owner/activity
+        // So much for the easy path -- see if the user has any records at all for this specific owner/activity
         JsonEntityBean rslt = null;  // Default
         final List<IPermission> permissionsOfRelevantActivity = new ArrayList<IPermission>();
         for (String activity : permissionActivities) {
@@ -285,8 +266,7 @@ public class GroupListHelperImpl implements IGroupListHelper {
 			} else {
 				JsonEntityBean jsonBean = new JsonEntityBean(entity, entityEnum);
 				if (populateChildren) {
-					@SuppressWarnings("unchecked")
-					Iterator<IGroupMember> members = (Iterator<IGroupMember>) entity.getMembers();
+					Iterator<IGroupMember> members = entity.getChildren().iterator();
 					jsonBean = populateChildren(jsonBean, members);
 				}
                 if (jsonBean.getEntityType().isGroup() || EntityEnum.PERSON.equals(jsonBean.getEntityType())) {
@@ -417,11 +397,11 @@ public class GroupListHelperImpl implements IGroupListHelper {
 	public EntityEnum getEntityType(IGroupMember entity) {
 		
 	    if (IEntityGroup.class.isAssignableFrom(entity.getClass())) {
-	        return EntityEnum.getEntityEnum(entity.getEntityType(), true);
+	        return EntityEnum.getEntityEnum(entity.getLeafType(), true);
 	    } 
 	    
 	    else {
-            return EntityEnum.getEntityEnum(entity.getEntityType(), false);
+            return EntityEnum.getEntityEnum(entity.getLeafType(), false);
 	    }
 	    
 	}

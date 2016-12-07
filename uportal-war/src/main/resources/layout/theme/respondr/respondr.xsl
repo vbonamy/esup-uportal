@@ -289,13 +289,19 @@
       $(function() {
         var navMenuToggle = function() {
           var menu = $(".portal-nav .menu"), menuToggle = $("#up-sticky-nav .menu-toggle");
-          // Toggle the menu visibility when the button is clicked.
+          // Toggle the nav visibility when the button is clicked.
           menuToggle.click(function() {
-            //alert("Handler for .click() called.");
-            menu.toggleClass("show");
+            // console.log("Handler for .click() called.");
+            // Open and animate the offcanvas
+            $('.row-offcanvas').toggleClass('active');
+            // show the nav
+            // menu.toggleClass("show");
+            // scroll top
             $('html, body').animate({
-                    scrollTop: 0
-               });
+                scrollTop: 0
+            });
+            // animate the hamburger to an arrow
+            $('.hamburger').toggleClass("is-active");
             return false;
           });
           // Console for debugging.
@@ -304,15 +310,7 @@
 
         navMenuToggle();
       });
-      
-      up.jQuery(document).ready(function () {
-           var $ = up.jQuery;
-           // Toggle the off-canvas menu when the button is clicked.
-           $('[data-toggle="offcanvas"]').click(function () {
-                $('.row-offcanvas').toggleClass('active');
-           });
-      });
-      
+
       $(document).ready(function() {
           if (up.lightboxConfig) {
             up.lightboxConfig.init();
@@ -433,15 +431,16 @@
  -->
 <xsl:template name="page.dialogs">
 
+    <xsl:variable name="permissionChannelId">PORTLET_ID.<xsl:value-of select="//focused/channel/@chanID"/></xsl:variable>
     <xsl:choose>
         <!-- The normal/usual case:  Dashboard (non-focused) mode -->
         <xsl:when test="not(//focused)">
             <xsl:call-template name="page.dialogs.dashboard" />
         </xsl:when>
-        <!-- UseIt use case:  We are focused on a portlet that is (1) not currently
-             in the user's layout and (2) not a "hidden" portlet.  (Portlets that 
-             are not a member of any category are hidden.) -->
-        <xsl:when test="//focused[@in-user-layout='no'] and upGroup:isChannelDeepMemberOf(//focused/channel/@fname, 'local.1')">
+        <!-- UseIt/ Add to My Layout use case:  We are focused on a portlet that is (1) not currently
+             in the user's layout and (2) not a "hidden" portlet (user has BROWSE
+             permission to portlet). -->
+        <xsl:when test="//focused[@in-user-layout='no'] and $AUTHENTICATED='true' and upAuth:hasPermission('UP_PORTLET_SUBSCRIBE', 'BROWSE', $permissionChannelId)">
             <xsl:call-template name="page.dialogs.useit" />
         </xsl:when>
         <xsl:otherwise>
@@ -706,7 +705,7 @@
             <script src="/uPortal/scripts/respond-1.4.2.min.js" type="text/javascript"></script>
         </head>
         <body class="up dashboard portal fl-theme-mist">
-          <div class="row-offcanvas row-offcanvas-left">
+          <div class="row-offcanvas">
             <div id="up-notification"></div>
             <div id="wrapper">
                 <xsl:call-template name="region.hidden-top" />
@@ -714,8 +713,12 @@
                 <header class="portal-header" role="banner">
                     <div id="up-sticky-nav" class="container-fluid">
                         <div class="portal-global row">
-                            <a href="javascript:;" class="menu-toggle pull-left visible-xs" data-toggle="offcanvas">
-                                <i class="fa fa-align-justify"></i> <xsl:value-of select="upMsg:getMessage('menu', $USER_LANG)"/>
+                            <a href="javascript:void(0);" tabindex="0" class="menu-toggle pull-left" aria-label="{upMsg:getMessage('menu', $USER_LANG)}" role="button" title="{upMsg:getMessage('menu', $USER_LANG)}" data-toggle="offcanvas" aria-expanded="false" aria-haspopup="true" aria-controls="sidebar">
+                                <div class="hamburger hamburger-arrow">
+                                   <div class="hamburger-box">
+                                     <div class="hamburger-inner"></div>
+                                   </div>
+                                </div>
                             </a>
                             <xsl:call-template name="region.pre-header" />
                         </div>
