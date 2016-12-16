@@ -411,7 +411,7 @@ public class UportalService {
 		List<IEntityGroup> subGroups = new ArrayList<IEntityGroup>();
 		Iterator<IGroupMember> groupMemberIter;
 		try {
-			groupMemberIter = group.getMembers();
+			groupMemberIter = group.getChildren().iterator();
 		} catch (GroupsException e) {
 			throw UportalServiceErrorException.error(e);
 		}
@@ -487,7 +487,7 @@ public class UportalService {
 		List<IEntityGroup> containingGroups = new ArrayList<IEntityGroup>();
 		Iterator<IEntityGroup> containingGroupsIter;
 		try {
-			containingGroupsIter = group.getParentGroups();
+			containingGroupsIter = group.getParentGroups().iterator();
 		} catch (GroupsException e) {
 			throw UportalServiceErrorException.error(e);
 		}
@@ -630,9 +630,9 @@ public class UportalService {
 	@SuppressWarnings("unchecked")
 	public Object [] getUserGroups(final String userId)
 	throws UportalServiceErrorException, UportalServiceUserNotFoundException {
-		Iterator<IGroupMember> groupIter;
+		Iterator<IEntityGroup> groupIter;
 		try {
-			groupIter = getUportalUser(userId).getAncestorGroups();
+			groupIter = getUportalUser(userId).getAncestorGroups().iterator();
 		} catch (GroupsException e) {
 			throw UportalServiceErrorException.error(e);
 		}

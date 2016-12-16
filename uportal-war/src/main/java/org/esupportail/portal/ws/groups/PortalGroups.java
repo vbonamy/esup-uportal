@@ -148,7 +148,7 @@ public class PortalGroups {
 	    	Vector v = new Vector();	    	
 			
 			// on recupere tous les sous-groupes de "name"
-			Iterator allgroups = igm.getMembers();
+			Iterator allgroups = egi.getChildren().iterator();
 	    	
 			// on parcourt chacun de ces groupes
 			while (allgroups.hasNext()) {
@@ -209,7 +209,7 @@ public class PortalGroups {
     		Vector groups = new Vector();
     		
     		// je parcours les fils
-    		Iterator iter = myGroup.getMembers();
+    		Iterator iter = myGroup.getChildren().iterator();
     		while (iter.hasNext()) {
     			
     			Object object = iter.next();
@@ -262,7 +262,7 @@ public class PortalGroups {
     			IGroupMember gm = GroupService.getGroupMember(ei);						
     		
     			// on recupere tous les groupes auxquels appartient l'utilisateur
-    			Iterator iter = gm.getParentGroups();  			
+    			Iterator iter = gm.getParentGroups().iterator();  			
 
     	    	// le vecteur qui va contenir tous les groupes
     	    	Vector groups = new Vector();
@@ -321,7 +321,7 @@ public class PortalGroups {
     private void getRecurContainingGroups(IGroupMember igm, Vector allGroups, Vector v) throws GroupsException {				
 
     	// recupere les groupes contenant le groupe passe en parametre
-		Iterator iter = igm.getParentGroups();
+		Iterator iter = igm.getParentGroups().iterator();
 		
 		// pour savoir combien on a d'elements, on recopie cette iteration dans un vecteur
 		Vector containingGroups = new Vector();
