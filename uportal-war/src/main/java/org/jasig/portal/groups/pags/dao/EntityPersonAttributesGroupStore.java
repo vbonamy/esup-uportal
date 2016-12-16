@@ -18,6 +18,7 @@
  */
 package org.jasig.portal.groups.pags.dao;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -121,7 +122,7 @@ public class EntityPersonAttributesGroupStore implements IEntityGroupStore, IEnt
         Element element = membershipCache.get(cacheKey);
         if (element == null) {
 
-            logger.debug("Checking if group {} contains member {}/{}", group.getName(), member.getKey(), member.getEntityType().getSimpleName());
+            logger.debug("Checking if group {} contains member {}/{}", group.getName(), member.getKey(), member.getLeafType().getSimpleName());
 
             boolean answer = false;  // default
             final PagsGroup groupDef = convertEntityToGroupDef(group);
@@ -213,18 +214,13 @@ public class EntityPersonAttributesGroupStore implements IEntityGroupStore, IEnt
         Iterator<IEntityGroup> rslt = set.iterator();  // default
 
         if (member.isGroup()) {
-
             // PAGS groups may only contain other PAGS groups (and people, of course)
             final IEntityGroup ieg = (IEntityGroup) member;
             if (PagsService.SERVICE_NAME_PAGS.equals(ieg.getServiceName().toString())) {
                 rslt = findParentGroupsForGroup((IEntityGroup) member);
             }
-
-        } else if (member.isEntity()) {
-            rslt = findParentGroupsForEntity((IEntity) member);
         } else {
-            final String msg = "The specified member is neither a group nor an entity:  " + member;
-            throw new IllegalArgumentException(msg);
+            rslt = findParentGroupsForEntity((IEntity) member);
         }
 
         return rslt;
@@ -456,13 +452,18 @@ public class EntityPersonAttributesGroupStore implements IEntityGroupStore, IEnt
      * Nested Types
      */
 
-    private static final class MembershipCacheKey {
+    private static final class MembershipCacheKey implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
         private final EntityIdentifier groupId;
         private final EntityIdentifier memberId;
+
         public MembershipCacheKey(final EntityIdentifier groupId, final EntityIdentifier memberId) {
             this.groupId = groupId;
             this.memberId = memberId;
         }
+
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -471,6 +472,7 @@ public class EntityPersonAttributesGroupStore implements IEntityGroupStore, IEnt
             result = prime * result + ((memberId == null) ? 0 : memberId.hashCode());
             return result;
         }
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj)
@@ -492,10 +494,12 @@ public class EntityPersonAttributesGroupStore implements IEntityGroupStore, IEnt
                 return false;
             return true;
         }
+
         @Override
         public String toString() {
             return "MembershipCacheKey [groupId=" + groupId + ", memberId=" + memberId + "]";
         }
+
     }
 
 }

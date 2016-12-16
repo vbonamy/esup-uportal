@@ -19,7 +19,6 @@
 package org.jasig.portal.portlet.registry;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -29,7 +28,6 @@ import org.jasig.portal.groups.IEntity;
 import org.jasig.portal.groups.IEntityGroup;
 import org.jasig.portal.groups.IGroupConstants;
 import org.jasig.portal.groups.IGroupMember;
-import org.jasig.portal.groups.ILockableEntityGroup;
 import org.jasig.portal.portlet.om.IPortletDefinition;
 import org.jasig.portal.portlet.om.PortletCategory;
 import org.jasig.portal.services.GroupService;
@@ -49,29 +47,6 @@ public class PortletCategoryRegistryImpl implements IPortletCategoryRegistry {
 	}
 
     /* (non-Javadoc)
-	 * @see org.jasig.portal.portlet.registry.IPortletCategoryRegistry#addCategoryToCategory(org.jasig.portal.portlet.om.PortletCategory, org.jasig.portal.portlet.om.PortletCategory)
-	 */
-	@Override
-    public void addCategoryToCategory(PortletCategory child, PortletCategory parent) {
-        String childKey = String.valueOf(child.getId());
-        IEntityGroup childGroup = GroupService.findGroup(childKey);
-        String parentKey = String.valueOf(parent.getId());
-        IEntityGroup parentGroup = GroupService.findGroup(parentKey);
-        parentGroup.addMember(childGroup);
-        parentGroup.updateMembers();
-    }
-
-    /* (non-Javadoc)
-	 * @see org.jasig.portal.portlet.registry.IPortletCategoryRegistry#deletePortletCategory(org.jasig.portal.portlet.om.PortletCategory)
-	 */
-	@Override
-    public void deletePortletCategory(PortletCategory category) {
-        String key = String.valueOf(category.getId());
-        ILockableEntityGroup categoryGroup = GroupService.findLockableGroup(key,"UP_PORTLET_PUBLISH");
-        categoryGroup.delete();
-    }
-
-    /* (non-Javadoc)
 	 * @see org.jasig.portal.portlet.registry.IPortletCategoryRegistry#getAllChildCategories(org.jasig.portal.portlet.om.PortletCategory)
 	 */
 	@Override
@@ -86,7 +61,7 @@ public class PortletCategoryRegistryImpl implements IPortletCategoryRegistry {
 
         return rslt;
     }
-	
+
     /* (non-Javadoc)
      * @see org.jasig.portal.portlet.registry.IPortletCategoryRegistry#getAllParentCategories(org.jasig.portal.portlet.om.PortletCategory)
      */
@@ -154,10 +129,7 @@ public class PortletCategoryRegistryImpl implements IPortletCategoryRegistry {
         String parentKey = String.valueOf(parent.getId());
         IEntityGroup parentGroup = GroupService.findGroup(parentKey);
         Set<PortletCategory> categories = new HashSet<PortletCategory>();
-    	@SuppressWarnings("unchecked")
-        Iterator<IGroupMember> iter = parentGroup.getMembers();
-        while (iter.hasNext()) {
-            IGroupMember gm = iter.next();
+        for (IGroupMember gm : parentGroup.getChildren()) {
             if (gm.isGroup()) {
                 String categoryId = gm.getKey();
                 categories.add(getPortletCategory(categoryId));
@@ -174,11 +146,8 @@ public class PortletCategoryRegistryImpl implements IPortletCategoryRegistry {
         String parentKey = String.valueOf(parent.getId());
         IEntityGroup parentGroup = GroupService.findGroup(parentKey);
         Set<IPortletDefinition> portletDefs = new HashSet<IPortletDefinition>();
-        @SuppressWarnings("unchecked")
-        Iterator<IGroupMember> iter = parentGroup.getMembers();
-        while (iter.hasNext()) {
-            IGroupMember gm = iter.next();
-            if (gm.isEntity()) {
+        for (IGroupMember gm : parentGroup.getChildren()) {
+            if (!gm.isGroup()) {
                 IPortletDefinition portletDefinition = portletDefinitionRegistry.getPortletDefinition(gm.getKey());
                 if(portletDefinition != null) {
                     portletDefs.add(portletDefinition);
@@ -193,11 +162,8 @@ public class PortletCategoryRegistryImpl implements IPortletCategoryRegistry {
                                 + "memberships for this missing portlet will be removed.");
 
                     // Delete existing category memberships for this portlet
-                    @SuppressWarnings("unchecked")
-                    Iterator<IEntityGroup> parents = gm.getParentGroups();
-                    while (parents.hasNext()) {
-                        IEntityGroup group = parents.next();
-                        group.removeMember(gm);
+                    for (IEntityGroup group : gm.getParentGroups()) {
+                        group.removeChild(gm);
                         group.update();
                     }
                 }
@@ -215,10 +181,7 @@ public class PortletCategoryRegistryImpl implements IPortletCategoryRegistry {
         IEntityGroup childGroup = GroupService.findGroup(childKey);
         Set<PortletCategory> parents = new HashSet<PortletCategory>();
 
-        @SuppressWarnings("unchecked")
-        Iterator<IGroupMember> iter = childGroup.getParentGroups();
-        while (iter.hasNext()) {
-            IGroupMember gm = iter.next();
+        for (IGroupMember gm : childGroup.getParentGroups()) {
             if (gm.isGroup()) {
                 String categoryId = gm.getKey();
                 parents.add(getPortletCategory(categoryId));
@@ -236,10 +199,7 @@ public class PortletCategoryRegistryImpl implements IPortletCategoryRegistry {
         IEntity childEntity = GroupService.getEntity(childKey, IPortletDefinition.class);
         Set<PortletCategory> parents = new HashSet<PortletCategory>();
 
-        @SuppressWarnings("unchecked")
-        Iterator<IGroupMember> iter = childEntity.getParentGroups();
-        while (iter.hasNext()) {
-            IGroupMember gm = iter.next();
+        for (IGroupMember gm : childEntity.getParentGroups()) {
             if (gm.isGroup()) {
                 String categoryId = gm.getKey();
                 parents.add(getPortletCategory(categoryId));
@@ -255,50 +215,6 @@ public class PortletCategoryRegistryImpl implements IPortletCategoryRegistry {
     public PortletCategory getTopLevelPortletCategory() {
         IEntityGroup categoryGroup = GroupService.getDistinguishedGroup(IGroupConstants.PORTLET_CATEGORIES);
         return getPortletCategory(categoryGroup.getKey());
-    }
-
-    /* (non-Javadoc)
-	 * @see org.jasig.portal.portlet.registry.IPortletCategoryRegistry#createPortletCategory(java.lang.String, java.lang.String, java.lang.String)
-	 */
-	@Override
-    public PortletCategory createPortletCategory( String name,
-            String description, String creatorId ) {
-        IEntityGroup categoryGroup = GroupService.newGroup(IPortletDefinition.class);
-        categoryGroup.setName( name ); // name cannot be null
-        categoryGroup.setCreatorID( creatorId ); // creatorId cannot be null
-        categoryGroup.setDescription( description );
-        categoryGroup.update();
-        String id = categoryGroup.getKey();
-        PortletCategory cat = new PortletCategory(id);
-        cat.setName( name );
-        cat.setDescription( description );
-        cat.setCreatorId( creatorId );
-        return cat;
-    }
-
-    /* (non-Javadoc)
-	 * @see org.jasig.portal.portlet.registry.IPortletCategoryRegistry#removeCategoryFromCategory(org.jasig.portal.portlet.om.PortletCategory, org.jasig.portal.portlet.om.PortletCategory)
-	 */
-	@Override
-    public void removeCategoryFromCategory(PortletCategory child, PortletCategory parent) {
-        String childKey = String.valueOf(child.getId());
-        IEntityGroup childGroup = GroupService.findGroup(childKey);
-        String parentKey = String.valueOf(parent.getId());
-        IEntityGroup parentGroup = GroupService.findGroup(parentKey);
-        parentGroup.removeMember(childGroup);
-        parentGroup.updateMembers();
-    }
-
-    /* (non-Javadoc)
-	 * @see org.jasig.portal.portlet.registry.IPortletCategoryRegistry#updatePortletCategory(org.jasig.portal.portlet.om.PortletCategory)
-	 */
-	@Override
-    public void updatePortletCategory(PortletCategory category) {
-        IEntityGroup categoryGroup = GroupService.findGroup(category.getId());
-        categoryGroup.setName(category.getName());
-        categoryGroup.setDescription(category.getDescription());
-        categoryGroup.setCreatorID(category.getCreatorId());
-        categoryGroup.update();
     }
 
 }

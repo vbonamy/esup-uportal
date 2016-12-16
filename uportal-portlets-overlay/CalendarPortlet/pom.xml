@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.jasig.portal.portlets-overlay</groupId>
         <artifactId>uportal-portlets-overlay</artifactId>
-        <version>4.3.0</version>
+        <version>4.3.1</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -33,6 +33,17 @@
 
     <name>Calendar Portlet</name>
     <description>Overlay on Calendar Portlet.</description>
+
+<!--
+    HACK! Remove this repo stanza and the 3rd-party directory
+          once CalDav4j is available in Maven Central!
+  -->
+    <repositories>
+        <repository>
+            <id>3rd-party-embedded</id>
+            <url>file://${project.basedir}/3rd-party/repository</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <!-- ===== Compile Time Dependencies ============================== -->
@@ -175,6 +186,14 @@
                                 <groupId>org.slf4j</groupId>
                                 <artifactId>log4j-over-slf4j</artifactId>
                             </exclusion>
+                            <exclusion>
+                                <groupId>org.osaf</groupId>
+                                <artifactId>caldav4j</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>slide</groupId>
+                                <artifactId>jakarta-slide-webdavlib</artifactId>
+                            </exclusion>
                         </exclusions>
                     </dependency>
                 </dependencies>
@@ -207,6 +226,14 @@
                             <exclusion>
                                 <groupId>xalan</groupId>
                                 <artifactId>serializer</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>org.osaf</groupId>
+                                <artifactId>caldav4j</artifactId>
+                            </exclusion>
+                            <exclusion>
+                                <groupId>slide</groupId>
+                                <artifactId>jakarta-slide-webdavlib</artifactId>
                             </exclusion>
                         </exclusions>
                     </dependency>
